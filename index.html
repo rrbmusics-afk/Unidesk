@@ -13,12 +13,24 @@
             overflow: hidden; position: fixed; 
         }
         .glass { background: rgba(255, 255, 255, 0.03); border-bottom: 1px solid rgba(255, 255, 255, 0.08); backdrop-filter: blur(20px); }
-        #chatBox { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; -webkit-overflow-scrolling: touch; }
-        .input-container { background: #0a0a0a; border-top: 1px solid rgba(255,255,255,0.1); padding: 10px 10px calc(15px + env(safe-area-inset-bottom)) 10px; }
+        
+        /* Chat box with bottom padding so fixed input doesn't cover last message */
+        #chatBox { 
+            flex: 1; overflow-y: auto; padding: 16px; padding-bottom: 100px; 
+            display: flex; flex-direction: column; gap: 10px; -webkit-overflow-scrolling: touch; 
+        }
+
+        /* FIXED Bottom Bar: Stays on top of everything always */
+        .input-container { 
+            position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+            background: #0a0a0a; border-top: 1px solid rgba(255,255,255,0.1); 
+            padding: 10px 10px calc(15px + env(safe-area-inset-bottom)) 10px; 
+        }
+
         .bubble { max-width: 85%; padding: 10px 14px; border-radius: 20px; font-size: 15px; line-height: 1.4; }
         .bubble-me { background: var(--accent); align-self: flex-end; border-bottom-right-radius: 4px; }
         .bubble-them { background: #262626; align-self: flex-start; border-bottom-left-radius: 4px; }
-        img { border-radius: 12px; margin: 5px 0; max-width: 100%; display: block; }
+        img { border-radius: 12px; margin: 5px 0; max-width: 100%; display: block; border: 1px solid rgba(255,255,255,0.1); }
         audio { height: 35px; width: 210px; filter: invert(1); margin-top: 5px; }
         .btn-active:active { transform: scale(0.92); opacity: 0.8; }
     </style>
@@ -30,7 +42,10 @@
             <span class="text-[10px] font-black tracking-widest uppercase text-blue-500">UniDesk OS</span>
             <span id="status-text" class="text-[8px] opacity-30 font-mono uppercase">System Ready</span>
         </div>
-        <div class="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_#22c55e]"></div>
+        <div class="flex items-center gap-3">
+            <span id="room-code-display" class="text-[11px] font-mono font-bold text-blue-400 tracking-widest"></span>
+            <div class="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_#22c55e]"></div>
+        </div>
     </nav>
 
     <div id="home-view" class="flex-grow flex flex-col items-center justify-center p-8 bg-black z-50">
@@ -39,7 +54,7 @@
                 <div class="w-10 h-10 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
                     <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4" stroke-width="2.5"/></svg>
                 </div>
-                <span class="text-[11px] font-bold uppercase tracking-widest">Initialize Room</span>
+                <span class="text-[11px] font-bold uppercase tracking-widest text-white/80">Initialize Room</span>
             </div>
             
             <div class="bg-white/5 border border-white/10 p-8 rounded-[2.5rem] space-y-4">
@@ -49,7 +64,7 @@
         </div>
     </div>
 
-    <div id="workspace-view" class="hidden flex-col h-full w-full">
+    <div id="workspace-view" class="hidden flex-col h-full w-full relative">
         <div id="chatBox"></div>
         
         <div class="input-container">
@@ -80,8 +95,7 @@
         const firebaseConfig = {
             apiKey: "AIzaSyDbfmd0zmv_mFV0CG2OrhKPPeU3zPYGOBg",
             authDomain: "unidesk-a70ac.firebaseapp.com",
-            projectId: "unidesk-a70ac",
-            storageBucket: "unidesk-a70ac.firebasestorage.app"
+            projectId: "unidesk-a70ac"
         };
 
         const app = initializeApp(firebaseConfig);
@@ -91,23 +105,18 @@
         window.createRoom = async () => {
             const code = Math.random().toString(36).substring(2, 8).toUpperCase();
             try {
-                // Testing connection first
                 await setDoc(doc(db, "rooms", code), { messages: [], time: Date.now() });
                 myId = "Admin"; 
                 openWorkspace(code);
-            } catch (e) {
-                alert("DATABASE ERROR: " + e.message + "\n\nMake sure Firestore is ENABLED in Firebase Console.");
-            }
+            } catch (e) { alert("DATABASE ERROR: " + e.message); }
         };
 
         window.joinRoom = async () => {
             const code = document.getElementById('roomCodeInput').value.toUpperCase();
             if(!code) return;
-            try {
-                const snap = await getDoc(doc(db, "rooms", code));
-                if(snap.exists()) openWorkspace(code);
-                else alert("Room not found.");
-            } catch (e) { alert("Access Denied: Check Rules."); }
+            const snap = await getDoc(doc(db, "rooms", code));
+            if(snap.exists()) openWorkspace(code);
+            else alert("Room not found.");
         };
 
         window.processFile = (file) => {
@@ -124,25 +133,23 @@
         window.toggleRecording = async () => {
             const btn = document.getElementById('micBtn');
             if(!mediaRecorder || mediaRecorder.state === "inactive") {
-                try {
-                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                    mediaRecorder = new MediaRecorder(stream);
-                    chunks = [];
-                    mediaRecorder.ondataavailable = e => chunks.push(e.data);
-                    mediaRecorder.onstop = async () => {
-                        const blob = new Blob(chunks, { type: 'audio/mp4' });
-                        const reader = new FileReader();
-                        reader.onloadend = async () => {
-                            await updateDoc(doc(db, "rooms", currentRoom), {
-                                messages: arrayUnion({ user: myId, data: reader.result, type: 'audio', time: Date.now() })
-                            });
-                            btn.classList.remove('text-red-500');
-                        };
-                        reader.readAsDataURL(blob);
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                chunks = [];
+                mediaRecorder.ondataavailable = e => chunks.push(e.data);
+                mediaRecorder.onstop = async () => {
+                    const blob = new Blob(chunks, { type: 'audio/mp4' });
+                    const reader = new FileReader();
+                    reader.onloadend = async () => {
+                        await updateDoc(doc(db, "rooms", currentRoom), {
+                            messages: arrayUnion({ user: myId, data: reader.result, type: 'audio', time: Date.now() })
+                        });
+                        btn.classList.remove('text-red-500');
                     };
-                    mediaRecorder.start();
-                    btn.classList.add('text-red-500');
-                } catch(e) { alert("Mic Permission Denied"); }
+                    reader.readAsDataURL(blob);
+                };
+                mediaRecorder.start();
+                btn.classList.add('text-red-500');
             } else { mediaRecorder.stop(); }
         };
 
@@ -150,7 +157,8 @@
             currentRoom = code;
             document.getElementById('home-view').classList.add('hidden');
             document.getElementById('workspace-view').classList.replace('hidden', 'flex');
-            document.getElementById('status-text').innerText = "LIVE: " + code;
+            document.getElementById('room-code-display').innerText = code;
+            document.getElementById('status-text').innerText = "SESSION ACTIVE";
             
             onSnapshot(doc(db, "rooms", code), (s) => {
                 const data = s.data();
@@ -162,7 +170,6 @@
                               m.type === 'audio' ? `<audio controls src="${m.data}"></audio>` : 
                               `<div>${m.text}</div>`}
                         </div>
-                        <span class="text-[7px] uppercase mt-1 opacity-20 px-2">${m.user}</span>
                     </div>
                 `).join('');
                 const cb = document.getElementById('chatBox');
@@ -173,12 +180,10 @@
         window.sendMessage = async () => {
             const i = document.getElementById('chatInput');
             if(!i.value || !currentRoom) return;
-            try {
-                await updateDoc(doc(db, "rooms", currentRoom), { 
-                    messages: arrayUnion({ user: myId, text: i.value, type: 'text', time: Date.now() }) 
-                });
-                i.value = "";
-            } catch(e) { alert("Send failed."); }
+            await updateDoc(doc(db, "rooms", currentRoom), { 
+                messages: arrayUnion({ user: myId, text: i.value, type: 'text', time: Date.now() }) 
+            });
+            i.value = "";
         };
     </script>
 </body>
