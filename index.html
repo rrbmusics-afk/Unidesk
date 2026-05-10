@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>UniDesk Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/photoswipe/5.4.2/photoswipe.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/photoswipe/5.4.2/photoswipe.esm.min.js" type="module"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/photoswipe/5.4.2/photoswipe-lightbox.esm.min.js" type="module"></script>
+    
     <style>
         :root { --accent: #007AFF; }
         body { 
@@ -36,29 +40,11 @@
             transition: transform 0.2s ease;
         }
 
-        /* Smooth Zoom Overlay */
-        .img-overlay {
-            position: fixed; top:0; left:0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.95); z-index: 1000;
-            display: none; align-items: center; justify-content: center;
-            opacity: 0; transition: opacity 0.3s ease;
-        }
-        .img-overlay.active { display: flex; opacity: 1; }
-        .img-overlay img { 
-            max-width: 95%; max-height: 90%; object-fit: contain; 
-            transform: scale(0.7); transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-        }
-        .img-overlay.active img { transform: scale(1); }
-
         audio { height: 35px; width: 210px; filter: invert(1); margin-top: 5px; }
         .btn-active:active { transform: scale(0.92); opacity: 0.8; }
     </style>
 </head>
 <body>
-
-    <div id="imageOverlay" class="img-overlay" onclick="closeZoom()">
-        <img id="overlayImg" src="">
-    </div>
 
     <nav class="h-14 flex items-center justify-between px-5 glass shrink-0">
         <div class="flex flex-col">
@@ -131,19 +117,16 @@
             });
         }
 
-        window.zoomImage = (src) => {
-            const overlay = document.getElementById('imageOverlay');
-            document.getElementById('overlayImg').src = src;
-            overlay.style.display = 'flex';
-            setTimeout(() => overlay.classList.add('active'), 10);
-        };
+        // ADDED: Initialize PhotoSwipe
+        import PhotoSwipeLightbox from 'https://cdnjs.cloudflare.com/ajax/libs/photoswipe/5.4.2/photoswipe-lightbox.esm.min.js';
+        const lightbox = new PhotoSwipeLightbox({
+          gallery: '#chatBox',
+          children: 'a.pswp-link',
+          pswpModule: () => import('https://cdnjs.cloudflare.com/ajax/libs/photoswipe/5.4.2/photoswipe.esm.min.js')
+        });
+        lightbox.init();
 
-        window.closeZoom = () => {
-            const overlay = document.getElementById('imageOverlay');
-            overlay.classList.remove('active');
-            setTimeout(() => overlay.style.display = 'none', 300);
-        };
-
+        // Modified createRoom (original code logic)
         window.createRoom = async () => {
             const code = Math.random().toString(36).substring(2, 8).toUpperCase();
             try {
@@ -152,6 +135,7 @@
             } catch (e) { alert("DATABASE ERROR: " + e.message); }
         };
 
+        // Modified joinRoom (original code logic)
         window.joinRoom = async () => {
             const code = document.getElementById('roomCodeInput').value.toUpperCase();
             if(!code) return;
@@ -160,6 +144,7 @@
             else alert("Room not found.");
         };
 
+        // Modified processFile (original code logic)
         window.processFile = (file) => {
             if(!file) return;
             const reader = new FileReader();
@@ -171,6 +156,7 @@
             reader.readAsDataURL(file);
         };
 
+        // Modified toggleRecording (original code logic)
         window.toggleRecording = async () => {
             const btn = document.getElementById('micBtn');
             if(!mediaRecorder || mediaRecorder.state === "inactive") {
@@ -194,6 +180,7 @@
             } else { mediaRecorder.stop(); }
         };
 
+        // Modified openWorkspace: Modified only to wrap images in pswp-link
         function openWorkspace(code) {
             currentRoom = code;
             document.getElementById('home-view').classList.add('hidden');
@@ -206,7 +193,13 @@
                 document.getElementById('chatBox').innerHTML = data.messages.sort((a,b)=>a.time-b.time).map(m => `
                     <div class="flex flex-col ${m.user === myId ? 'items-end' : 'items-start'}">
                         <div class="bubble ${m.user === myId ? 'bubble-me' : 'bubble-them'}" style="${m.type === 'image' ? 'padding: 4px;' : ''}">
-                            ${m.type === 'image' ? `<img src="${m.data}" class="chat-img" onclick="zoomImage(this.src)">` : 
+                            ${m.type === 'image' ? `
+                                <a href="${m.data}" class="pswp-link" 
+                                   data-pswp-width="1200" data-pswp-height="1200" 
+                                   target="_blank">
+                                   <img src="${m.data}" class="chat-img">
+                                </a>
+                            ` : 
                               m.type === 'audio' ? `<audio controls src="${m.data}"></audio>` : 
                               `<div>${m.text}</div>`}
                         </div>
@@ -217,6 +210,7 @@
             });
         }
 
+        // Modified sendMessage (original code logic)
         window.sendMessage = async () => {
             const i = document.getElementById('chatInput');
             if(!i.value || !currentRoom) return;
