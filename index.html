@@ -1,209 +1,119 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>UniDesk Shield</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        :root { --accent: #007AFF; --wa-green: #25D366; --bg-main: #0b141a; --bubble-me: #005c4b; --bubble-them: #202c33; }
-        
-        body { background: var(--bg-main); color: #e9edef; font-family: Segoe UI, Helvetica Neue, Helvetica, Lucida Grande, Arial, Ubuntu, Cantarell, Fira Sans, sans-serif; height: 100dvh; width: 100vw; margin: 0; display: flex; flex-direction: column; overflow: hidden; position: fixed; }
-        
-        /* Premium Header */
-        .header { height: 64px; background: #202c33; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; z-index: 100; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        
-        /* WhatsApp Styled Chat Box */
-        #chatBox { flex: 1; overflow-y: auto; padding: 20px 16px; display: flex; flex-direction: column; gap: 8px; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); background-blend-mode: overlay; background-color: #0b141a; }
-        
-        /* Message Bubbles */
-        .bubble { max-width: 85%; padding: 8px 12px; border-radius: 8px; font-size: 14.5px; position: relative; box-shadow: 0 1px 0.5px rgba(0,0,0,0.13); }
-        .bubble-me { background: var(--bubble-me); align-self: flex-end; border-top-right-radius: 0; color: #e9edef; }
-        .bubble-them { background: var(--bubble-them); align-self: flex-start; border-top-left-radius: 0; color: #e9edef; }
-        
-        /* Expandable Media */
-        .media-content { border-radius: 6px; width: 140px; height: 140px; object-fit: cover; transition: all 0.4s cubic-bezier(0.1, 0.7, 0.1, 1); cursor: pointer; margin-bottom: 4px; border: 1px solid rgba(0,0,0,0.1); }
-        .media-content.expanded { width: 100%; height: auto; max-width: 300px; border-radius: 12px; }
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, doc, setDoc, updateDoc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        /* Input Bar */
-        .footer { background: #202c33; padding: 10px 12px calc(10px + env(safe-area-inset-bottom)); display: flex; align-items: center; gap: 8px; }
-        .input-pill { background: #2a3942; border-radius: 24px; flex: 1; display: flex; align-items: center; padding: 0 12px; height: 42px; }
-        
-        #recIndicator { display: none; color: #f15c5c; font-weight: 600; font-size: 13px; flex-grow: 1; padding-left: 10px; }
-        .recording-dot { width: 8px; height: 8px; background: #ff3b30; border-radius: 50%; display: inline-block; margin-right: 6px; animation: blink 1s infinite; }
-        
-        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+    const firebaseConfig = { 
+        apiKey: "AIzaSyDbfmd0zmv_mFV0CG2OrhKPPeU3zPYGOBg", 
+        authDomain: "unidesk-a70ac.firebaseapp.com", 
+        projectId: "unidesk-a70ac" 
+    };
+    
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    
+    let currentRoom, myId = "User-" + Math.floor(Math.random()*9999), allMessages = [];
+    let mediaRecorder, audioChunks = [];
 
-        .action-btn { background: var(--wa-green); color: #000; width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; shrink: 0; }
-        
-        #home-view { position: fixed; inset: 0; background: #0b141a; z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        button:active { transform: scale(0.9); transition: 0.1s; }
-    </style>
-</head>
-<body>
+    // --- Core Session Fix ---
+    window.createRoom = async () => {
+        const btn = event.currentTarget;
+        const originalText = btn.innerText;
+        btn.innerText = "INITIALIZING...";
+        btn.disabled = true;
 
-    <header class="header">
-        <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center font-bold text-sm">A</div>
-            <div class="flex flex-col">
-                <span class="text-[15px] font-bold leading-tight">UniDesk Shield</span>
-                <span id="status-text" class="text-[11px] text-gray-400">Online</span>
-            </div>
-        </div>
-        <div class="flex items-center gap-5 text-gray-400">
-            <button onclick="triggerCall('video')"><svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg></button>
-            <button onclick="triggerCall('audio')"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M20 15.5c-1.25 0-2.45-.2-3.57-.57a1.02 1.02 0 00-1.01.24l-2.2 2.2a15.05 15.05 0 01-6.59-6.59l2.2-2.21a.99.99 0 00.23-1c-.36-1.13-.56-2.32-.56-3.57 0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1 0 9.39 7.61 17 17 17 .55 0 1-.45 1-1v-3.5c0-.55-.45-1-1-1z"/></svg></button>
-        </div>
-    </header>
-
-    <main id="chatBox">
-        <div class="self-center bg-[#182229] text-[#8696a0] text-[11px] px-3 py-1 rounded-md mb-4 border border-gray-800">
-            Messages are end-to-end encrypted.
-        </div>
-    </main>
-
-    <footer class="footer">
-        <button onclick="document.getElementById('fileInput').click()" class="text-gray-400 p-1">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>
-        </button>
-        
-        <div class="input-pill">
-            <input type="text" id="chatInput" placeholder="Message" class="w-full bg-transparent outline-none text-sm py-2">
-            <div id="recIndicator"><span class="recording-dot"></span> 0:00</div>
-        </div>
-
-        <button id="mainAction" class="action-btn">
-            <svg id="micIcon" class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
-            <svg id="sendIcon" class="w-6 h-6 hidden" fill="currentColor" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
-        </button>
-    </footer>
-
-    <input type="file" id="fileInput" class="hidden" accept="image/*,application/pdf" onchange="processFile(this.files[0])">
-
-    <div id="home-view">
-        <div class="w-72 space-y-4">
-            <div class="text-center mb-8">
-                <h1 class="text-2xl font-bold">UniDesk</h1>
-                <p class="text-gray-500 text-xs tracking-widest uppercase">Privacy Focused</p>
-            </div>
-            <button onclick="createRoom()" class="w-full bg-gray-800 p-5 rounded-2xl font-bold uppercase text-xs tracking-widest">New Session</button>
-            <input type="text" id="roomCodeInput" placeholder="Enter Access Code" class="w-full bg-[#2a3942] p-4 rounded-xl text-center outline-none">
-            <button onclick="joinRoom()" class="w-full bg-blue-600 h-12 rounded-xl font-bold text-xs uppercase">Connect</button>
-        </div>
-    </div>
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, doc, setDoc, updateDoc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-        const firebaseConfig = { apiKey: "AIzaSyDbfmd0zmv_mFV0CG2OrhKPPeU3zPYGOBg", authDomain: "unidesk-a70ac.firebaseapp.com", projectId: "unidesk-a70ac" };
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        
-        let currentRoom, myId = "User-" + Math.floor(Math.random()*999), allMessages = [];
-        let mediaRecorder, audioChunks = [];
-
-        // UI Logic for Input Toggle
-        const chatInput = document.getElementById('chatInput');
-        const micIcon = document.getElementById('micIcon');
-        const sendIcon = document.getElementById('sendIcon');
-
-        chatInput.oninput = () => {
-            const hasVal = chatInput.value.trim().length > 0;
-            micIcon.classList.toggle('hidden', hasVal);
-            sendIcon.classList.toggle('hidden', !hasVal);
-        };
-
-        // WhatsApp Voice Recording (Hold to Record)
-        const mainAction = document.getElementById('mainAction');
-        const startRec = async (e) => {
-            if (chatInput.value.length > 0) return;
-            e.preventDefault();
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            mediaRecorder = new MediaRecorder(stream);
-            audioChunks = [];
-            mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-            mediaRecorder.onstop = async () => {
-                const reader = new FileReader();
-                reader.readAsDataURL(new Blob(audioChunks, { type: 'audio/mp4' }));
-                reader.onloadend = () => uploadMedia(reader.result, 'audio');
-            };
-            mediaRecorder.start();
-            document.getElementById('recIndicator').style.display = 'block';
-            chatInput.style.display = 'none';
-        };
-
-        const stopRec = () => {
-            if (mediaRecorder?.state === "recording") {
-                mediaRecorder.stop();
-                document.getElementById('recIndicator').style.display = 'none';
-                chatInput.style.display = 'block';
-            }
-        };
-
-        mainAction.addEventListener('mousedown', startRec);
-        mainAction.addEventListener('mouseup', stopRec);
-        mainAction.addEventListener('touchstart', startRec);
-        mainAction.addEventListener('touchend', stopRec);
-        mainAction.onclick = () => { if(chatInput.value.length > 0) sendMessage(); };
-
-        // Media Upload Logic
-        window.processFile = (file) => {
-            const reader = new FileReader();
-            reader.onload = (e) => uploadMedia(e.target.result, file.type.startsWith('image') ? 'image' : 'doc');
-            reader.readAsDataURL(file);
-        };
-
-        async function uploadMedia(data, type) {
-            allMessages.push({ id: Date.now().toString(), user: myId, data, type, time: Date.now() });
-            await updateDoc(doc(db, "rooms", currentRoom), { messages: allMessages });
-        }
-
-        function openWorkspace(code) {
-            currentRoom = code;
-            document.getElementById('home-view').classList.add('hidden');
-            
-            onSnapshot(doc(db, "rooms", code), (s) => {
-                const data = s.data(); if(!data) return;
-                allMessages = data.messages || [];
-                const chatBox = document.getElementById('chatBox');
-                const banner = chatBox.firstElementChild.outerHTML;
-                chatBox.innerHTML = banner;
-                
-                allMessages.forEach(m => {
-                    const div = document.createElement('div');
-                    div.className = `flex flex-col ${m.user === myId ? 'items-end' : 'items-start'}`;
-                    
-                    let inner = '';
-                    if (m.type === 'text') inner = `<div class="bubble ${m.user === myId ? 'bubble-me' : 'bubble-them'}">${m.text}</div>`;
-                    else if (m.type === 'image' || m.type === 'doc') inner = `<img src="${m.data}" class="media-content" onclick="this.classList.toggle('expanded')">`;
-                    else if (m.type === 'audio') inner = `<div class="bubble ${m.user === myId ? 'bubble-me' : 'bubble-them'}"><audio controls class="h-8 w-40 brightness-90"><source src="${m.data}"></audio></div>`;
-                    
-                    div.innerHTML = inner;
-                    chatBox.appendChild(div);
-                });
-                chatBox.scrollTop = chatBox.scrollHeight;
-            });
-        }
-
-        window.sendMessage = async () => {
-            const val = chatInput.value.trim(); if(!val) return;
-            allMessages.push({ id: Date.now().toString(), user: myId, text: val, type: 'text', time: Date.now() });
-            await updateDoc(doc(db, "rooms", currentRoom), { messages: allMessages });
-            chatInput.value = ""; chatInput.oninput();
-        };
-
-        window.createRoom = async () => {
+        try {
             const code = Math.random().toString(36).substring(2, 8).toUpperCase();
-            await setDoc(doc(db, "rooms", code), { messages: [], time: Date.now() });
+            const roomRef = doc(db, "rooms", code);
+            
+            // Initializing the document with an empty message array and metadata
+            await setDoc(roomRef, { 
+                messages: [], 
+                createdAt: Date.now(),
+                active: true 
+            });
+            
+            console.log("Room Created:", code);
             openWorkspace(code);
+        } catch (error) {
+            console.error("Setup Error:", error);
+            alert("Connection Failed. Ensure Firestore is in Test Mode.");
+            btn.innerText = originalText;
+            btn.disabled = false;
+        }
+    };
+
+    window.joinRoom = async () => {
+        const codeInput = document.getElementById('roomCodeInput');
+        const code = codeInput.value.trim().toUpperCase();
+        if(!code) return;
+
+        const snap = await getDoc(doc(db, "rooms", code));
+        if(snap.exists()) {
+            openWorkspace(code);
+        } else {
+            alert("Invalid Access Code");
+        }
+    };
+
+    function openWorkspace(code) {
+        currentRoom = code;
+        document.getElementById('home-view').classList.add('hidden');
+        document.getElementById('status-text').innerText = "Online - " + code;
+
+        // Real-time listener
+        onSnapshot(doc(db, "rooms", code), (s) => {
+            const data = s.data(); 
+            if(!data) return;
+            
+            allMessages = data.messages || [];
+            renderMessages();
+        });
+    }
+
+    function renderMessages() {
+        const chatBox = document.getElementById('chatBox');
+        // Keep the E2EE banner
+        const banner = `<div class="self-center bg-[#182229] text-[#8696a0] text-[11px] px-3 py-1 rounded-md mb-4 border border-gray-800">Messages are end-to-end encrypted.</div>`;
+        chatBox.innerHTML = banner;
+        
+        allMessages.forEach(m => {
+            const div = document.createElement('div');
+            div.className = `flex flex-col ${m.user === myId ? 'items-end' : 'items-start'}`;
+            
+            let inner = '';
+            if (m.type === 'text') {
+                inner = `<div class="bubble ${m.user === myId ? 'bubble-me' : 'bubble-them'}">${m.text}</div>`;
+            } else if (m.type === 'image' || m.type === 'doc') {
+                inner = `<img src="${m.data}" class="media-content" onclick="this.classList.toggle('expanded')">`;
+            } else if (m.type === 'audio') {
+                inner = `<div class="bubble ${m.user === myId ? 'bubble-me' : 'bubble-them'}">
+                            <audio controls class="h-8 w-40 brightness-90 invert"><source src="${m.data}"></audio>
+                         </div>`;
+            }
+            
+            div.innerHTML = inner;
+            chatBox.appendChild(div);
+        });
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    window.sendMessage = async () => {
+        const chatInput = document.getElementById('chatInput');
+        const val = chatInput.value.trim(); 
+        if(!val || !currentRoom) return;
+
+        const newMessage = { 
+            id: Date.now().toString(), 
+            user: myId, 
+            text: val, 
+            type: 'text', 
+            time: Date.now() 
         };
 
-        window.joinRoom = async () => {
-            const code = document.getElementById('roomCodeInput').value.toUpperCase();
-            const snap = await getDoc(doc(db, "rooms", code));
-            if(snap.exists()) openWorkspace(code);
-        };
-    </script>
-</body>
-</html>
+        allMessages.push(newMessage);
+        await updateDoc(doc(db, "rooms", currentRoom), { messages: allMessages });
+        
+        chatInput.value = ""; 
+        chatInput.dispatchEvent(new Event('input')); // Reset icons
+    }
+</script>
