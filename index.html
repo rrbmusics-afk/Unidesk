@@ -7,75 +7,78 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root { --accent: #007AFF; }
-        body { background: #000; color: #fff; font-family: -apple-system, BlinkMacSystemFont, sans-serif; height: 100dvh; overflow: hidden; position: fixed; width: 100vw; }
+        body { background: #000; color: #fff; font-family: -apple-system, BlinkMacSystemFont, sans-serif; height: 100dvh; overflow: hidden; position: fixed; width: 100vw; display: flex; flex-direction: column; }
         
-        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); }
+        /* Fixed Header (Old Style) */
+        .header { height: 64px; display: flex; items-center: center; justify-content: space-between; padding: 0 20px; background: rgba(10, 10, 10, 0.8); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255, 255, 255, 0.05); z-index: 100; shrink-0: 0; }
         
-        /* Message Bubbles & Photos */
-        .chat-img { border-radius: 14px; width: 110px; height: 110px; object-fit: cover; transition: all 0.4s ease; cursor: pointer; }
-        .chat-img.expanded { width: 85vw; height: auto; border-radius: 12px; }
+        /* Chat Area */
+        #chatBox { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 14px; scroll-behavior: smooth; }
 
-        .bubble { max-width: 82%; padding: 12px 16px; border-radius: 20px; font-size: 15px; position: relative; transition: opacity 0.2s; user-select: none; -webkit-user-select: none; }
+        /* Fixed Bottom Input */
+        .footer { background: #0a0a0a; border-top: 1px solid rgba(255,255,255,0.08); padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); z-index: 100; shrink-0: 0; }
+
+        /* Premium UI Elements */
+        .bubble { max-width: 82%; padding: 12px 16px; border-radius: 20px; font-size: 15px; position: relative; }
         .bubble-me { background: var(--accent); align-self: flex-end; border-bottom-right-radius: 4px; }
         .bubble-them { background: #262626; align-self: flex-start; border-bottom-left-radius: 4px; }
         
-        #chatBox { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+        .chat-img { border-radius: 14px; width: 115px; height: 115px; object-fit: cover; transition: 0.4s cubic-bezier(0.1, 1, 0.1, 1); cursor: pointer; }
+        .chat-img.expanded { width: 85vw; height: auto; border-radius: 12px; transform: scale(1.02); }
 
-        /* Context Menu (Edit/Delete) */
-        #contextMenu { 
-            position: fixed; background: #1c1c1e; border: 1px solid rgba(255,255,255,0.1); 
-            border-radius: 14px; display: none; flex-direction: column; z-index: 10000; 
-            width: 160px; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.5);
-        }
-        .menu-item { padding: 12px 16px; font-size: 14px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; }
-        .menu-item:last-child { border-bottom: none; color: #ff3b30; }
-        .menu-item:active { background: rgba(255,255,255,0.1); }
+        /* Context Menu */
+        #contextMenu { position: fixed; background: #1c1c1e; border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; display: none; flex-direction: column; z-index: 10000; width: 170px; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.7); }
+        .menu-item { padding: 14px 18px; font-size: 14px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .menu-item:last-child { border-bottom: none; color: #ff3b30; font-weight: 600; }
 
-        /* Persistent Input Logic */
-        .input-wrapper { background: #0a0a0a; border-top: 1px solid rgba(255,255,255,0.08); padding: 10px 12px calc(10px + env(safe-area-inset-bottom)); }
-        
-        button:active { transform: scale(0.9); }
+        button:active { transform: scale(0.92); }
     </style>
 </head>
 <body>
 
-    <nav id="navBar" class="h-16 flex items-center justify-between px-6 glass border-b border-white/5 shrink-0">
+    <header class="header">
         <div class="flex items-center gap-3">
-            <button onclick="exitWorkspace()" id="backBtn" class="hidden text-white/60"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg></button>
-            <div class="flex flex-col">
-                <span class="text-[10px] font-black tracking-widest text-blue-500 uppercase">UniDesk OS</span>
-                <span id="room-code-display" class="text-[13px] font-mono font-bold"></span>
+            <button onclick="exitTyping()" id="backBtn" class="hidden text-white/50 p-1"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="3" d="M15 19l-7-7 7-7"/></svg></button>
+            <div class="flex flex-col justify-center">
+                <span class="text-[9px] font-black tracking-[0.2em] uppercase text-blue-500">Aethercore UniDesk</span>
+                <span id="room-code-display" class="text-[13px] font-mono font-bold tracking-widest text-white/90"></span>
             </div>
         </div>
-    </nav>
+        <div class="flex items-center gap-2">
+            <div class="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_#22c55e]"></div>
+            <span class="text-[10px] font-bold text-white/40 uppercase tracking-tighter">Secure</span>
+        </div>
+    </header>
 
-    <div id="workspace-view" class="flex-grow flex flex-col w-full relative">
-        <div id="chatBox"></div>
-        
-        <div class="input-wrapper">
-            <div class="flex items-center gap-3">
-                <button onclick="document.getElementById('fileInput').click()" class="bg-white/5 rounded-full w-10 h-10 text-white/40 flex items-center justify-center"><svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg></button>
-                <div class="flex-grow bg-white/5 border border-white/10 rounded-2xl px-4 flex items-center h-12">
-                    <input type="text" id="chatInput" placeholder="Message" class="w-full bg-transparent py-2 text-sm outline-none text-white">
-                </div>
-                <button id="actionBtn" class="bg-blue-600 rounded-full w-12 h-12 text-white flex items-center justify-center">
-                    <svg id="micIcon" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4m-4 0h8"/></svg>
-                    <svg id="sendIcon" class="hidden w-5 h-5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
-                </button>
+    <main id="chatBox"></main>
+
+    <footer class="footer">
+        <div class="flex items-center gap-3 max-w-4xl mx-auto">
+            <button onclick="document.getElementById('fileInput').click()" class="bg-white/5 rounded-full w-10 h-10 text-white/40 flex items-center justify-center shrink-0"><svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg></button>
+            
+            <div class="flex-grow bg-white/5 border border-white/10 rounded-2xl px-4 flex items-center h-12">
+                <input type="text" id="chatInput" placeholder="Message" 
+                       onfocus="document.getElementById('backBtn').classList.remove('hidden')"
+                       class="w-full bg-transparent py-2 text-sm outline-none text-white">
             </div>
-            <input type="file" id="fileInput" class="hidden" accept="image/*" onchange="processFile(this.files[0])">
+
+            <button id="actionBtn" class="bg-blue-600 rounded-full w-12 h-12 text-white flex items-center justify-center shrink-0">
+                <svg id="micIcon" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4m-4 0h8"/></svg>
+                <svg id="sendIcon" class="hidden w-5 h-5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
+            </button>
         </div>
-    </div>
+        <input type="file" id="fileInput" class="hidden" accept="image/*" onchange="processFile(this.files[0])">
+    </footer>
 
     <div id="contextMenu">
         <div class="menu-item" onclick="initEdit()">Edit</div>
         <div class="menu-item" onclick="deleteForEveryone()">Delete for Everyone</div>
     </div>
 
-    <div id="home-view" class="absolute inset-0 bg-black z-50 flex flex-col items-center justify-center p-8">
-         <button onclick="createRoom()" class="w-64 bg-white/5 border border-white/10 py-12 rounded-[2.5rem] font-bold text-[10px] tracking-widest uppercase mb-6">Create Session</button>
-         <input type="text" id="roomCodeInput" placeholder="CODE" class="w-64 bg-black/40 p-5 rounded-xl text-center font-mono text-blue-400 outline-none border border-white/5 mb-4">
-         <button onclick="joinRoom()" class="w-64 bg-blue-600 h-14 rounded-xl font-bold text-xs uppercase">Join</button>
+    <div id="home-view" class="fixed inset-0 bg-black z-[200] flex flex-col items-center justify-center p-8">
+         <button onclick="createRoom()" class="w-64 bg-white/5 border border-white/10 py-14 rounded-[2.5rem] font-bold text-[10px] tracking-widest uppercase mb-6 text-white/50">New Workspace</button>
+         <input type="text" id="roomCodeInput" placeholder="ACCESS CODE" class="w-64 bg-black/40 p-5 rounded-xl text-center font-mono text-blue-400 outline-none border border-white/5 mb-4">
+         <button onclick="joinRoom()" class="w-64 bg-blue-600 h-14 rounded-xl font-bold text-xs uppercase tracking-widest">Connect</button>
     </div>
 
     <script type="module">
@@ -87,56 +90,42 @@
         const db = getFirestore(app);
         
         let currentRoom, myId = "User-" + Math.floor(Math.random()*999), allMessages = [];
-        let mediaRecorder, audioChunks = [], selectedMsgId = null;
+        let pressTimer, selectedMsgId = null;
 
-        // --- LONG PRESS LOGIC (CONTEXT MENU) ---
-        let pressTimer;
-        const chatBox = document.getElementById('chatBox');
-
-        window.handleLongPressStart = (id, user) => {
-            if(user !== myId) return; // Only owner can edit/delete
-            pressTimer = window.setTimeout(() => {
-                selectedMsgId = id;
-                const menu = document.getElementById('contextMenu');
-                menu.style.display = 'flex';
-                menu.style.left = '50%';
-                menu.style.top = '50%';
-                menu.style.transform = 'translate(-50%, -50%)';
-            }, 600);
+        // Sticky Keyboard Logic
+        window.exitTyping = () => {
+            const input = document.getElementById('chatInput');
+            input.blur();
+            document.getElementById('backBtn').classList.add('hidden');
         };
 
-        window.handleLongPressEnd = () => clearTimeout(pressTimer);
-        document.addEventListener('click', () => document.getElementById('contextMenu').style.display = 'none');
+        // Long Press Handler
+        window.handlePress = (id, user, isStart) => {
+            if (user !== myId) return;
+            if (isStart) {
+                pressTimer = setTimeout(() => {
+                    selectedMsgId = id;
+                    const menu = document.getElementById('contextMenu');
+                    menu.style.display = 'flex';
+                    menu.style.left = '50%'; menu.style.top = '50%';
+                    menu.style.transform = 'translate(-50%, -50%)';
+                }, 600);
+            } else clearTimeout(pressTimer);
+        };
 
+        document.addEventListener('click', (e) => {
+            if(!e.target.closest('.bubble')) document.getElementById('contextMenu').style.display = 'none';
+        });
+
+        // Delete Logic
         window.deleteForEveryone = async () => {
             allMessages = allMessages.filter(m => m.id !== selectedMsgId);
             await updateDoc(doc(db, "rooms", currentRoom), { messages: allMessages });
+            document.getElementById('contextMenu').style.display = 'none';
         };
 
-        window.initEdit = () => {
-            const msg = allMessages.find(m => m.id === selectedMsgId);
-            if(msg && msg.type === 'text') {
-                const input = document.getElementById('chatInput');
-                input.value = msg.text;
-                input.focus();
-                // Flag to handle update instead of new send
-                input.dataset.editing = selectedMsgId;
-            }
-        };
-
-        // --- PERSISTENT KEYBOARD LOGIC ---
+        // Photo / Message Logic
         const chatInput = document.getElementById('chatInput');
-        chatInput.addEventListener('focus', () => {
-            document.getElementById('backBtn').classList.remove('hidden');
-        });
-
-        window.exitWorkspace = () => {
-            chatInput.blur();
-            document.getElementById('backBtn').classList.add('hidden');
-            // If we are deep in typing mode, this resets the "typing lock"
-        };
-
-        // --- MEDIA & SEND LOGIC ---
         chatInput.oninput = () => {
             const hasText = chatInput.value.trim().length > 0;
             document.getElementById('micIcon').classList.toggle('hidden', hasText);
@@ -146,18 +135,9 @@
         window.sendMessage = async () => {
             const val = chatInput.value.trim();
             if (!val) return;
-
-            if(chatInput.dataset.editing) {
-                const idx = allMessages.findIndex(m => m.id === chatInput.dataset.editing);
-                allMessages[idx].text = val;
-                delete chatInput.dataset.editing;
-            } else {
-                allMessages.push({ id: Date.now().toString(), user: myId, text: val, type: 'text', time: Date.now() });
-            }
-
+            allMessages.push({ id: Date.now().toString(), user: myId, text: val, type: 'text', time: Date.now() });
             await updateDoc(doc(db, "rooms", currentRoom), { messages: allMessages });
             chatInput.value = ""; chatInput.oninput();
-            chatInput.focus(); // Keep keyboard open
         };
 
         document.getElementById('actionBtn').onclick = () => {
@@ -165,7 +145,6 @@
         };
 
         window.processFile = async (file) => {
-            if (!file) return;
             const reader = new FileReader();
             reader.onload = async (e) => {
                 allMessages.push({ id: Date.now().toString(), user: myId, data: e.target.result, type: 'image', time: Date.now() });
@@ -174,7 +153,7 @@
             reader.readAsDataURL(file);
         };
 
-        // --- UI SYNC ---
+        // Sync Workspace
         function openWorkspace(code) {
             currentRoom = code;
             document.getElementById('home-view').classList.add('hidden');
@@ -183,21 +162,16 @@
             onSnapshot(doc(db, "rooms", code), (s) => {
                 const data = s.data(); if(!data) return;
                 allMessages = data.messages || [];
+                const chatBox = document.getElementById('chatBox');
                 chatBox.innerHTML = '';
                 
                 allMessages.forEach(m => {
                     const div = document.createElement('div');
                     div.className = `flex flex-col ${m.user === myId ? 'items-end' : 'items-start'}`;
-                    
-                    let body = m.type === 'image' ? `<img src="${m.data}" class="chat-img" onclick="this.classList.toggle('expanded')">` : 
-                               m.type === 'audio' ? `<audio controls class="h-8 w-48 scale-90 origin-left"><source src="${m.data}"></audio>` : 
-                               `<span>${m.text}</span>`;
-                    
+                    let body = m.type === 'image' ? `<img src="${m.data}" class="chat-img" onclick="this.classList.toggle('expanded')">` : `<span>${m.text}</span>`;
                     div.innerHTML = `<div class="bubble ${m.user === myId ? 'bubble-me' : 'bubble-them'}" 
-                                     ontouchstart="handleLongPressStart('${m.id}', '${m.user}')" 
-                                     ontouchend="handleLongPressEnd()" 
-                                     onmousedown="handleLongPressStart('${m.id}', '${m.user}')" 
-                                     onmouseup="handleLongPressEnd()">${body}</div>`;
+                                     onmousedown="handlePress('${m.id}', '${m.user}', true)" onmouseup="handlePress(null, null, false)"
+                                     ontouchstart="handlePress('${m.id}', '${m.user}', true)" ontouchend="handlePress(null, null, false)">${body}</div>`;
                     chatBox.appendChild(div);
                 });
                 chatBox.scrollTop = chatBox.scrollHeight;
