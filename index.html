@@ -6,56 +6,67 @@
     <title>UniDesk | Private Workspace</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background: #050505; color: #e5e5e5; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; overflow-x: hidden; }
-        .glass { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); backdrop-filter: blur(12px); }
-        .btn-blue { background: #007AFF; transition: all 0.2s ease; }
-        .btn-blue:hover { background: #0056b3; transform: translateY(-1px); }
+        body { background: #050505; color: #e5e5e5; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; overflow: hidden; }
+        .glass { background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08); backdrop-filter: blur(20px); }
+        .btn-blue { background: #007AFF; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .btn-blue:hover { background: #0056b3; transform: translateY(-1px); box-shadow: 0 10px 20px -10px rgba(0, 122, 255, 0.5); }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
     </style>
 </head>
-<body class="flex flex-col min-h-screen">
+<body class="flex flex-col h-screen">
 
-    <nav class="p-5 border-b border-white/10 flex justify-between items-center glass sticky top-0 z-50">
-        <div class="flex items-center gap-2">
-            <div class="w-3 h-3 bg-blue-500 rounded-full animate-pulse"></div>
-            <h1 class="text-lg font-bold tracking-tight text-white">UniDesk <span class="text-[10px] text-blue-400 border border-blue-400/30 px-2 py-0.5 rounded-full ml-1 uppercase">Aethercore</span></h1>
+    <div id="toast-container" class="fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] flex flex-col gap-3"></div>
+
+    <nav class="p-5 border-b border-white/5 flex justify-between items-center glass z-50">
+        <div class="flex items-center gap-3">
+            <div class="w-2 h-2 bg-blue-500 rounded-full animate-pulse shadow-[0_0_10px_#007AFF]"></div>
+            <h1 class="text-sm font-black tracking-[0.3em] uppercase text-white">UniDesk</h1>
         </div>
+        <div class="text-[10px] text-white/30 font-mono">AETHERCORE OS v1.0</div>
     </nav>
 
-    <main class="flex-grow flex flex-col items-center justify-center p-4" id="app">
+    <main class="flex-grow flex items-center justify-center p-6 relative">
         
-        <div id="home-view" class="grid md:grid-cols-2 gap-6 max-w-4xl w-full">
-            <div onclick="createRoom()" class="glass p-10 rounded-[2rem] cursor-pointer hover:border-white/20 transition-all group">
-                <div class="w-12 h-12 bg-blue-500/10 rounded-2xl flex items-center justify-center mb-6">
-                    <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+        <div id="home-view" class="grid md:grid-cols-2 gap-8 max-w-5xl w-full">
+            <div onclick="createRoom()" class="glass p-12 rounded-[2.5rem] cursor-pointer hover:border-white/20 transition-all group">
+                <div class="text-blue-500 mb-6 group-hover:scale-110 transition-transform">
+                    <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4" stroke-width="1.5"/></svg>
                 </div>
-                <h3 class="text-2xl font-semibold mb-2 text-white">Create Workspace</h3>
-                <p class="text-white/40 leading-relaxed">Start a new private session with a 6-digit code.</p>
+                <h3 class="text-2xl font-light text-white mb-2">Initialize Workspace</h3>
+                <p class="text-white/30 text-sm leading-relaxed">Secure a new encrypted channel for private collaboration.</p>
             </div>
             
-            <div class="glass p-10 rounded-[2rem]">
-                <h3 class="text-2xl font-semibold mb-4 text-white">Join Workspace</h3>
-                <input type="text" id="roomCodeInput" maxlength="6" placeholder="CODE" class="w-full bg-white/5 p-4 rounded-2xl border border-white/10 mb-4 text-center text-2xl font-mono tracking-widest uppercase text-blue-400 focus:outline-none focus:border-blue-500">
-                <button onclick="joinRoom()" class="w-full btn-blue p-4 rounded-2xl font-bold text-white shadow-lg shadow-blue-500/20">Request Entry</button>
+            <div class="glass p-12 rounded-[2.5rem]">
+                <h3 class="text-2xl font-light text-white mb-6">Join Session</h3>
+                <input type="text" id="roomCodeInput" maxlength="6" placeholder="ACCESS CODE" class="w-full bg-white/[0.03] p-5 rounded-2xl border border-white/10 mb-5 text-center text-xl font-mono tracking-[0.5em] uppercase text-blue-400 focus:outline-none focus:border-blue-500/50">
+                <button onclick="joinRoom()" class="w-full btn-blue p-5 rounded-2xl font-bold text-xs uppercase tracking-widest text-white">Request Clearance</button>
             </div>
         </div>
 
-        <div id="workspace-view" class="hidden w-full max-w-6xl">
-            <div class="flex flex-col md:flex-row gap-6">
-                <div class="w-full md:w-72">
-                    <div class="glass p-6 rounded-[2rem] mb-4">
-                        <h4 class="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] mb-4">Code</h4>
-                        <div id="roomID" class="bg-blue-500/10 p-4 rounded-2xl text-blue-400 font-mono text-center text-2xl font-bold border border-blue-500/20">------</div>
-                    </div>
-                    <div id="adminControls" class="hidden glass p-6 rounded-[2rem]">
-                        <h4 class="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] mb-4">Requests</h4>
-                        <div id="requestList" class="space-y-3"></div>
-                    </div>
+        <div id="workspace-view" class="hidden w-full max-w-7xl h-[80vh] flex gap-6">
+            <div class="w-80 flex flex-col gap-4">
+                <div class="glass p-8 rounded-[2rem]">
+                    <span class="text-[10px] font-bold text-white/20 uppercase tracking-widest block mb-4">Active Channel</span>
+                    <div id="roomID" class="text-3xl font-mono text-white tracking-tighter">------</div>
                 </div>
-                <div class="flex-grow glass p-10 rounded-[2rem] min-h-[50vh]">
-                    <h2 class="text-3xl font-bold text-white mb-6">Private Desk Active</h2>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="bg-white/5 p-6 rounded-2xl border border-white/5 italic text-white/40">Secure workspace ready...</div>
-                    </div>
+                <div id="adminControls" class="hidden glass p-8 rounded-[2rem] flex-grow overflow-hidden flex flex-col">
+                    <span class="text-[10px] font-bold text-white/20 uppercase tracking-widest block mb-4">Entry Queue</span>
+                    <div id="requestList" class="space-y-3 overflow-y-auto"></div>
+                </div>
+            </div>
+
+            <div class="flex-grow glass rounded-[2.5rem] flex flex-col overflow-hidden">
+                <div class="p-6 border-b border-white/5 flex justify-between items-center bg-white/[0.01]">
+                    <div class="text-xs font-bold text-white/50 uppercase">Secure Chat</div>
+                    <button onclick="location.reload()" class="text-[10px] text-white/20 hover:text-white uppercase">Terminate</button>
+                </div>
+                <div id="chatBox" class="flex-grow p-8 overflow-y-auto space-y-4 text-sm">
+                    <div class="text-white/20 italic text-center text-xs">End-to-end encryption active.</div>
+                </div>
+                <div class="p-6 bg-white/[0.02] flex gap-4">
+                    <input type="text" id="chatInput" placeholder="Message workspace..." class="flex-grow bg-white/5 p-4 rounded-xl border border-white/10 focus:outline-none focus:border-blue-500/50">
+                    <button onclick="sendMessage()" class="btn-blue px-8 rounded-xl font-bold text-xs uppercase">Send</button>
                 </div>
             </div>
         </div>
@@ -77,11 +88,22 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        let currentRoom = null;
+
+        // Custom Professional Notification
+        window.notify = (msg, type = "info") => {
+            const toast = document.createElement('div');
+            toast.className = `glass px-6 py-3 rounded-full text-xs font-medium border-l-4 ${type === 'err' ? 'border-red-500' : 'border-blue-500'} animate-bounce`;
+            toast.innerText = msg;
+            document.getElementById('toast-container').appendChild(toast);
+            setTimeout(() => toast.remove(), 4000);
+        };
 
         window.createRoom = async () => {
             const code = Math.random().toString(36).substring(2, 8).toUpperCase();
-            await setDoc(doc(db, "rooms", code), { status: "active", requests: [] });
+            await setDoc(doc(db, "rooms", code), { status: "active", requests: [], messages: [] });
             openWorkspace(code, true);
+            notify("Workspace Initialized");
         };
 
         window.joinRoom = async () => {
@@ -90,31 +112,50 @@
             const snap = await getDoc(roomRef);
             if (snap.exists()) {
                 await updateDoc(roomRef, { requests: arrayUnion(`User-${Math.floor(Math.random()*999)}`) });
-                alert("Knock sent!");
-            } else { alert("Code not found."); }
+                notify("Clearance Requested. Awaiting Admin.");
+            } else { notify("Invalid Access Code", "err"); }
         };
 
         function openWorkspace(code, isAdmin) {
+            currentRoom = code;
             document.getElementById('home-view').classList.add('hidden');
-            document.getElementById('workspace-view').classList.remove('hidden');
+            document.getElementById('workspace-view').classList.replace('hidden', 'flex');
             document.getElementById('roomID').innerText = code;
-            if(isAdmin) {
-                document.getElementById('adminControls').classList.remove('hidden');
-                onSnapshot(doc(db, "rooms", code), (s) => {
-                    const data = s.data();
-                    const list = document.getElementById('requestList');
-                    list.innerHTML = "";
-                    if(data.requests?.length) {
-                        data.requests.forEach(r => {
-                            list.innerHTML += `<div class="bg-blue-600/20 p-3 rounded-xl flex justify-between items-center text-xs border border-blue-500/30">
-                                <span>${r}</span>
-                                <button onclick="alert('Accepted')" class="bg-blue-600 px-2 py-1 rounded-lg">Allow</button>
-                            </div>`;
-                        });
-                    } else { list.innerHTML = "<p class='text-white/20 text-center text-xs'>No knocks yet</p>"; }
+            
+            if(isAdmin) document.getElementById('adminControls').classList.remove('hidden');
+
+            onSnapshot(doc(db, "rooms", code), (s) => {
+                const data = s.data();
+                // Handle Requests
+                const list = document.getElementById('requestList');
+                list.innerHTML = "";
+                data.requests?.forEach(r => {
+                    list.innerHTML += `<div class="bg-white/5 p-4 rounded-2xl flex justify-between items-center border border-white/5">
+                        <span class="text-[10px] font-mono text-white/50">${r}</span>
+                        <button onclick="notify('User Authorized')" class="bg-blue-600 text-[9px] font-black px-3 py-1 rounded-lg uppercase">Allow</button>
+                    </div>`;
                 });
-            }
+
+                // Handle Chat
+                const chat = document.getElementById('chatBox');
+                chat.innerHTML = data.messages?.map(m => `
+                    <div class="flex flex-col ${m.user === 'Admin' ? 'items-end' : 'items-start'}">
+                        <span class="text-[9px] text-white/20 mb-1 uppercase tracking-widest">${m.user}</span>
+                        <div class="bg-white/5 px-4 py-2 rounded-2xl border border-white/5 max-w-[80%]">${m.text}</div>
+                    </div>
+                `).join('') || "";
+                chat.scrollTop = chat.scrollHeight;
+            });
         }
+
+        window.sendMessage = async () => {
+            const input = document.getElementById('chatInput');
+            if(!input.value) return;
+            await updateDoc(doc(db, "rooms", currentRoom), {
+                messages: arrayUnion({ user: "Admin", text: input.value, time: Date.now() })
+            });
+            input.value = "";
+        };
     </script>
 </body>
 </html>
