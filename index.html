@@ -13,8 +13,10 @@
             overflow: hidden; position: fixed; 
         }
         .glass { background: rgba(255, 255, 255, 0.03); border-bottom: 1px solid rgba(255, 255, 255, 0.08); backdrop-filter: blur(20px); }
+        
+        /* 1) Buffer ensures messages are never hidden by the bar */
         #chatBox { 
-            flex: 1; overflow-y: auto; padding: 16px; padding-bottom: 100px; 
+            flex: 1; overflow-y: auto; padding: 16px; padding-bottom: 120px; 
             display: flex; flex-direction: column; gap: 10px; -webkit-overflow-scrolling: touch; 
         }
         .input-container { 
@@ -26,26 +28,25 @@
         .bubble-me { background: var(--accent); align-self: flex-end; border-bottom-right-radius: 4px; }
         .bubble-them { background: #262626; align-self: flex-start; border-bottom-left-radius: 4px; }
         
-        /* WhatsApp Style Small Image Preview */
         .chat-img { 
-            border-radius: 12px; 
-            margin: 4px 0; 
-            width: 200px; /* Small fixed width like WhatsApp */
-            height: 200px; 
-            object-fit: cover; /* Keeps it square and neat */
-            display: block; 
-            border: 1px solid rgba(255,255,255,0.1);
-            cursor: pointer;
-            transition: transform 0.2s;
+            border-radius: 12px; margin: 4px 0; width: 220px; height: 220px; 
+            object-fit: cover; display: block; cursor: pointer;
+            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* Full Screen Zoom Overlay */
+        /* 2) Smooth Zoom Animation */
         .img-overlay {
             position: fixed; top:0; left:0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.95); z-index: 200;
+            background: rgba(0,0,0,0.9); z-index: 200;
             display: none; align-items: center; justify-content: center;
+            opacity: 0; transition: opacity 0.3s ease;
         }
-        .img-overlay img { max-width: 95%; max-height: 90%; object-fit: contain; }
+        .img-overlay.active { display: flex; opacity: 1; }
+        .img-overlay img { 
+            max-width: 95%; max-height: 90%; object-fit: contain; 
+            transform: scale(0.8); transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .img-overlay.active img { transform: scale(1); }
 
         audio { height: 35px; width: 210px; filter: invert(1); margin-top: 5px; }
         .btn-active:active { transform: scale(0.92); opacity: 0.8; }
@@ -53,7 +54,7 @@
 </head>
 <body>
 
-    <div id="imageOverlay" class="img-overlay" onclick="this.style.display='none'">
+    <div id="imageOverlay" class="img-overlay" onclick="closeZoom()">
         <img id="overlayImg" src="">
     </div>
 
@@ -87,16 +88,16 @@
         <div id="chatBox"></div>
         <div class="input-container">
             <div class="flex items-center gap-2">
-                <button onclick="document.getElementById('fileInput').click()" class="p-3 bg-white/5 rounded-full text-white/40 btn-active">
+                <button onmousedown="event.preventDefault()" onclick="document.getElementById('fileInput').click()" class="p-3 bg-white/5 rounded-full text-white/40 btn-active">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4" stroke-width="2"/></svg>
                 </button>
                 <div class="flex-grow bg-white/5 border border-white/10 rounded-full px-4 py-1 flex items-center">
                     <input type="text" id="chatInput" placeholder="Message" class="w-full bg-transparent py-2.5 text-sm outline-none">
-                    <button id="micBtn" onclick="toggleRecording()" class="ml-2 text-white/40 btn-active">
+                    <button id="micBtn" onmousedown="event.preventDefault()" onclick="toggleRecording()" class="ml-2 text-white/40 btn-active">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" stroke-width="2"/></svg>
                     </button>
                 </div>
-                <button onclick="sendMessage()" class="p-3.5 bg-blue-600 rounded-full text-white shadow-lg btn-active">
+                <button onmousedown="event.preventDefault()" onclick="sendMessage()" class="p-3.5 bg-blue-600 rounded-full text-white shadow-lg btn-active">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="3"/></svg>
                 </button>
             </div>
@@ -119,16 +120,23 @@
         let currentRoom, myId = "User-" + Math.floor(Math.random()*999), mediaRecorder, chunks = [];
 
         window.zoomImage = (src) => {
+            const overlay = document.getElementById('imageOverlay');
             document.getElementById('overlayImg').src = src;
-            document.getElementById('imageOverlay').style.display = 'flex';
+            overlay.style.display = 'flex';
+            setTimeout(() => overlay.classList.add('active'), 10);
+        };
+
+        window.closeZoom = () => {
+            const overlay = document.getElementById('imageOverlay');
+            overlay.classList.remove('active');
+            setTimeout(() => overlay.style.display = 'none', 300);
         };
 
         window.createRoom = async () => {
             const code = Math.random().toString(36).substring(2, 8).toUpperCase();
             try {
                 await setDoc(doc(db, "rooms", code), { messages: [], time: Date.now() });
-                myId = "Admin"; 
-                openWorkspace(code);
+                myId = "Admin"; openWorkspace(code);
             } catch (e) { alert("DATABASE ERROR: " + e.message); }
         };
 
@@ -179,7 +187,6 @@
             document.getElementById('home-view').classList.add('hidden');
             document.getElementById('workspace-view').classList.replace('hidden', 'flex');
             document.getElementById('room-code-display').innerText = code;
-            document.getElementById('status-text').innerText = "SESSION ACTIVE";
             
             onSnapshot(doc(db, "rooms", code), (s) => {
                 const data = s.data();
@@ -201,10 +208,12 @@
         window.sendMessage = async () => {
             const i = document.getElementById('chatInput');
             if(!i.value || !currentRoom) return;
+            const text = i.value;
+            i.value = ""; // Clear immediately for speed
+            i.focus(); // Keep keyboard up
             await updateDoc(doc(db, "rooms", currentRoom), { 
-                messages: arrayUnion({ user: myId, text: i.value, type: 'text', time: Date.now() }) 
+                messages: arrayUnion({ user: myId, text: text, type: 'text', time: Date.now() }) 
             });
-            i.value = "";
         };
     </script>
 </body>
