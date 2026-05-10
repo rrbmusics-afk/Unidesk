@@ -64,28 +64,52 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // --- CORE LOGIC ---
+                // --- THIS PART MAKES THE "KNOCKING" WORK ---
         window.createRoom = async () => {
             const code = Math.random().toString(36).substring(2, 8).toUpperCase();
-            await setDoc(doc(db, "rooms", code), {
-                admin: "Me",
-                members: ["Me"],
-                pending: [],
-                createdAt: new Date()
+            const roomRef = doc(db, "rooms", code);
+            await setDoc(roomRef, {
+                status: "active",
+                requests: []
             });
             openWorkspace(code, true);
         };
 
-        window.joinRoom = () => {
-            const code = document.getElementById('roomCodeInput').value;
-            // Logic to send join request would go here
-            alert("Request sent! Friend must approve you.");
+        window.joinRoom = async () => {
+            const code = document.getElementById('roomCodeInput').value.toUpperCase();
+            if(!code) return alert("Please enter a 6-digit code!");
+            
+            const roomRef = doc(db, "rooms", code);
+            // This sends a "Knock" to your database so you can see it
+            await updateDoc(roomRef, {
+                requests: arrayUnion("New Friend Request")
+            });
+            alert("Knock sent! Your friend needs to click 'Approve' on their screen.");
         };
 
         function openWorkspace(code, isAdmin) {
             document.getElementById('home-view').classList.add('hidden');
             document.getElementById('workspace-view').classList.remove('hidden');
             document.getElementById('roomID').innerText = code;
+
+            if(isAdmin) {
+                document.getElementById('adminControls').classList.remove('hidden');
+                // This 'Listens' for your friends knocking in real-time
+                onSnapshot(doc(db, "rooms", code), (snapshot) => {
+                    const data = snapshot.data();
+                    const list = document.getElementById('requestList');
+                    list.innerHTML = ""; 
+                    if(data.requests) {
+                        data.requests.forEach(req => {
+                            list.innerHTML += `
+                                <div class="bg-blue-600/20 p-2 rounded flex justify-between items-center text-xs border border-blue-500/30">
+                                    <span>${req}</span>
+                                    <button onclick="alert('Access Granted!')" class="bg-blue-600 px-2 py-1 rounded font-bold">Approve</button>
+                                </div>`;
+                        });
+                    }
+                });
+            }
         }
     </script>
 </body>
