@@ -2,79 +2,80 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UniDesk | Private Workspace</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>UniDesk | Mobile</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background: #050505; color: #e5e5e5; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; overflow: hidden; }
+        body { background: #050505; color: #e5e5e5; font-family: -apple-system, system-ui, sans-serif; overflow: hidden; position: fixed; width: 100%; height: 100%; }
         .glass { background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08); backdrop-filter: blur(20px); }
-        .btn-blue { background: #007AFF; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .btn-blue:hover { background: #0056b3; transform: translateY(-1px); box-shadow: 0 10px 20px -10px rgba(0, 122, 255, 0.5); }
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+        .btn-blue { background: #007AFF; transition: all 0.2s ease; }
+        .btn-blue:active { transform: scale(0.96); opacity: 0.8; }
+        .sidebar-hidden { transform: translateX(-100%); }
+        .sidebar-visible { transform: translateX(0); }
+        input, button { -webkit-appearance: none; border-radius: 12px; }
     </style>
 </head>
-<body class="flex flex-col h-screen">
+<body class="flex flex-col h-full">
 
-    <div id="toast-container" class="fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] flex flex-col gap-3"></div>
+    <div id="toast-container" class="fixed top-20 left-1/2 -translate-x-1/2 z-[100] flex flex-col gap-2 w-[90%]"></div>
 
-    <nav class="p-5 border-b border-white/5 flex justify-between items-center glass z-50">
+    <nav class="p-4 border-b border-white/5 flex justify-between items-center glass z-50">
         <div class="flex items-center gap-3">
-            <div class="w-2 h-2 bg-blue-500 rounded-full animate-pulse shadow-[0_0_10px_#007AFF]"></div>
-            <h1 class="text-sm font-black tracking-[0.3em] uppercase text-white">UniDesk</h1>
+            <button id="menu-btn" onclick="toggleSidebar()" class="hidden p-2 -ml-2 text-white/50">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+            </button>
+            <h1 class="text-xs font-black tracking-[0.2em] uppercase">UniDesk</h1>
         </div>
-        <div class="text-[10px] text-white/30 font-mono">AETHERCORE OS v1.0</div>
+        <div id="status-dot" class="w-2 h-2 bg-white/10 rounded-full"></div>
     </nav>
 
-    <main class="flex-grow flex items-center justify-center p-6 relative">
+    <main class="flex-grow flex items-center justify-center p-4 relative overflow-hidden">
         
-        <div id="home-view" class="grid md:grid-cols-2 gap-8 max-w-5xl w-full">
-            <div onclick="createRoom()" class="glass p-12 rounded-[2.5rem] cursor-pointer hover:border-white/20 transition-all group">
-                <div class="text-blue-500 mb-6 group-hover:scale-110 transition-transform">
-                    <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4" stroke-width="1.5"/></svg>
-                </div>
-                <h3 class="text-2xl font-light text-white mb-2">Initialize Workspace</h3>
-                <p class="text-white/30 text-sm leading-relaxed">Secure a new encrypted channel for private collaboration.</p>
+        <div id="home-view" class="flex flex-col gap-4 w-full max-w-sm">
+            <div onclick="createRoom()" class="glass p-8 rounded-[2rem] text-center active:bg-white/5 transition-colors">
+                <div class="text-blue-500 flex justify-center mb-4"><svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4" stroke-width="2"/></svg></div>
+                <h3 class="text-xl font-medium text-white mb-1">Create Desk</h3>
+                <p class="text-white/30 text-xs uppercase tracking-tighter">New Encrypted Session</p>
             </div>
             
-            <div class="glass p-12 rounded-[2.5rem]">
-                <h3 class="text-2xl font-light text-white mb-6">Join Session</h3>
-                <input type="text" id="roomCodeInput" maxlength="6" placeholder="ACCESS CODE" class="w-full bg-white/[0.03] p-5 rounded-2xl border border-white/10 mb-5 text-center text-xl font-mono tracking-[0.5em] uppercase text-blue-400 focus:outline-none focus:border-blue-500/50">
-                <button onclick="joinRoom()" class="w-full btn-blue p-5 rounded-2xl font-bold text-xs uppercase tracking-widest text-white">Request Clearance</button>
+            <div class="glass p-8 rounded-[2rem]">
+                <input type="text" id="roomCodeInput" maxlength="6" placeholder="ENTER CODE" class="w-full bg-white/[0.04] p-4 rounded-xl border border-white/10 mb-3 text-center font-mono tracking-[0.3em] text-blue-400 focus:outline-none">
+                <button onclick="joinRoom()" class="w-full btn-blue p-4 rounded-xl font-bold text-[10px] uppercase tracking-widest text-white">Join Workspace</button>
             </div>
         </div>
 
-        <div id="workspace-view" class="hidden w-full max-w-7xl h-[80vh] flex gap-6">
-            <div class="w-80 flex flex-col gap-4">
-                <div class="glass p-8 rounded-[2rem]">
-                    <span class="text-[10px] font-bold text-white/20 uppercase tracking-widest block mb-4">Active Channel</span>
-                    <div id="roomID" class="text-3xl font-mono text-white tracking-tighter">------</div>
+        <div id="sidebar" class="fixed inset-0 z-40 sidebar-hidden transition-transform duration-300 pointer-events-none">
+            <div class="w-72 h-full glass border-r border-white/10 p-6 pointer-events-auto flex flex-col gap-6 shadow-2xl">
+                <div>
+                    <span class="text-[10px] font-bold text-white/20 uppercase tracking-widest block mb-4">Workspace Code</span>
+                    <div id="roomID" class="text-2xl font-mono text-blue-400 tracking-widest bg-white/5 p-4 rounded-2xl text-center">------</div>
                 </div>
-                <div id="adminControls" class="hidden glass p-8 rounded-[2rem] flex-grow overflow-hidden flex flex-col">
-                    <span class="text-[10px] font-bold text-white/20 uppercase tracking-widest block mb-4">Entry Queue</span>
-                    <div id="requestList" class="space-y-3 overflow-y-auto"></div>
+                <div id="adminControls" class="hidden flex-grow overflow-hidden flex flex-col">
+                    <span class="text-[10px] font-bold text-white/20 uppercase tracking-widest block mb-4">Requests</span>
+                    <div id="requestList" class="space-y-2 overflow-y-auto"></div>
                 </div>
+                <button onclick="location.reload()" class="w-full p-4 text-[10px] uppercase font-bold text-red-500/50 border border-red-500/10 rounded-xl mt-auto">Terminate Session</button>
             </div>
+            <div onclick="toggleSidebar()" class="flex-grow h-full pointer-events-auto"></div>
+        </div>
 
-            <div class="flex-grow glass rounded-[2.5rem] flex flex-col overflow-hidden">
-                <div class="p-6 border-b border-white/5 flex justify-between items-center bg-white/[0.01]">
-                    <div class="text-xs font-bold text-white/50 uppercase">Secure Chat</div>
-                    <button onclick="location.reload()" class="text-[10px] text-white/20 hover:text-white uppercase">Terminate</button>
-                </div>
-                <div id="chatBox" class="flex-grow p-8 overflow-y-auto space-y-4 text-sm">
-                    <div class="text-white/20 italic text-center text-xs">End-to-end encryption active.</div>
-                </div>
-                <div class="p-6 bg-white/[0.02] flex gap-4">
-                    <input type="text" id="chatInput" placeholder="Message workspace..." class="flex-grow bg-white/5 p-4 rounded-xl border border-white/10 focus:outline-none focus:border-blue-500/50">
-                    <button onclick="sendMessage()" class="btn-blue px-8 rounded-xl font-bold text-xs uppercase">Send</button>
-                </div>
+        <div id="workspace-view" class="hidden fixed inset-0 top-[65px] bg-[#050505] flex flex-col">
+            <div id="chatBox" class="flex-grow p-4 overflow-y-auto space-y-4 pb-24">
+                <div class="text-white/10 text-[10px] text-center uppercase tracking-[0.2em] py-10">Encrypted workspace ready</div>
+            </div>
+            
+            <div class="fixed bottom-0 left-0 right-0 p-4 pb-8 glass border-t border-white/5 flex gap-2">
+                <input type="text" id="chatInput" placeholder="Message..." class="flex-grow bg-white/5 p-4 rounded-2xl border border-white/10 focus:outline-none focus:border-blue-500/40 text-sm">
+                <button onclick="sendMessage()" class="btn-blue px-6 rounded-2xl">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                </button>
             </div>
         </div>
     </main>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, doc, setDoc, updateDoc, onSnapshot, arrayUnion, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, updateDoc, onSnapshot, arrayUnion, arrayRemove, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDbfmd0zmv_mFV0CG2OrhKPPeU3zPYGOBg",
@@ -82,79 +83,86 @@
             projectId: "unidesk-a70ac",
             storageBucket: "unidesk-a70ac.firebasestorage.app",
             messagingSenderId: "882535016432",
-            appId: "1:882535016432:web:6eca2645a47a827e779f35",
-            measurementId: "G-M26R027F70"
+            appId: "1:882535016432:web:6eca2645a47a827e779f35"
         };
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-        let currentRoom = null;
+        let currentRoom, isAdmin = false, myId = "User-" + Math.floor(Math.random()*999);
 
-        // Custom Professional Notification
-        window.notify = (msg, type = "info") => {
-            const toast = document.createElement('div');
-            toast.className = `glass px-6 py-3 rounded-full text-xs font-medium border-l-4 ${type === 'err' ? 'border-red-500' : 'border-blue-500'} animate-bounce`;
-            toast.innerText = msg;
-            document.getElementById('toast-container').appendChild(toast);
-            setTimeout(() => toast.remove(), 4000);
+        window.toggleSidebar = () => {
+            const s = document.getElementById('sidebar');
+            s.classList.toggle('sidebar-hidden');
+            s.classList.toggle('sidebar-visible');
+        };
+
+        window.notify = (m) => {
+            const t = document.createElement('div');
+            t.className = "glass px-6 py-3 rounded-2xl text-[10px] uppercase text-center border border-blue-500/30 text-white shadow-xl";
+            t.innerText = m;
+            document.getElementById('toast-container').appendChild(t);
+            setTimeout(() => t.remove(), 2500);
         };
 
         window.createRoom = async () => {
             const code = Math.random().toString(36).substring(2, 8).toUpperCase();
-            await setDoc(doc(db, "rooms", code), { status: "active", requests: [], messages: [] });
-            openWorkspace(code, true);
-            notify("Workspace Initialized");
+            isAdmin = true; myId = "Admin";
+            await setDoc(doc(db, "rooms", code), { status: "active", requests: [], members: ["Admin"], messages: [] });
+            openWorkspace(code);
         };
 
         window.joinRoom = async () => {
             const code = document.getElementById('roomCodeInput').value.toUpperCase();
-            const roomRef = doc(db, "rooms", code);
-            const snap = await getDoc(roomRef);
+            if(!code) return;
+            const ref = doc(db, "rooms", code);
+            const snap = await getDoc(ref);
             if (snap.exists()) {
-                await updateDoc(roomRef, { requests: arrayUnion(`User-${Math.floor(Math.random()*999)}`) });
-                notify("Clearance Requested. Awaiting Admin.");
-            } else { notify("Invalid Access Code", "err"); }
+                await updateDoc(ref, { requests: arrayUnion(myId) });
+                notify("Request Sent");
+                onSnapshot(ref, (s) => { if(s.data().members.includes(myId)) openWorkspace(code); });
+            } else notify("Invalid Code");
         };
 
-        function openWorkspace(code, isAdmin) {
+        window.approveUser = async (uid) => {
+            await updateDoc(doc(db, "rooms", currentRoom), { members: arrayUnion(uid), requests: arrayRemove(uid) });
+            notify("Authorized");
+        };
+
+        function openWorkspace(code) {
             currentRoom = code;
             document.getElementById('home-view').classList.add('hidden');
-            document.getElementById('workspace-view').classList.replace('hidden', 'flex');
+            document.getElementById('workspace-view').classList.remove('hidden');
+            document.getElementById('menu-btn').classList.remove('hidden');
+            document.getElementById('status-dot').classList.replace('bg-white/10', 'bg-blue-500');
             document.getElementById('roomID').innerText = code;
-            
             if(isAdmin) document.getElementById('adminControls').classList.remove('hidden');
 
             onSnapshot(doc(db, "rooms", code), (s) => {
                 const data = s.data();
-                // Handle Requests
-                const list = document.getElementById('requestList');
-                list.innerHTML = "";
-                data.requests?.forEach(r => {
-                    list.innerHTML += `<div class="bg-white/5 p-4 rounded-2xl flex justify-between items-center border border-white/5">
-                        <span class="text-[10px] font-mono text-white/50">${r}</span>
-                        <button onclick="notify('User Authorized')" class="bg-blue-600 text-[9px] font-black px-3 py-1 rounded-lg uppercase">Allow</button>
-                    </div>`;
-                });
-
-                // Handle Chat
-                const chat = document.getElementById('chatBox');
-                chat.innerHTML = data.messages?.map(m => `
-                    <div class="flex flex-col ${m.user === 'Admin' ? 'items-end' : 'items-start'}">
-                        <span class="text-[9px] text-white/20 mb-1 uppercase tracking-widest">${m.user}</span>
-                        <div class="bg-white/5 px-4 py-2 rounded-2xl border border-white/5 max-w-[80%]">${m.text}</div>
+                if(isAdmin) {
+                    document.getElementById('requestList').innerHTML = data.requests.map(r => `
+                        <div class="bg-white/5 p-3 rounded-xl flex justify-between items-center border border-white/5">
+                            <span class="text-[9px] font-mono">${r}</span>
+                            <button onclick="approveUser('${r}')" class="bg-blue-600 px-3 py-1 rounded-lg text-[8px] font-bold uppercase">Allow</button>
+                        </div>
+                    `).join('');
+                }
+                document.getElementById('chatBox').innerHTML = data.messages.map(m => `
+                    <div class="flex flex-col ${m.user === myId ? 'items-end' : 'items-start'}">
+                        <div class="${m.user === myId ? 'bg-blue-600' : 'bg-white/[0.08]'} px-4 py-3 rounded-2xl text-sm max-w-[85%] text-white">${m.text}</div>
+                        <span class="text-[7px] uppercase mt-1 opacity-20 tracking-widest">${m.user}</span>
                     </div>
-                `).join('') || "";
-                chat.scrollTop = chat.scrollHeight;
+                `).join('');
+                const cb = document.getElementById('chatBox');
+                cb.scrollTop = cb.scrollHeight;
             });
         }
 
         window.sendMessage = async () => {
-            const input = document.getElementById('chatInput');
-            if(!input.value) return;
-            await updateDoc(doc(db, "rooms", currentRoom), {
-                messages: arrayUnion({ user: "Admin", text: input.value, time: Date.now() })
-            });
-            input.value = "";
+            const i = document.getElementById('chatInput');
+            if(!i.value) return;
+            await updateDoc(doc(db, "rooms", currentRoom), { messages: arrayUnion({ user: myId, text: i.value, time: Date.now() }) });
+            i.value = "";
         };
     </script>
 </body>
