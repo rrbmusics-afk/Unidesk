@@ -6,213 +6,199 @@
     <title>UniDesk Shield</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        :root { --accent: #007AFF; --e2ee-gold: #FFD700; --whatsapp-green: #25D366; }
-        body { background: #000; color: #fff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; height: 100dvh; width: 100vw; margin: 0; display: flex; flex-direction: column; overflow: hidden; position: fixed; }
-        .glass { background: rgba(255, 255, 255, 0.03); border-bottom: 1px solid rgba(255, 255, 255, 0.08); backdrop-filter: blur(20px); }
-        #chatBox { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; -webkit-overflow-scrolling: touch; }
+        :root { --wa-bg: #0b141a; --wa-input: #2a3942; --wa-green: #00a884; --wa-mic: #ff2d55; }
+        body { background: var(--wa-bg); color: #fff; font-family: -apple-system, sans-serif; height: 100dvh; overflow: hidden; position: fixed; width: 100%; }
         
-        .bubble { max-width: 85%; padding: 8px 12px; border-radius: 12px; font-size: 15px; line-height: 1.4; position: relative; word-wrap: break-word; }
-        .bubble-me { background: #005c4b; align-self: flex-end; border-bottom-right-radius: 4px; }
-        .bubble-them { background: #202c33; align-self: flex-start; border-bottom-left-radius: 4px; }
+        #chatBox { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 8px; scroll-behavior: smooth; }
         
-        .e2ee-banner { background: rgba(255, 215, 0, 0.05); color: #ffd700; border: 1px solid rgba(255,215,0,0.15); border-radius: 10px; padding: 10px 14px; margin: 10px auto 20px auto; font-size: 11px; text-align: center; max-width: 85%; display: flex; align-items: center; gap: 8px; justify-content: center; }
+        /* WhatsApp Bubbles */
+        .bubble { max-width: 85%; padding: 8px 12px; border-radius: 12px; font-size: 15px; position: relative; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .bubble-me { background: #005c4b; align-self: flex-end; border-bottom-right-radius: 2px; }
+        .bubble-them { background: #202c33; align-self: flex-start; border-bottom-left-radius: 2px; }
 
-        .input-container { background: #111b21; padding: 10px 12px calc(12px + env(safe-area-inset-bottom)) 12px; }
-        
-        /* Document Preview Styles */
-        .doc-preview { background: rgba(0,0,0,0.2); border-radius: 8px; padding: 10px; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); margin-top: 4px; border: 1px solid rgba(255,255,255,0.1); }
-        .doc-preview.expanded { position: fixed; inset: 20px; z-index: 5000; background: #111; display: flex; flex-direction: column; justify-content: center; align-items: center; border-radius: 20px; }
-        
-        /* Recording UI */
-        .recording-active { color: #ff3b30 !important; animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+        /* Smooth Document Expansion */
+        .doc-card { background: rgba(0,0,0,0.15); border-radius: 8px; display: flex; align-items: center; gap: 10px; padding: 10px; cursor: pointer; border: 1px solid rgba(255,255,255,0.05); }
+        .doc-expanded { position: fixed; inset: 0; z-index: 9999; background: rgba(0,0,0,0.95); display: flex; align-items: center; justify-content: center; padding: 20px; animation: popIn 0.3s ease; }
+        @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
-        #callOverlay { position: fixed; inset: 0; background: #000; z-index: 2000; display: none; flex-direction: column; }
-        #remoteVideo { width: 100%; height: 100%; object-fit: cover; }
-        #localVideo { position: absolute; top: 20px; right: 20px; width: 100px; height: 150px; border-radius: 16px; border: 1.5px solid rgba(255,255,255,0.2); object-fit: cover; }
+        /* Recording Interface */
+        .input-bar-container { background: #111b21; padding: 8px 12px; display: flex; align-items: center; gap: 8px; min-height: 60px; position: relative; }
+        .recording-ui { position: absolute; left: 0; top: 0; width: 100%; height: 100%; background: #111b21; display: none; align-items: center; justify-content: space-between; padding: 0 20px; z-index: 10; }
+        .red-dot { width: 10px; height: 10px; background: red; border-radius: 50%; animation: blink 1s infinite; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+        /* Audio Controls Styling */
+        audio::-webkit-media-controls-panel { background-color: #202c33; }
+        audio::-webkit-media-controls-current-time-display, 
+        audio::-webkit-media-controls-time-remaining-display { color: #fff; }
+
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-    <div id="incomingCall" class="fixed top-3 left-1/2 -translate-x-1/2 w-[94%] max-w-md bg-[#1c1c1e] rounded-2xl p-4 z-[3000] hidden border border-white/10 shadow-2xl">
-        <div class="flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-yellow-500/20 rounded-full flex items-center justify-center text-yellow-500">
-                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6z" /></svg>
-                </div>
-                <div><p class="text-[10px] text-yellow-500 font-bold uppercase">Secure Call</p><p class="text-sm font-medium">Incoming...</p></div>
+    <nav class="h-16 flex items-center justify-between px-5 bg-[#202c33] shrink-0">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center font-bold">U</div>
+            <div>
+                <p id="room-code-display" class="font-bold text-sm">Waiting...</p>
+                <p class="text-[10px] text-green-500">online</p>
             </div>
-            <div class="flex gap-2">
-                <button onclick="declineCall()" class="w-10 h-10 bg-red-500/20 text-red-500 rounded-full border border-red-500/20">✕</button>
-                <button onclick="acceptCall()" class="w-10 h-10 bg-green-500 text-white rounded-full">✓</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="callOverlay">
-        <video id="remoteVideo" autoplay playsinline></video>
-        <video id="localVideo" autoplay playsinline muted></video>
-        <button onclick="endCall()" class="absolute bottom-12 left-1/2 -translate-x-1/2 bg-red-600 w-16 h-16 rounded-full flex items-center justify-center">
-            <svg class="w-8 h-8" fill="white" viewBox="0 0 24 24"><path d="M6.62 10.79a15.1 15.1 0 006.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.26 1.12.32 2.33.3 3.53-.09a1 1 0 011.04 1.04v3.59a1 1 0 01-1.04 1.04C10.51 22 2 13.49 2 3.04A1 1 0 013.04 2h3.59a1 1 0 011.04 1.04c-.39 1.2-.41 2.41-.09 3.53.1.35.01.75-.26 1.02l-2.2 2.2z"/></svg>
-        </button>
-    </div>
-
-    <nav class="h-16 flex items-center justify-between px-5 glass shrink-0">
-        <div class="flex flex-col">
-            <span class="text-[9px] font-black tracking-widest text-blue-500 uppercase">UniDesk OS</span>
-            <span id="room-code-display" class="text-[13px] font-mono font-bold text-white tracking-widest"></span>
-        </div>
-        <div id="call-controls" class="hidden flex items-center gap-4">
-            <button onclick="triggerCall('audio')" class="text-white/60"><svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg></button>
-            <button onclick="triggerCall('video')" class="text-white/60"><svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg></button>
         </div>
     </nav>
 
     <div id="home-view" class="flex-grow flex flex-col items-center justify-center p-8">
-        <div class="w-full max-w-xs space-y-6">
-            <div onclick="createRoom()" class="bg-white/5 border border-white/10 p-12 rounded-[2.5rem] text-center cursor-pointer">
-                <span class="text-[11px] font-bold uppercase tracking-widest text-white/60">Initialize Room</span>
-            </div>
-            <div class="bg-white/5 border border-white/10 p-7 rounded-[2.5rem] space-y-4">
-                <input type="text" id="roomCodeInput" placeholder="ENTER CODE" class="w-full bg-black/40 p-4 rounded-xl text-center font-mono text-blue-400 border border-white/5 outline-none tracking-widest">
-                <button onclick="joinRoom()" class="w-full bg-blue-600 h-12 rounded-xl font-bold text-xs uppercase tracking-widest">Connect</button>
-            </div>
+        <button onclick="createRoom()" class="bg-wa-green px-8 py-4 rounded-full font-bold mb-4">Create Secure Room</button>
+        <div class="flex gap-2">
+            <input type="text" id="roomCodeInput" placeholder="Code" class="bg-wa-input p-3 rounded-lg outline-none">
+            <button onclick="joinRoom()" class="bg-blue-600 px-6 rounded-lg">Join</button>
         </div>
     </div>
 
-    <div id="workspace-view" class="hidden flex-grow flex flex-col w-full relative">
-        <div id="chatBox">
-            <div class="e2ee-banner">
-                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" /></svg>
-                <span>End-to-end encrypted.</span>
-            </div>
-        </div>
+    <div id="workspace-view" class="hidden flex-grow flex flex-col w-full overflow-hidden">
+        <div id="chatBox"></div>
 
-        <div class="input-container">
-            <div class="flex items-center gap-2 max-w-4xl mx-auto">
-                <button onclick="document.getElementById('fileInput').click()" class="text-white/60 w-10 h-10 flex items-center justify-center">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>
-                </button>
-                
-                <div class="flex-grow bg-[#2a3942] rounded-full px-4 flex items-center h-11">
-                    <input type="text" id="chatInput" placeholder="Message" class="w-full bg-transparent border-none outline-none text-white text-[15px]">
+        <div class="input-bar-container">
+            <div id="recordingUI" class="recording-ui">
+                <div class="flex items-center gap-3">
+                    <div class="red-dot"></div>
+                    <span id="recordTimer" class="font-mono text-white">0:00</span>
                 </div>
+                <div class="text-white/50 text-sm animate-pulse">Slide to cancel < </div>
+            </div>
 
-                <button id="micBtn" class="bg-[#00a884] text-white rounded-full w-11 h-11 flex items-center justify-center shadow-lg">
-                    <svg id="micIcon" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4z"/><path d="M4 8a1 1 0 011 1 5 5 0 0010 0 1 1 0 112 0 7 7 0 01-6 6.92V18a1 1 0 11-2 0v-2.08A7 7 0 013 9a1 1 0 011-1z"/></svg>
+            <button onclick="document.getElementById('fileInput').click()" class="text-white/60">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            </button>
+            
+            <div class="flex-grow bg-[#2a3942] rounded-full px-4 flex items-center h-11">
+                <input type="text" id="chatInput" placeholder="Message" class="w-full bg-transparent outline-none text-white text-[15px]">
+            </div>
+
+            <div id="actionArea">
+                <button id="micBtn" class="bg-[#00a884] text-white rounded-full w-12 h-12 flex items-center justify-center">
+                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4z"/><path d="M4 8a1 1 0 011 1 5 5 0 0010 0 1 1 0 112 0 7 7 0 01-6 6.92V18a1 1 0 11-2 0v-2.08A7 7 0 013 9a1 1 0 011-1z"/></svg>
                 </button>
-                
-                <button id="sendBtn" onclick="sendMessage()" class="hidden bg-[#00a884] text-white rounded-full w-11 h-11 flex items-center justify-center shadow-lg">
-                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"/></svg>
+                <button id="sendBtn" onclick="sendMessage()" class="hidden bg-[#00a884] text-white rounded-full w-12 h-12 flex items-center justify-center">
+                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"/></svg>
                 </button>
             </div>
-            <input type="file" id="fileInput" class="hidden" onchange="sendDocument(this.files[0])">
         </div>
+        <input type="file" id="fileInput" class="hidden" onchange="handleFile(this)">
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, doc, setDoc, updateDoc, onSnapshot, getDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, updateDoc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = { apiKey: "AIzaSyDbfmd0zmv_mFV0CG2OrhKPPeU3zPYGOBg", authDomain: "unidesk-a70ac.firebaseapp.com", projectId: "unidesk-a70ac" };
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         
-        let currentRoom, myId = "User-" + Math.floor(Math.random()*999), allMessages = [], mediaRecorder, audioChunks = [];
+        let currentRoom, myId = "User-" + Math.floor(Math.random()*999), allMessages = [];
+        let mediaRecorder, audioChunks = [], recordInterval;
 
-        // Logic for toggling Mic/Send button
         const chatInput = document.getElementById('chatInput');
         const micBtn = document.getElementById('micBtn');
         const sendBtn = document.getElementById('sendBtn');
+        const recordingUI = document.getElementById('recordingUI');
 
-        chatInput.oninput = () => {
-            if(chatInput.value.trim().length > 0) {
-                micBtn.classList.add('hidden');
-                sendBtn.classList.remove('hidden');
-            } else {
-                micBtn.classList.remove('hidden');
-                sendBtn.classList.add('hidden');
-            }
-        };
+        // Logic: Switch Mic to Send
+        chatInput.addEventListener('input', () => {
+            const hasText = chatInput.value.trim().length > 0;
+            micBtn.classList.toggle('hidden', hasText);
+            sendBtn.classList.toggle('hidden', !hasText);
+        });
 
-        // Voice Recording Logic
+        // WhatsApp Style Recording Logic
         micBtn.onclick = async () => {
             if (!mediaRecorder || mediaRecorder.state === "inactive") {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 mediaRecorder = new MediaRecorder(stream);
                 audioChunks = [];
                 
+                mediaRecorder.onstart = () => {
+                    recordingUI.style.display = 'flex';
+                    startTimer();
+                };
+
                 mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-                mediaRecorder.onstop = () => {
-                    const blob = new Blob(audioChunks, { type: 'audio/ogg; codecs=opus' });
+                
+                mediaRecorder.onstop = async () => {
+                    recordingUI.style.display = 'none';
+                    stopTimer();
+                    const blob = new Blob(audioChunks, { type: 'audio/ogg' });
                     const reader = new FileReader();
-                    reader.onloadend = () => sendMediaMessage(reader.result, 'audio');
+                    reader.onloadend = () => sendMedia(reader.result, 'audio');
                     reader.readAsDataURL(blob);
-                    document.getElementById('micIcon').classList.remove('recording-active');
                 };
 
                 mediaRecorder.start();
-                document.getElementById('micIcon').classList.add('recording-active');
             } else {
                 mediaRecorder.stop();
             }
         };
 
-        window.sendDocument = (file) => {
-            if (!file) return;
+        function startTimer() {
+            let sec = 0;
+            const timerEl = document.getElementById('recordTimer');
+            recordInterval = setInterval(() => {
+                sec++;
+                let m = Math.floor(sec/60);
+                let s = sec % 60;
+                timerEl.innerText = `${m}:${s < 10 ? '0'+s : s}`;
+            }, 1000);
+        }
+
+        function stopTimer() { clearInterval(recordInterval); document.getElementById('recordTimer').innerText = "0:00"; }
+
+        window.handleFile = (input) => {
+            const file = input.files[0];
             const reader = new FileReader();
-            reader.onload = (e) => sendMediaMessage(e.target.result, 'doc', file.name);
+            reader.onload = (e) => sendMedia(e.target.result, 'doc', file.name);
             reader.readAsDataURL(file);
         };
 
-        async function sendMediaMessage(data, type, fileName = "") {
-            const msg = { 
-                id: Date.now().toString(), 
-                user: myId, 
-                data: data, 
-                type: type, 
-                name: fileName,
-                time: Date.now() 
-            };
+        async function sendMedia(data, type, fileName = "") {
+            const msg = { id: Date.now().toString(), user: myId, data, type, name: fileName, time: Date.now() };
             allMessages.push(msg);
             await updateDoc(doc(db, "rooms", currentRoom), { messages: allMessages });
         }
 
-        window.toggleDoc = (el) => {
-            el.classList.toggle('expanded');
+        window.toggleDoc = (data) => {
+            const viewer = document.createElement('div');
+            viewer.className = 'doc-expanded';
+            viewer.innerHTML = data.includes('image') ? `<img src="${data}" class="max-w-full max-h-full">` : `<div class="bg-white p-8 text-black rounded-lg">Document Preview Not Available</div>`;
+            viewer.onclick = () => viewer.remove();
+            document.body.appendChild(viewer);
         };
 
+        // UI Builder
         window.openWorkspace = (code) => {
             currentRoom = code;
             document.getElementById('home-view').classList.add('hidden');
-            document.getElementById('workspace-view').classList.replace('hidden', 'flex');
-            document.getElementById('room-code-display').innerText = code;
-            document.getElementById('call-controls').classList.remove('hidden');
+            document.getElementById('workspace-view').classList.remove('hidden');
+            document.getElementById('room-code-display').innerText = `Room: ${code}`;
 
             onSnapshot(doc(db, "rooms", code), (s) => {
                 const data = s.data(); if(!data) return;
                 allMessages = data.messages || [];
                 const chatBox = document.getElementById('chatBox');
-                const banner = chatBox.querySelector('.e2ee-banner');
                 chatBox.innerHTML = '';
-                chatBox.appendChild(banner);
                 
                 allMessages.forEach(m => {
                     const div = document.createElement('div');
-                    div.className = `flex flex-col ${m.user === myId ? 'items-end' : 'items-start'}`;
+                    div.className = `bubble ${m.user === myId ? 'bubble-me' : 'bubble-them'}`;
                     
-                    let content = '';
-                    if(m.type === 'text') content = m.text;
-                    else if(m.type === 'audio') content = `<audio controls class="max-w-full"><source src="${m.data}"></audio>`;
+                    if(m.type === 'text') div.innerText = m.text;
+                    else if(m.type === 'audio') div.innerHTML = `<audio controls class="w-full h-8"><source src="${m.data}"></audio>`;
                     else if(m.type === 'doc') {
-                        content = `
-                            <div class="doc-preview" onclick="toggleDoc(this)">
-                                <div class="p-2 bg-blue-500 rounded text-white">DOC</div>
-                                <div class="text-xs truncate max-w-[120px]">${m.name}</div>
+                        div.innerHTML = `
+                            <div class="doc-card" onclick="toggleDoc('${m.data}')">
+                                <div class="w-10 h-10 bg-white/10 rounded flex items-center justify-center">📄</div>
+                                <div class="text-xs truncate w-32">${m.name}</div>
                             </div>`;
                     }
-
-                    div.innerHTML = `<div class="bubble ${m.user === myId ? 'bubble-me' : 'bubble-them'}">${content}</div>`;
                     chatBox.appendChild(div);
                 });
                 chatBox.scrollTop = chatBox.scrollHeight;
@@ -220,16 +206,16 @@
         };
 
         window.sendMessage = async () => {
-            if(!chatInput.value) return;
+            if(!chatInput.value.trim()) return;
             allMessages.push({ id: Date.now().toString(), user: myId, text: chatInput.value, type: 'text', time: Date.now() });
             await updateDoc(doc(db, "rooms", currentRoom), { messages: allMessages });
-            chatInput.value = ""; chatInput.oninput();
+            chatInput.value = ""; chatInput.dispatchEvent(new Event('input'));
         };
 
         window.createRoom = async () => {
             const code = Math.random().toString(36).substring(2, 8).toUpperCase();
             await setDoc(doc(db, "rooms", code), { messages: [], time: Date.now() });
-            myId = "Admin"; openWorkspace(code);
+            openWorkspace(code);
         };
 
         window.joinRoom = async () => {
