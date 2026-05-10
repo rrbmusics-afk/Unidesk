@@ -6,9 +6,6 @@
     <title>UniDesk Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/photoswipe/5.4.2/photoswipe.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/photoswipe/5.4.2/photoswipe.esm.min.js" type="module"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/photoswipe/5.4.2/photoswipe-lightbox.esm.min.js" type="module"></script>
-    
     <style>
         :root { --accent: #007AFF; }
         body { 
@@ -23,7 +20,6 @@
             display: flex; flex-direction: column; gap: 10px; -webkit-overflow-scrolling: touch; 
         }
 
-        /* Fixed Bar stays above keyboard via JS resize */
         .input-container { 
             background: #0a0a0a; border-top: 1px solid rgba(255,255,255,0.1); 
             padding: 10px 10px calc(10px + env(safe-area-inset-bottom)) 10px; 
@@ -37,8 +33,10 @@
         .chat-img { 
             border-radius: 12px; margin: 4px 0; width: 220px; height: 220px; 
             object-fit: cover; display: block; cursor: pointer;
-            transition: transform 0.2s ease;
         }
+
+        /* Prevent stretching in the zoom view */
+        .pswp__img { object-fit: contain !important; }
 
         audio { height: 35px; width: 210px; filter: invert(1); margin-top: 5px; }
         .btn-active:active { transform: scale(0.92); opacity: 0.8; }
@@ -96,6 +94,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, doc, setDoc, updateDoc, onSnapshot, arrayUnion, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import PhotoSwipeLightbox from 'https://cdnjs.cloudflare.com/ajax/libs/photoswipe/5.4.2/photoswipe-lightbox.esm.min.js';
 
         const firebaseConfig = {
             apiKey: "AIzaSyDbfmd0zmv_mFV0CG2OrhKPPeU3zPYGOBg",
@@ -107,26 +106,24 @@
         const db = getFirestore(app);
         let currentRoom, myId = "User-" + Math.floor(Math.random()*999), mediaRecorder, chunks = [];
 
-        // Smooth Keyboard Handling
         if (window.visualViewport) {
             window.visualViewport.addEventListener('resize', () => {
                 document.body.style.height = window.visualViewport.height + 'px';
-                window.scrollTo(0, 0);
                 const cb = document.getElementById('chatBox');
                 cb.scrollTop = cb.scrollHeight;
             });
         }
 
-        // ADDED: Initialize PhotoSwipe
-        import PhotoSwipeLightbox from 'https://cdnjs.cloudflare.com/ajax/libs/photoswipe/5.4.2/photoswipe-lightbox.esm.min.js';
         const lightbox = new PhotoSwipeLightbox({
           gallery: '#chatBox',
           children: 'a.pswp-link',
-          pswpModule: () => import('https://cdnjs.cloudflare.com/ajax/libs/photoswipe/5.4.2/photoswipe.esm.min.js')
+          pswpModule: () => import('https://cdnjs.cloudflare.com/ajax/libs/photoswipe/5.4.2/photoswipe.esm.min.js'),
+          initialZoomLevel: 'fit',
+          secondaryZoomLevel: 2,
+          maxZoomLevel: 4
         });
         lightbox.init();
 
-        // Modified createRoom (original code logic)
         window.createRoom = async () => {
             const code = Math.random().toString(36).substring(2, 8).toUpperCase();
             try {
@@ -135,7 +132,6 @@
             } catch (e) { alert("DATABASE ERROR: " + e.message); }
         };
 
-        // Modified joinRoom (original code logic)
         window.joinRoom = async () => {
             const code = document.getElementById('roomCodeInput').value.toUpperCase();
             if(!code) return;
@@ -144,7 +140,6 @@
             else alert("Room not found.");
         };
 
-        // Modified processFile (original code logic)
         window.processFile = (file) => {
             if(!file) return;
             const reader = new FileReader();
@@ -156,7 +151,6 @@
             reader.readAsDataURL(file);
         };
 
-        // Modified toggleRecording (original code logic)
         window.toggleRecording = async () => {
             const btn = document.getElementById('micBtn');
             if(!mediaRecorder || mediaRecorder.state === "inactive") {
@@ -180,7 +174,6 @@
             } else { mediaRecorder.stop(); }
         };
 
-        // Modified openWorkspace: Modified only to wrap images in pswp-link
         function openWorkspace(code) {
             currentRoom = code;
             document.getElementById('home-view').classList.add('hidden');
@@ -194,9 +187,7 @@
                     <div class="flex flex-col ${m.user === myId ? 'items-end' : 'items-start'}">
                         <div class="bubble ${m.user === myId ? 'bubble-me' : 'bubble-them'}" style="${m.type === 'image' ? 'padding: 4px;' : ''}">
                             ${m.type === 'image' ? `
-                                <a href="${m.data}" class="pswp-link" 
-                                   data-pswp-width="1200" data-pswp-height="1200" 
-                                   target="_blank">
+                                <a href="${m.data}" class="pswp-link" data-pswp-width="1200" data-pswp-height="1600" target="_blank">
                                    <img src="${m.data}" class="chat-img">
                                 </a>
                             ` : 
@@ -210,7 +201,6 @@
             });
         }
 
-        // Modified sendMessage (original code logic)
         window.sendMessage = async () => {
             const i = document.getElementById('chatInput');
             if(!i.value || !currentRoom) return;
