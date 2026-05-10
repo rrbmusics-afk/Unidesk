@@ -7,74 +7,58 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root { --accent: #007AFF; }
-        body { background: #000; color: #fff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; height: 100dvh; overflow: hidden; position: fixed; width: 100vw; }
+        body { background: #000; color: #fff; font-family: -apple-system, BlinkMacSystemFont, sans-serif; height: 100dvh; overflow: hidden; position: fixed; width: 100vw; }
         
-        /* Premium Glass & Layout */
         .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); }
         
-        /* Smooth Zoom In/Out Animation */
-        .chat-img { 
-            border-radius: 14px; width: 110px; height: 110px; object-fit: cover; 
-            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1); cursor: pointer;
-            border: 1px solid rgba(255,255,255,0.1); transform-origin: center;
-        }
-        .chat-img.expanded { 
-            width: 85vw; height: auto; border-radius: 12px; 
-            transform: scale(1.05); z-index: 50; position: relative;
-        }
+        /* Message Bubbles & Photos */
+        .chat-img { border-radius: 14px; width: 110px; height: 110px; object-fit: cover; transition: all 0.4s ease; cursor: pointer; }
+        .chat-img.expanded { width: 85vw; height: auto; border-radius: 12px; }
 
-        /* Android Alignment & Bubbles */
-        .bubble { max-width: 82%; padding: 12px 16px; border-radius: 20px; font-size: 15px; line-height: 1.4; }
-        .bubble-me { background: var(--accent); align-self: flex-end; border-bottom-right-radius: 4px; box-shadow: 0 4px 15px rgba(0,122,255,0.2); }
+        .bubble { max-width: 82%; padding: 12px 16px; border-radius: 20px; font-size: 15px; position: relative; transition: opacity 0.2s; user-select: none; -webkit-user-select: none; }
+        .bubble-me { background: var(--accent); align-self: flex-end; border-bottom-right-radius: 4px; }
         .bubble-them { background: #262626; align-self: flex-start; border-bottom-left-radius: 4px; }
         
-        #chatBox { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 14px; padding-bottom: 30px; }
-        
-        /* Keyboard/Input Focus Logic */
-        .input-wrapper { 
-            background: #0a0a0a; border-top: 1px solid rgba(255,255,255,0.08); 
-            padding: 8px 12px calc(10px + env(safe-area-inset-bottom));
-            transition: padding 0.3s ease;
-        }
-        .input-wrapper.typing { padding-top: 15px; }
+        #chatBox { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 14px; }
 
-        #chatInput { font-size: 16px; } /* Prevents iOS/Android auto-zoom on focus */
+        /* Context Menu (Edit/Delete) */
+        #contextMenu { 
+            position: fixed; background: #1c1c1e; border: 1px solid rgba(255,255,255,0.1); 
+            border-radius: 14px; display: none; flex-direction: column; z-index: 10000; 
+            width: 160px; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+        }
+        .menu-item { padding: 12px 16px; font-size: 14px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; }
+        .menu-item:last-child { border-bottom: none; color: #ff3b30; }
+        .menu-item:active { background: rgba(255,255,255,0.1); }
+
+        /* Persistent Input Logic */
+        .input-wrapper { background: #0a0a0a; border-top: 1px solid rgba(255,255,255,0.08); padding: 10px 12px calc(10px + env(safe-area-inset-bottom)); }
         
-        /* Interactive Elements */
-        button:active { transform: scale(0.9); opacity: 0.7; }
-        .e2ee-tag { background: rgba(255, 215, 0, 0.05); color: #ffd700; border: 1px solid rgba(255,215,0,0.1); border-radius: 10px; padding: 10px; font-size: 11px; text-align: center; margin-bottom: 20px; width: 90%; align-self: center; }
+        button:active { transform: scale(0.9); }
     </style>
 </head>
 <body>
 
-    <nav class="h-16 flex items-center justify-between px-6 glass border-b border-white/5 shrink-0">
-        <div class="flex flex-col">
-            <span class="text-[10px] font-black tracking-[0.2em] uppercase text-blue-500">UniDesk OS</span>
-            <span id="room-code-display" class="text-[13px] font-mono font-bold text-white/90 mt-1"></span>
-        </div>
-        <div id="call-controls" class="hidden flex items-center gap-1">
-            <button onclick="triggerCall('audio')" class="w-10 h-10 flex items-center justify-center text-white/30"><svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg></button>
-            <button onclick="triggerCall('video')" class="w-10 h-10 flex items-center justify-center text-white/30"><svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg></button>
+    <nav id="navBar" class="h-16 flex items-center justify-between px-6 glass border-b border-white/5 shrink-0">
+        <div class="flex items-center gap-3">
+            <button onclick="exitWorkspace()" id="backBtn" class="hidden text-white/60"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg></button>
+            <div class="flex flex-col">
+                <span class="text-[10px] font-black tracking-widest text-blue-500 uppercase">UniDesk OS</span>
+                <span id="room-code-display" class="text-[13px] font-mono font-bold"></span>
+            </div>
         </div>
     </nav>
 
     <div id="workspace-view" class="flex-grow flex flex-col w-full relative">
-        <div id="chatBox">
-            <div class="e2ee-tag">Messages and calls are end-to-end encrypted.</div>
-        </div>
+        <div id="chatBox"></div>
         
-        <div class="input-wrapper" id="inputWrapper">
-            <div class="flex items-center gap-3 max-w-4xl mx-auto">
+        <div class="input-wrapper">
+            <div class="flex items-center gap-3">
                 <button onclick="document.getElementById('fileInput').click()" class="bg-white/5 rounded-full w-10 h-10 text-white/40 flex items-center justify-center"><svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg></button>
-                
                 <div class="flex-grow bg-white/5 border border-white/10 rounded-2xl px-4 flex items-center h-12">
-                    <input type="text" id="chatInput" placeholder="Message" 
-                           onfocus="handleFocus(true)" onblur="handleFocus(false)"
-                           class="w-full bg-transparent py-2 text-sm outline-none text-white placeholder-white/20">
-                    <div id="recIndicator" class="hidden flex items-center gap-2 text-[10px] font-bold text-red-500 uppercase tracking-widest"><span class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span> REC</div>
+                    <input type="text" id="chatInput" placeholder="Message" class="w-full bg-transparent py-2 text-sm outline-none text-white">
                 </div>
-
-                <button id="actionBtn" class="bg-blue-600 rounded-full w-12 h-12 text-white shadow-xl flex items-center justify-center">
+                <button id="actionBtn" class="bg-blue-600 rounded-full w-12 h-12 text-white flex items-center justify-center">
                     <svg id="micIcon" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4m-4 0h8"/></svg>
                     <svg id="sendIcon" class="hidden w-5 h-5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
                 </button>
@@ -83,10 +67,15 @@
         </div>
     </div>
 
-    <div id="home-view" class="absolute inset-0 bg-black z-40 hidden flex flex-col items-center justify-center p-8">
-         <button onclick="createRoom()" class="w-64 bg-white/5 border border-white/10 py-12 rounded-[2.5rem] font-bold text-[10px] tracking-widest uppercase mb-6">Initialize</button>
-         <input type="text" id="roomCodeInput" placeholder="CODE" class="w-64 bg-black/40 p-4 rounded-xl text-center font-mono text-blue-400 outline-none border border-white/5 mb-4">
-         <button onclick="joinRoom()" class="w-64 bg-blue-600 h-12 rounded-xl font-bold text-xs uppercase">Connect</button>
+    <div id="contextMenu">
+        <div class="menu-item" onclick="initEdit()">Edit</div>
+        <div class="menu-item" onclick="deleteForEveryone()">Delete for Everyone</div>
+    </div>
+
+    <div id="home-view" class="absolute inset-0 bg-black z-50 flex flex-col items-center justify-center p-8">
+         <button onclick="createRoom()" class="w-64 bg-white/5 border border-white/10 py-12 rounded-[2.5rem] font-bold text-[10px] tracking-widest uppercase mb-6">Create Session</button>
+         <input type="text" id="roomCodeInput" placeholder="CODE" class="w-64 bg-black/40 p-5 rounded-xl text-center font-mono text-blue-400 outline-none border border-white/5 mb-4">
+         <button onclick="joinRoom()" class="w-64 bg-blue-600 h-14 rounded-xl font-bold text-xs uppercase">Join</button>
     </div>
 
     <script type="module">
@@ -98,119 +87,122 @@
         const db = getFirestore(app);
         
         let currentRoom, myId = "User-" + Math.floor(Math.random()*999), allMessages = [];
-        let mediaRecorder, audioChunks = [];
+        let mediaRecorder, audioChunks = [], selectedMsgId = null;
 
-        // HIDE KEYBOARD / FOCUS LOGIC
-        window.handleFocus = (isFocused) => {
-            const wrapper = document.getElementById('inputWrapper');
-            if(isFocused) wrapper.classList.add('typing');
-            else wrapper.classList.remove('typing');
-            
-            // On Android, scroll to bottom when keyboard appears
-            setTimeout(() => {
-                const cb = document.getElementById('chatBox');
-                cb.scrollTop = cb.scrollHeight;
-            }, 300);
+        // --- LONG PRESS LOGIC (CONTEXT MENU) ---
+        let pressTimer;
+        const chatBox = document.getElementById('chatBox');
+
+        window.handleLongPressStart = (id, user) => {
+            if(user !== myId) return; // Only owner can edit/delete
+            pressTimer = window.setTimeout(() => {
+                selectedMsgId = id;
+                const menu = document.getElementById('contextMenu');
+                menu.style.display = 'flex';
+                menu.style.left = '50%';
+                menu.style.top = '50%';
+                menu.style.transform = 'translate(-50%, -50%)';
+            }, 600);
         };
 
-        // ZOOM IN / ZOOM OUT LOGIC
-        window.toggleImg = (el) => {
-            const isExpanded = el.classList.contains('expanded');
-            // Reset all others first
-            document.querySelectorAll('.chat-img').forEach(img => img.classList.remove('expanded'));
-            if(!isExpanded) el.classList.add('expanded');
-            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        window.handleLongPressEnd = () => clearTimeout(pressTimer);
+        document.addEventListener('click', () => document.getElementById('contextMenu').style.display = 'none');
+
+        window.deleteForEveryone = async () => {
+            allMessages = allMessages.filter(m => m.id !== selectedMsgId);
+            await updateDoc(doc(db, "rooms", currentRoom), { messages: allMessages });
         };
 
-        // AUDIO RECORDING (WhatsApp Style)
-        const actionBtn = document.getElementById('actionBtn');
+        window.initEdit = () => {
+            const msg = allMessages.find(m => m.id === selectedMsgId);
+            if(msg && msg.type === 'text') {
+                const input = document.getElementById('chatInput');
+                input.value = msg.text;
+                input.focus();
+                // Flag to handle update instead of new send
+                input.dataset.editing = selectedMsgId;
+            }
+        };
+
+        // --- PERSISTENT KEYBOARD LOGIC ---
         const chatInput = document.getElementById('chatInput');
+        chatInput.addEventListener('focus', () => {
+            document.getElementById('backBtn').classList.remove('hidden');
+        });
 
+        window.exitWorkspace = () => {
+            chatInput.blur();
+            document.getElementById('backBtn').classList.add('hidden');
+            // If we are deep in typing mode, this resets the "typing lock"
+        };
+
+        // --- MEDIA & SEND LOGIC ---
         chatInput.oninput = () => {
             const hasText = chatInput.value.trim().length > 0;
             document.getElementById('micIcon').classList.toggle('hidden', hasText);
             document.getElementById('sendIcon').classList.toggle('hidden', !hasText);
         };
 
-        const startRec = async (e) => {
-            if (chatInput.value.length > 0) { sendMessage(); return; }
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            mediaRecorder = new MediaRecorder(stream);
-            audioChunks = [];
-            mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-            mediaRecorder.onstop = async () => {
-                const reader = new FileReader();
-                reader.readAsDataURL(new Blob(audioChunks, { type: 'audio/mp4' }));
-                reader.onloadend = async () => {
-                    allMessages.push({ user: myId, data: reader.result, type: 'audio', time: Date.now() });
-                    await updateDoc(doc(db, "rooms", currentRoom), { messages: allMessages });
-                };
-                stream.getTracks().forEach(t => t.stop());
-            };
-            mediaRecorder.start();
-            document.getElementById('recIndicator').classList.remove('hidden');
-            chatInput.style.opacity = '0';
-        };
+        window.sendMessage = async () => {
+            const val = chatInput.value.trim();
+            if (!val) return;
 
-        const stopRec = () => {
-            if (mediaRecorder?.state === "recording") {
-                mediaRecorder.stop();
-                document.getElementById('recIndicator').classList.add('hidden');
-                chatInput.style.opacity = '1';
+            if(chatInput.dataset.editing) {
+                const idx = allMessages.findIndex(m => m.id === chatInput.dataset.editing);
+                allMessages[idx].text = val;
+                delete chatInput.dataset.editing;
+            } else {
+                allMessages.push({ id: Date.now().toString(), user: myId, text: val, type: 'text', time: Date.now() });
             }
+
+            await updateDoc(doc(db, "rooms", currentRoom), { messages: allMessages });
+            chatInput.value = ""; chatInput.oninput();
+            chatInput.focus(); // Keep keyboard open
         };
 
-        actionBtn.addEventListener('touchstart', (e) => { e.preventDefault(); startRec(); });
-        actionBtn.addEventListener('touchend', stopRec);
-        actionBtn.addEventListener('mousedown', startRec);
-        actionBtn.addEventListener('mouseup', stopRec);
+        document.getElementById('actionBtn').onclick = () => {
+            if (chatInput.value.trim().length > 0) sendMessage();
+        };
 
-        // PHOTO PROCESSING
         window.processFile = async (file) => {
             if (!file) return;
             const reader = new FileReader();
             reader.onload = async (e) => {
-                allMessages.push({ user: myId, data: e.target.result, type: 'image', time: Date.now() });
+                allMessages.push({ id: Date.now().toString(), user: myId, data: e.target.result, type: 'image', time: Date.now() });
                 await updateDoc(doc(db, "rooms", currentRoom), { messages: allMessages });
             };
             reader.readAsDataURL(file);
         };
 
-        // FIREBASE SYNC
+        // --- UI SYNC ---
         function openWorkspace(code) {
             currentRoom = code;
             document.getElementById('home-view').classList.add('hidden');
             document.getElementById('room-code-display').innerText = code;
-            document.getElementById('call-controls').classList.remove('hidden');
 
             onSnapshot(doc(db, "rooms", code), (s) => {
                 const data = s.data(); if(!data) return;
                 allMessages = data.messages || [];
-                const chatBox = document.getElementById('chatBox');
-                const banner = chatBox.querySelector('.e2ee-tag').outerHTML;
-                chatBox.innerHTML = banner;
+                chatBox.innerHTML = '';
                 
                 allMessages.forEach(m => {
                     const div = document.createElement('div');
                     div.className = `flex flex-col ${m.user === myId ? 'items-end' : 'items-start'}`;
-                    let body = '';
-                    if (m.type === 'image') body = `<img src="${m.data}" class="chat-img" onclick="toggleImg(this)">`;
-                    else if (m.type === 'audio') body = `<audio controls class="h-8 w-48 scale-90 origin-left"><source src="${m.data}"></audio>`;
-                    else body = `<span>${m.text}</span>`;
-                    div.innerHTML = `<div class="bubble ${m.user === myId ? 'bubble-me' : 'bubble-them'}">${body}</div>`;
+                    
+                    let body = m.type === 'image' ? `<img src="${m.data}" class="chat-img" onclick="this.classList.toggle('expanded')">` : 
+                               m.type === 'audio' ? `<audio controls class="h-8 w-48 scale-90 origin-left"><source src="${m.data}"></audio>` : 
+                               `<span>${m.text}</span>`;
+                    
+                    div.innerHTML = `<div class="bubble ${m.user === myId ? 'bubble-me' : 'bubble-them'}" 
+                                     ontouchstart="handleLongPressStart('${m.id}', '${m.user}')" 
+                                     ontouchend="handleLongPressEnd()" 
+                                     onmousedown="handleLongPressStart('${m.id}', '${m.user}')" 
+                                     onmouseup="handleLongPressEnd()">${body}</div>`;
                     chatBox.appendChild(div);
                 });
                 chatBox.scrollTop = chatBox.scrollHeight;
             });
         }
-
-        window.sendMessage = async () => {
-            const val = chatInput.value.trim();
-            if (!val) return;
-            allMessages.push({ user: myId, text: val, type: 'text', time: Date.now() });
-            await updateDoc(doc(db, "rooms", currentRoom), { messages: allMessages });
-            chatInput.value = ""; chatInput.oninput();
-        };
 
         window.createRoom = async () => {
             const code = Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -223,9 +215,6 @@
             const snap = await getDoc(doc(db, "rooms", code));
             if(snap.exists()) openWorkspace(code);
         };
-
-        // Start in home view
-        document.getElementById('home-view').classList.remove('hidden');
     </script>
 </body>
 </html>
