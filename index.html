@@ -14,16 +14,18 @@
         }
         .glass { background: rgba(255, 255, 255, 0.03); border-bottom: 1px solid rgba(255, 255, 255, 0.08); backdrop-filter: blur(20px); }
         
-        /* 1) Buffer ensures messages are never hidden by the bar */
         #chatBox { 
-            flex: 1; overflow-y: auto; padding: 16px; padding-bottom: 120px; 
+            flex: 1; overflow-y: auto; padding: 16px; padding-bottom: 20px; 
             display: flex; flex-direction: column; gap: 10px; -webkit-overflow-scrolling: touch; 
         }
+
+        /* Fixed Bar stays above keyboard via JS resize */
         .input-container { 
-            position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
             background: #0a0a0a; border-top: 1px solid rgba(255,255,255,0.1); 
-            padding: 10px 10px calc(15px + env(safe-area-inset-bottom)) 10px; 
+            padding: 10px 10px calc(10px + env(safe-area-inset-bottom)) 10px; 
+            width: 100%;
         }
+
         .bubble { max-width: 85%; padding: 10px 14px; border-radius: 20px; font-size: 15px; line-height: 1.4; }
         .bubble-me { background: var(--accent); align-self: flex-end; border-bottom-right-radius: 4px; }
         .bubble-them { background: #262626; align-self: flex-start; border-bottom-left-radius: 4px; }
@@ -31,20 +33,20 @@
         .chat-img { 
             border-radius: 12px; margin: 4px 0; width: 220px; height: 220px; 
             object-fit: cover; display: block; cursor: pointer;
-            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: transform 0.2s ease;
         }
 
-        /* 2) Smooth Zoom Animation */
+        /* Smooth Zoom Overlay */
         .img-overlay {
             position: fixed; top:0; left:0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9); z-index: 200;
+            background: rgba(0,0,0,0.95); z-index: 1000;
             display: none; align-items: center; justify-content: center;
             opacity: 0; transition: opacity 0.3s ease;
         }
         .img-overlay.active { display: flex; opacity: 1; }
         .img-overlay img { 
             max-width: 95%; max-height: 90%; object-fit: contain; 
-            transform: scale(0.8); transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transform: scale(0.7); transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
         .img-overlay.active img { transform: scale(1); }
 
@@ -84,7 +86,7 @@
         </div>
     </div>
 
-    <div id="workspace-view" class="hidden flex-col h-full w-full relative">
+    <div id="workspace-view" class="hidden flex-grow flex flex-col w-full relative overflow-hidden">
         <div id="chatBox"></div>
         <div class="input-container">
             <div class="flex items-center gap-2">
@@ -118,6 +120,16 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         let currentRoom, myId = "User-" + Math.floor(Math.random()*999), mediaRecorder, chunks = [];
+
+        // Smooth Keyboard Handling
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', () => {
+                document.body.style.height = window.visualViewport.height + 'px';
+                window.scrollTo(0, 0);
+                const cb = document.getElementById('chatBox');
+                cb.scrollTop = cb.scrollHeight;
+            });
+        }
 
         window.zoomImage = (src) => {
             const overlay = document.getElementById('imageOverlay');
@@ -209,8 +221,8 @@
             const i = document.getElementById('chatInput');
             if(!i.value || !currentRoom) return;
             const text = i.value;
-            i.value = ""; // Clear immediately for speed
-            i.focus(); // Keep keyboard up
+            i.value = "";
+            i.focus();
             await updateDoc(doc(db, "rooms", currentRoom), { 
                 messages: arrayUnion({ user: myId, text: text, type: 'text', time: Date.now() }) 
             });
