@@ -18,7 +18,7 @@
         .bubble-them { background: var(--bubble-them); align-self: flex-start; border-top-left-radius: 0; }
         
         .footer { background: #202c33; padding: 10px 12px; display: flex; align-items: center; gap: 8px; z-index: 10; }
-        .input-pill { background: #2a3942; border-radius: 24px; flex: 1; display: flex; align-items: center; padding: 0 14px; height: 44px; }
+        .input-pill { background: #2a3942; border-radius: 24px; flex: 1; display: flex; align-items: center; padding: 0 14px; height: 44px; position: relative; }
         .action-btn { background: var(--wa-green); color: #0b141a; width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; shrink: 0; border: none; touch-action: none; }
         
         .overlay { position: fixed; inset: 0; background: #0b141a; z-index: 5000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
@@ -79,7 +79,7 @@
             </button>
             <div class="input-pill">
                 <input type="text" id="chatInput" placeholder="Message" autocomplete="off" class="w-full bg-transparent outline-none text-sm py-2 text-white">
-                <div id="recIndicator" class="hidden text-red-500 font-bold text-xs uppercase"><span class="animate-pulse">●</span> Rec...</div>
+                <div id="recIndicator" class="hidden absolute left-4 text-red-500 font-bold text-xs uppercase"><span class="animate-pulse">●</span> Rec...</div>
             </div>
             <button id="mainAction" class="action-btn">
                 <svg id="micIcon" class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
@@ -126,13 +126,11 @@
             document.getElementById('sendIcon').classList.toggle('hidden', !hasText);
         };
 
-        // KEYBOARD PERSISTENCE LOGIC
         mainAction.addEventListener('pointerdown', (e) => {
             if (chatInput.value.trim().length === 0) {
                 e.preventDefault();
                 startRec();
             } else {
-                // Prevent button click from stealing focus from input
                 e.preventDefault(); 
                 sendMessage();
             }
@@ -158,7 +156,8 @@
                 };
                 mediaRecorder.start();
                 document.getElementById('recIndicator').classList.remove('hidden');
-                chatInput.classList.add('hidden');
+                // Set opacity instead of display hidden to keep keyboard context
+                chatInput.style.opacity = "0";
             } catch(e) { alert("Mic error: Check permissions."); }
         };
 
@@ -166,7 +165,7 @@
             if (mediaRecorder?.state === "recording") {
                 mediaRecorder.stop();
                 document.getElementById('recIndicator').classList.add('hidden');
-                chatInput.classList.remove('hidden');
+                chatInput.style.opacity = "1";
             }
         };
 
@@ -209,7 +208,6 @@
             if(!text) return;
             chatInput.value = ""; 
             chatInput.oninput();
-            // Refocus to keep keyboard up
             chatInput.focus(); 
             await updateDoc(doc(db, "rooms", currentRoom), { messages: arrayUnion({ user: myId, text, type: 'text', time: Date.now() }) });
         }
