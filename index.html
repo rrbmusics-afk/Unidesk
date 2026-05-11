@@ -18,7 +18,6 @@
         .bubble-me { background: var(--bubble-me); align-self: flex-end; border-top-right-radius: 0; }
         .bubble-them { background: var(--bubble-them); align-self: flex-start; border-top-left-radius: 0; }
         
-        /* Expandable Media Logic */
         .media-content { border-radius: 8px; width: 120px; height: 120px; object-fit: cover; transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1); cursor: pointer; border: 1px solid rgba(255,255,255,0.1); margin: 2px 0; }
         .media-content.expanded { width: 100%; height: auto; max-width: 320px; border-radius: 12px; }
 
@@ -29,7 +28,7 @@
         .recording-dot { width: 10px; height: 10px; background: #ff3b30; border-radius: 50%; display: inline-block; margin-right: 8px; animation: blink 1s infinite; }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 
-        .action-btn { background: var(--wa-green); color: #0b141a; width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; shrink: 0; transition: transform 0.1s; }
+        .action-btn { background: var(--wa-green); color: #0b141a; width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; shrink: 0; transition: transform 0.1s; border: none; outline: none; cursor: pointer; }
         .action-btn:active { transform: scale(0.9); }
 
         #home-view { position: fixed; inset: 0; background: #0b141a; z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
@@ -52,7 +51,7 @@
     </header>
 
     <main id="chatBox">
-        <div class="self-center bg-[#182229] text-[#ffd700] text-[10px] px-4 py-1.5 rounded-lg mb-4 border border-[#ffd700]/10 tracking-widest uppercase">
+        <div id="e2ee-banner" class="self-center bg-[#182229] text-[#ffd700] text-[10px] px-4 py-1.5 rounded-lg mb-4 border border-[#ffd700]/10 tracking-widest uppercase">
             End-to-End Encrypted
         </div>
     </main>
@@ -63,7 +62,7 @@
         </button>
         
         <div class="input-pill">
-            <input type="text" id="chatInput" placeholder="Message" autocomplete="off" class="w-full bg-transparent outline-none text-sm py-2">
+            <input type="text" id="chatInput" placeholder="Message" autocomplete="off" class="w-full bg-transparent outline-none text-sm py-2 text-white">
             <div id="recIndicator"><span class="recording-dot"></span> RECORDING...</div>
         </div>
 
@@ -113,89 +112,8 @@
         };
 
         // WhatsApp Voice Recording Logic
-        const startRec = async (e) => {
-            if (chatInput.value.length > 0) return;
-            e.preventDefault();
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                mediaRecorder = new MediaRecorder(stream);
-                audioChunks = [];
-                mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-                mediaRecorder.onstop = async () => {
-                    const reader = new FileReader();
-                    reader.readAsDataURL(new Blob(audioChunks, { type: 'audio/mp4' }));
-                    reader.onloadend = () => uploadMedia(reader.result, 'audio');
-                    stream.getTracks().forEach(t => t.stop());
-                };
-                mediaRecorder.start();
-                document.getElementById('recIndicator').style.display = 'block';
-                chatInput.style.visibility = 'hidden';
-            } catch(err) { alert("Mic access denied"); }
-        };
-
-        const stopRec = () => {
-            if (mediaRecorder?.state === "recording") {
-                mediaRecorder.stop();
-                document.getElementById('recIndicator').style.display = 'none';
-                chatInput.style.visibility = 'visible';
-            }
-        };
-
-        mainAction.addEventListener('mousedown', startRec);
-        mainAction.addEventListener('mouseup', stopRec);
-        mainAction.addEventListener('touchstart', startRec);
-        mainAction.addEventListener('touchend', stopRec);
-        mainAction.onclick = () => { if(chatInput.value.length > 0) sendMessage(); };
-
-        // Media Upload
-        window.processFile = (file) => {
-            if(!file) return;
-            const reader = new FileReader();
-            reader.onload = (e) => uploadMedia(e.target.result, file.type.startsWith('image') ? 'image' : 'doc');
-            reader.readAsDataURL(file);
-        };
-
-        async function uploadMedia(data, type) {
-            const msg = { id: Date.now().toString(), user: myId, data, type, time: Date.now() };
-            allMessages.push(msg);
-            await updateDoc(doc(db, "rooms", currentRoom), { messages: allMessages });
-        }
-
-        // Room Management
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, doc, setDoc, updateDoc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-        const firebaseConfig = { apiKey: "AIzaSyDbfmd0zmv_mFV0CG2OrhKPPeU3zPYGOBg", authDomain: "unidesk-a70ac.firebaseapp.com", projectId: "unidesk-a70ac" };
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        
-        let currentRoom, myId = "User-" + Math.floor(Math.random()*9999), allMessages = [];
-        let mediaRecorder, audioChunks = [];
-
-        const chatInput = document.getElementById('chatInput');
-        const micIcon = document.getElementById('micIcon');
-        const sendIcon = document.getElementById('sendIcon');
-        const mainAction = document.getElementById('mainAction');
-
-        // Toggle Mic/Send
-        chatInput.oninput = () => {
-            const hasVal = chatInput.value.trim().length > 0;
-            micIcon.classList.toggle('hidden', hasVal);
-            sendIcon.classList.toggle('hidden', !hasVal);
-        };
-
-        // Support Enter Key to send
-        chatInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                window.sendMessage();
-            }
-        });
-
-        // WhatsApp Voice Recording Logic
-        const startRec = async (e) => {
-            if (chatInput.value.length > 0) return;
-            e.preventDefault();
+        const startRec = async () => {
+            if (chatInput.value.trim().length > 0) return;
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 mediaRecorder = new MediaRecorder(stream);
@@ -210,31 +128,30 @@
                 };
                 mediaRecorder.start();
                 document.getElementById('recIndicator').style.display = 'block';
-                chatInput.style.visibility = 'hidden';
+                chatInput.style.display = 'none';
             } catch(err) { alert("Mic access denied"); }
         };
 
         const stopRec = () => {
-            if (mediaRecorder?.state === "recording") {
+            if (mediaRecorder && mediaRecorder.state === "recording") {
                 mediaRecorder.stop();
                 document.getElementById('recIndicator').style.display = 'none';
-                chatInput.style.visibility = 'visible';
+                chatInput.style.display = 'block';
             }
         };
 
-        mainAction.addEventListener('mousedown', startRec);
-        mainAction.addEventListener('mouseup', stopRec);
-        mainAction.addEventListener('touchstart', startRec);
-        mainAction.addEventListener('touchend', stopRec);
+        // Improved Click/Hold Logic
+        mainAction.onmousedown = (e) => { if(chatInput.value.trim() === "") startRec(); };
+        mainAction.onmouseup = (e) => { if(chatInput.value.trim() === "") stopRec(); };
+        mainAction.ontouchstart = (e) => { e.preventDefault(); if(chatInput.value.trim() === "") startRec(); };
+        mainAction.ontouchend = (e) => { e.preventDefault(); if(chatInput.value.trim() === "") stopRec(); };
         
-        // Fixed Click Logic
         mainAction.onclick = () => { 
             if(chatInput.value.trim().length > 0) {
-                window.sendMessage(); 
+                sendMessage(); 
             }
         };
 
-        // Media Upload
         window.processFile = (file) => {
             if(!file) return;
             const reader = new FileReader();
@@ -243,25 +160,19 @@
         };
 
         async function uploadMedia(data, type) {
-            if(!currentRoom) return;
             const msg = { id: Date.now().toString(), user: myId, data, type, time: Date.now() };
             allMessages.push(msg);
             await updateDoc(doc(db, "rooms", currentRoom), { messages: allMessages });
         }
 
-        // Room Management - Attached to window for HTML access
         window.createRoom = async () => {
             const btn = document.getElementById('newSessionBtn');
-            const originalText = btn.innerText;
             btn.innerText = "INITIALIZING...";
             const code = Math.random().toString(36).substring(2, 8).toUpperCase();
             try {
                 await setDoc(doc(db, "rooms", code), { messages: [], createdAt: Date.now() });
                 openWorkspace(code);
-            } catch(e) { 
-                alert("Database Error. Check connection."); 
-                btn.innerText = originalText; 
-            }
+            } catch(e) { alert("Database Error"); btn.innerText = "New Session"; }
         };
 
         window.joinRoom = async () => {
@@ -285,12 +196,13 @@
 
         function renderChat() {
             const chatBox = document.getElementById('chatBox');
-            const bannerHtml = `<div class="self-center bg-[#182229] text-[#ffd700] text-[10px] px-4 py-1.5 rounded-lg mb-4 border border-[#ffd700]/10 tracking-widest uppercase">End-to-End Encrypted</div>`;
-            chatBox.innerHTML = bannerHtml;
+            const banner = document.getElementById('e2ee-banner');
+            chatBox.innerHTML = '';
+            chatBox.appendChild(banner);
             
             allMessages.forEach(m => {
                 const div = document.createElement('div');
-                div.className = `flex flex-col ${m.user === myId ? 'items-end' : 'items-start'} mb-2`;
+                div.className = `flex flex-col ${m.user === myId ? 'items-end' : 'items-start'}`;
                 
                 let html = '';
                 if (m.type === 'text') {
@@ -307,19 +219,15 @@
             chatBox.scrollTop = chatBox.scrollHeight;
         }
 
-        // Attached to window so the button and enter key can find it
         window.sendMessage = async () => {
             const val = chatInput.value.trim(); 
-            if(!val || !currentRoom) return;
-            
-            const newMessage = { id: Date.now().toString(), user: myId, text: val, type: 'text', time: Date.now() };
-            allMessages.push(newMessage);
-            
+            if(!val) return;
+            const newMsg = { id: Date.now().toString(), user: myId, text: val, type: 'text', time: Date.now() };
+            allMessages.push(newMsg);
             await updateDoc(doc(db, "rooms", currentRoom), { messages: allMessages });
             chatInput.value = ""; 
-            chatInput.oninput(); // Reset icons
+            chatInput.oninput();
         };
     </script>
-
 </body>
 </html>
