@@ -13,6 +13,10 @@
         .bubble { max-width: 85%; padding: 8px 12px; border-radius: 8px; font-size: 14.5px; position: relative; box-shadow: 0 1px 0.5px rgba(0,0,0,0.13); word-wrap: break-word; }
         .bubble-me { background: var(--bubble-me); align-self: flex-end; border-top-right-radius: 0; }
         .bubble-them { background: var(--bubble-them); align-self: flex-start; border-top-left-radius: 0; }
+        
+        /* Document Bubble Style */
+        .doc-bubble { display: flex; align-items: center; gap: 10px; background: rgba(0,0,0,0.2); padding: 8px; border-radius: 6px; margin-bottom: 4px; text-decoration: none; color: inherit; }
+
         .footer { background: #202c33; padding: 10px 12px calc(10px + env(safe-area-inset-bottom)); display: flex; align-items: center; gap: 8px; }
         .input-pill { background: #2a3942; border-radius: 24px; flex: 1; display: flex; align-items: center; padding: 0 14px; height: 44px; }
         #recIndicator { display: none; color: #ff453a; font-weight: 600; font-size: 13px; flex-grow: 1; padding-left: 10px; }
@@ -45,7 +49,9 @@
     </main>
 
     <footer class="footer">
-        <button onclick="document.getElementById('fileInput').click()" class="text-gray-400 p-1"><svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg></button>
+        <button onclick="document.getElementById('fileInput').click()" class="text-gray-400 p-1">
+            <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>
+        </button>
         <div class="input-pill">
             <input type="text" id="chatInput" placeholder="Message" autocomplete="off" class="w-full bg-transparent outline-none text-sm py-2 text-white">
             <div id="recIndicator"><span class="recording-dot"></span> RECORDING...</div>
@@ -73,22 +79,22 @@
         </div>
     </div>
 
-    <input type="file" id="fileInput" class="hidden" accept="image/*" onchange="processFile(this.files[0])">
+    <!-- Modified file input to support images and documents -->
+    <input type="file" id="fileInput" class="hidden" accept="image/*,application/pdf,application/msword,text/plain" onchange="processFile(this.files[0])">
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, doc, setDoc, updateDoc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, updateDoc, onSnapshot, getDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = { apiKey: "AIzaSyDbfmd0zmv_mFV0CG2OrhKPPeU3zPYGOBg", authDomain: "unidesk-a70ac.firebaseapp.com", projectId: "unidesk-a70ac" };
         const db = getFirestore(initializeApp(firebaseConfig));
         
         let currentRoom, isAdmin = false, myId = "User-" + Math.floor(Math.random()*9999);
-        let mediaRecorder, audioChunks = [], allMessages = [];
+        let mediaRecorder, audioChunks = [];
 
         const chatInput = document.getElementById('chatInput');
         const mainAction = document.getElementById('mainAction');
 
-        // Logic: Send text on click, Record on hold
         chatInput.oninput = () => {
             const hasText = chatInput.value.trim().length > 0;
             document.getElementById('micIcon').classList.toggle('hidden', hasText);
@@ -97,19 +103,21 @@
 
         const startRec = async () => {
             if (chatInput.value.trim()) return;
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            mediaRecorder = new MediaRecorder(stream);
-            audioChunks = [];
-            mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-            mediaRecorder.onstop = () => {
-                const reader = new FileReader();
-                reader.readAsDataURL(new Blob(audioChunks, { type: 'audio/mp4' }));
-                reader.onloadend = () => uploadMedia(reader.result, 'audio');
-                stream.getTracks().forEach(t => t.stop());
-            };
-            mediaRecorder.start();
-            document.getElementById('recIndicator').style.display = 'block';
-            chatInput.style.display = 'none';
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+                mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+                mediaRecorder.onstop = () => {
+                    const reader = new FileReader();
+                    reader.readAsDataURL(new Blob(audioChunks, { type: 'audio/mp4' }));
+                    reader.onloadend = () => uploadMedia(reader.result, 'audio');
+                    stream.getTracks().forEach(t => t.stop());
+                };
+                mediaRecorder.start();
+                document.getElementById('recIndicator').style.display = 'block';
+                chatInput.style.display = 'none';
+            } catch(e) { alert("Mic access denied"); }
         };
 
         const stopRec = () => {
@@ -120,7 +128,6 @@
             }
         };
 
-        // UI Event Listeners
         mainAction.onmousedown = startRec;
         mainAction.onmouseup = stopRec;
         mainAction.ontouchstart = (e) => { if(!chatInput.value.trim()) { e.preventDefault(); startRec(); } };
@@ -136,14 +143,15 @@
 
         window.joinRoom = async () => {
             const code = document.getElementById('roomCodeInput').value.toUpperCase();
+            if(!code) return;
             const snap = await getDoc(doc(db, "rooms", code));
             if(snap.exists()) {
                 await updateDoc(doc(db, "rooms", code), { pendingReq: myId });
                 document.getElementById('wait-view').style.display = 'flex';
                 onSnapshot(doc(db, "rooms", code), (s) => {
-                    if(s.data().pendingReq === 'approved') openWorkspace(code);
+                    if(s.data()?.pendingReq === 'approved') openWorkspace(code);
                 });
-            }
+            } else { alert("Session Not Found"); }
         };
 
         window.approveUser = async () => {
@@ -158,33 +166,59 @@
             document.getElementById('status-text').innerText = "Session: " + code;
             onSnapshot(doc(db, "rooms", code), (s) => {
                 const data = s.data();
+                if(!data) return;
                 if(isAdmin && data.pendingReq && data.pendingReq !== 'approved') document.getElementById('admin-panel').style.display = 'block';
-                allMessages = data.messages || [];
-                renderChat();
+                renderChat(data.messages || []);
             });
         }
 
-        async function uploadMedia(data, type) {
-            allMessages.push({ user: myId, data, type, time: Date.now() });
-            await updateDoc(doc(db, "rooms", currentRoom), { messages: allMessages });
+        async function uploadMedia(data, type, fileName = "") {
+            const newMsg = { user: myId, data, type, fileName, time: Date.now() };
+            await updateDoc(doc(db, "rooms", currentRoom), { messages: arrayUnion(newMsg) });
         }
 
         async function sendMessage() {
             const text = chatInput.value.trim();
-            allMessages.push({ user: myId, text, type: 'text', time: Date.now() });
-            await updateDoc(doc(db, "rooms", currentRoom), { messages: allMessages });
+            if(!text) return;
+            const newMsg = { user: myId, text, type: 'text', time: Date.now() };
+            await updateDoc(doc(db, "rooms", currentRoom), { messages: arrayUnion(newMsg) });
             chatInput.value = ""; chatInput.oninput();
         }
 
-        function renderChat() {
+        window.processFile = (file) => {
+            if(!file) return;
+            const reader = new FileReader();
+            const type = file.type.startsWith('image') ? 'image' : 'doc';
+            reader.onload = (e) => uploadMedia(e.target.result, type, file.name);
+            reader.readAsDataURL(file);
+        };
+
+        function renderChat(messages) {
             const box = document.getElementById('chatBox');
             const banner = document.getElementById('e2ee-banner');
             box.innerHTML = ''; box.appendChild(banner);
-            allMessages.forEach(m => {
+            
+            messages.forEach(m => {
                 const div = document.createElement('div');
                 div.className = `flex flex-col ${m.user === myId ? 'items-end' : 'items-start'}`;
-                if(m.type === 'text') div.innerHTML = `<div class="bubble ${m.user === myId ? 'bubble-me' : 'bubble-them'}">${m.text}</div>`;
-                else if(m.type === 'audio') div.innerHTML = `<div class="bubble ${m.user === myId ? 'bubble-me' : 'bubble-them'}"><audio controls class="h-8 w-44 brightness-90 invert"><source src="${m.data}"></audio></div>`;
+                let inner = "";
+                
+                if(m.type === 'text') {
+                    inner = `<div class="bubble ${m.user === myId ? 'bubble-me' : 'bubble-them'}">${m.text}</div>`;
+                } else if(m.type === 'audio') {
+                    inner = `<div class="bubble ${m.user === myId ? 'bubble-me' : 'bubble-them'}"><audio controls class="h-8 w-44 brightness-90 invert"><source src="${m.data}"></audio></div>`;
+                } else if(m.type === 'image') {
+                    inner = `<img src="${m.data}" class="media-content rounded-lg mb-1 max-w-[200px]" onclick="this.style.maxWidth = this.style.maxWidth === '100%' ? '200px' : '100%'">`;
+                } else if(m.type === 'doc') {
+                    inner = `<div class="bubble ${m.user === myId ? 'bubble-me' : 'bubble-them'}">
+                                <a href="${m.data}" download="${m.fileName}" class="doc-bubble">
+                                    <svg class="w-6 h-6 text-blue-400" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"/></svg>
+                                    <span class="text-xs truncate max-w-[120px]">${m.fileName || 'Document'}</span>
+                                </a>
+                             </div>`;
+                }
+                
+                div.innerHTML = inner;
                 box.appendChild(div);
             });
             box.scrollTop = box.scrollHeight;
