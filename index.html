@@ -8,16 +8,21 @@
     <style>
         :root { --accent: #007AFF; --wa-green: #25D366; --bg-main: #0b141a; --bubble-me: #005c4b; --bubble-them: #202c33; }
         body { background: var(--bg-main); color: #e9edef; font-family: -apple-system, BlinkMacSystemFont, sans-serif; position: absolute; inset: 0; margin: 0; display: flex; flex-direction: column; overflow: hidden; }
+        
         .header { height: 64px; background: #202c33; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; z-index: 100; border-bottom: 1px solid rgba(255,255,255,0.05); shrink: 0; }
         #chatBox { flex: 1; overflow-y: auto; padding: 20px 16px; display: flex; flex-direction: column; gap: 8px; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); background-blend-mode: overlay; background-color: #0b141a; scroll-behavior: smooth; }
+        
         .bubble { max-width: 85%; padding: 8px 12px; border-radius: 8px; font-size: 14.5px; position: relative; box-shadow: 0 1px 0.5px rgba(0,0,0,0.13); word-wrap: break-word; }
         .bubble-me { background: var(--bubble-me); align-self: flex-end; border-top-right-radius: 0; }
         .bubble-them { background: var(--bubble-them); align-self: flex-start; border-top-left-radius: 0; }
+        
         .footer { background: #202c33; padding: 10px 12px; display: flex; align-items: center; gap: 8px; shrink: 0; }
         .input-pill { background: #2a3942; border-radius: 24px; flex: 1; display: flex; align-items: center; padding: 0 14px; height: 44px; }
-        #recIndicator { display: none; color: #ff453a; font-weight: 600; font-size: 13px; flex-grow: 1; }
-        .action-btn { background: var(--wa-green); color: #0b141a; width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; shrink: 0; border: none; outline: none; cursor: pointer; }
+        
+        .action-btn { background: var(--wa-green); color: #0b141a; width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; shrink: 0; border: none; outline: none; }
+        
         #home-view, #wait-view { position: fixed; inset: 0; background: #0b141a; z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
+        #admin-panel { display: none; background: #f59e0b; color: black; font-size: 10px; padding: 2px 8px; border-radius: 4px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -25,12 +30,14 @@
     <header class="header">
         <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center font-bold text-sm">A</div>
-            <div>
-                <span class="block text-[15px] font-bold leading-tight">UniDesk Shield</span>
-                <span id="status-text" class="text-[11px] text-gray-400">Secure Session</span>
+            <div class="flex flex-col">
+                <span class="text-[15px] font-bold leading-tight">UniDesk Shield</span>
+                <div class="flex items-center gap-2">
+                    <span id="status-text" class="text-[11px] text-gray-400">Secure</span>
+                    <div id="admin-panel" onclick="approveUser()">ACCEPT REQ?</div>
+                </div>
             </div>
         </div>
-        <div id="admin-panel" onclick="approveUser()" class="hidden bg-amber-500 text-black text-[10px] px-3 py-1 rounded font-bold cursor-pointer">APPROVE REQ</div>
     </header>
 
     <main id="chatBox">
@@ -43,28 +50,37 @@
         </button>
         <div class="input-pill">
             <input type="text" id="chatInput" placeholder="Message" autocomplete="off" class="w-full bg-transparent outline-none text-sm py-2 text-white">
-            <div id="recIndicator" class="hidden"><span class="animate-pulse inline-block w-2 h-2 bg-red-500 rounded-full mr-2"></span> RECORDING...</div>
+            <div id="recIndicator" class="hidden text-red-500 font-bold text-xs"><span class="animate-pulse">●</span> RECORDING...</div>
         </div>
-        <!-- Using pointerdown/up to handle both mouse and touch reliably -->
         <button id="mainAction" class="action-btn">
             <svg id="micIcon" class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
             <svg id="sendIcon" class="w-6 h-6 hidden" fill="currentColor" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
         </button>
     </footer>
 
+    <!-- HOME UI RESTORED -->
     <div id="home-view">
-        <h1 class="text-3xl font-black text-blue-500 mb-8 tracking-tighter">AETHERCORE</h1>
-        <div class="w-full max-w-xs space-y-4">
-            <button onclick="createRoom()" class="w-full bg-white/5 border border-white/10 p-5 rounded-2xl font-bold uppercase text-xs text-white/70">Create Session</button>
-            <input type="text" id="roomCodeInput" placeholder="ACCESS CODE" class="w-full bg-[#2a3942] p-5 rounded-2xl text-center outline-none text-blue-400 uppercase font-mono">
-            <button onclick="joinRoom()" class="w-full bg-blue-600 h-14 rounded-2xl font-bold text-xs uppercase">Connect</button>
+        <div class="w-full max-w-xs space-y-5 text-center">
+            <h1 class="text-3xl font-black text-blue-500 tracking-tighter">AETHERCORE</h1>
+            <button onclick="createRoom()" class="w-full bg-white/5 border border-white/10 p-5 rounded-2xl font-bold uppercase text-xs text-white/70">New Session</button>
+            <div class="relative">
+                <input type="text" id="roomCodeInput" placeholder="ACCESS CODE" class="w-full bg-[#2a3942] p-5 rounded-2xl text-center outline-none text-blue-400 uppercase font-mono tracking-widest">
+            </div>
+            <button onclick="joinRoom()" class="w-full bg-blue-600 h-14 rounded-2xl font-bold text-xs uppercase shadow-xl">Connect</button>
         </div>
     </div>
 
+    <!-- WAIT VIEW RESTORED -->
     <div id="wait-view" class="hidden">
-        <div class="text-center space-y-4">
-            <div class="animate-spin rounded-full h-10 w-10 border-t-2 border-blue-500 mx-auto"></div>
-            <p class="text-gray-400 text-sm">Waiting for administrator approval...</p>
+        <div class="text-center space-y-6">
+            <div class="relative">
+                <div class="animate-ping absolute inset-0 rounded-full bg-blue-500/20"></div>
+                <div class="relative animate-spin rounded-full h-14 w-14 border-b-2 border-blue-500 mx-auto"></div>
+            </div>
+            <div>
+                <h2 class="text-xl font-bold">Request Sent</h2>
+                <p class="text-gray-400 text-sm mt-2">Wait for Admin to approve your connection...</p>
+            </div>
         </div>
     </div>
 
@@ -80,11 +96,11 @@
         let currentRoom, isAdmin = false, myId = "User-" + Math.floor(Math.random()*9999);
         let mediaRecorder, audioChunks = [];
 
-        // Dynamic Viewport Fix
+        // Viewport keyboard fix
         if (window.visualViewport) {
             window.visualViewport.addEventListener('resize', () => {
                 document.body.style.height = window.visualViewport.height + 'px';
-                window.scrollTo(0,0);
+                window.scrollTo(0, 0);
             });
         }
 
@@ -97,7 +113,22 @@
             document.getElementById('sendIcon').classList.toggle('hidden', !hasText);
         };
 
-        // RECORDING LOGIC
+        // Unified Pointer Events for Send Button Fix
+        mainAction.addEventListener('pointerdown', (e) => {
+            if (chatInput.value.trim().length === 0) {
+                e.preventDefault();
+                startRec();
+            }
+        });
+
+        mainAction.addEventListener('pointerup', (e) => {
+            if (chatInput.value.trim().length > 0) {
+                sendMessage();
+            } else {
+                stopRec();
+            }
+        });
+
         const startRec = async () => {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -113,7 +144,7 @@
                 mediaRecorder.start();
                 document.getElementById('recIndicator').classList.remove('hidden');
                 chatInput.classList.add('hidden');
-            } catch(e) { console.error("Mic Error"); }
+            } catch(e) { console.log("Mic error"); }
         };
 
         const stopRec = () => {
@@ -124,26 +155,11 @@
             }
         };
 
-        // UNIFIED BUTTON LOGIC
-        mainAction.addEventListener('pointerdown', (e) => {
-            if (chatInput.value.trim().length === 0) {
-                e.preventDefault();
-                startRec();
-            }
-        });
-
-        mainAction.addEventListener('pointerup', (e) => {
-            if (chatInput.value.trim().length > 0) {
-                sendMessage(); // Trigger send if there is text
-            } else {
-                stopRec(); // Otherwise stop recording
-            }
-        });
-
         window.createRoom = async () => {
             isAdmin = true;
             const code = Math.random().toString(36).substring(2, 8).toUpperCase();
             await setDoc(doc(db, "rooms", code), { messages: [], status: 'active', pendingReq: null });
+            alert("YOUR CODE: " + code); // Show code immediately
             openWorkspace(code);
         };
 
@@ -152,28 +168,30 @@
             if(!code) return;
             const snap = await getDoc(doc(db, "rooms", code));
             if(snap.exists()) {
+                // Request access
                 await updateDoc(doc(db, "rooms", code), { pendingReq: myId });
                 document.getElementById('wait-view').classList.remove('hidden');
+                // Watch for admin approval
                 onSnapshot(doc(db, "rooms", code), (s) => {
                     if(s.data()?.pendingReq === 'approved') openWorkspace(code);
                 });
-            }
+            } else { alert("Session Not Found"); }
         };
 
         window.approveUser = async () => {
             await updateDoc(doc(db, "rooms", currentRoom), { pendingReq: 'approved' });
-            document.getElementById('admin-panel').classList.add('hidden');
+            document.getElementById('admin-panel').style.display = 'none';
         };
 
         function openWorkspace(code) {
             currentRoom = code;
             document.getElementById('home-view').classList.add('hidden');
             document.getElementById('wait-view').classList.add('hidden');
-            document.getElementById('status-text').innerText = "Room: " + code;
+            document.getElementById('status-text').innerText = "Session: " + code;
             onSnapshot(doc(db, "rooms", code), (s) => {
                 const data = s.data();
                 if(isAdmin && data?.pendingReq && data.pendingReq !== 'approved') {
-                    document.getElementById('admin-panel').classList.remove('hidden');
+                    document.getElementById('admin-panel').style.display = 'block';
                 }
                 renderChat(data?.messages || []);
             });
@@ -214,7 +232,7 @@
                 if(m.type === 'text') inner = `<div class="bubble ${m.user === myId ? 'bubble-me' : 'bubble-them'}">${m.text}</div>`;
                 else if(m.type === 'audio') inner = `<div class="bubble ${m.user === myId ? 'bubble-me' : 'bubble-them'}"><audio controls class="h-8 w-44 brightness-90 invert"><source src="${m.data}"></audio></div>`;
                 else if(m.type === 'image') inner = `<img src="${m.data}" class="rounded-lg max-w-[200px] border border-white/5">`;
-                else if(m.type === 'doc') inner = `<div class="bubble ${m.user === myId ? 'bubble-me' : 'bubble-them'}"><a href="${m.data}" download="${m.fileName}" class="text-xs text-blue-400 underline">File: ${m.fileName}</a></div>`;
+                else if(m.type === 'doc') inner = `<div class="bubble ${m.user === myId ? 'bubble-me' : 'bubble-them'}"><a href="${m.data}" download="${m.fileName}" class="text-xs text-blue-400">File: ${m.fileName}</a></div>`;
                 div.innerHTML = inner;
                 box.appendChild(div);
             });
