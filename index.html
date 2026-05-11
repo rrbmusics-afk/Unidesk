@@ -92,7 +92,12 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, doc, setDoc, updateDoc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        const firebaseConfig = { apiKey: "AIzaSyDbfmd0zmv_mFV0CG2OrhKPPeU3zPYGOBg", authDomain: "unidesk-a70ac.firebaseapp.com", projectId: "unidesk-a70ac" };
+        // Your Firebase config
+        const firebaseConfig = { 
+            apiKey: "AIzaSyDbfmd0zmv_mFV0CG2OrhKPPeU3zPYGOBg", 
+            authDomain: "unidesk-a70ac.firebaseapp.com", 
+            projectId: "unidesk-a70ac" 
+        };
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         
@@ -104,14 +109,97 @@
         const sendIcon = document.getElementById('sendIcon');
         const mainAction = document.getElementById('mainAction');
 
-        // Toggle Mic/Send
+        // UI Toggle for icons
         chatInput.oninput = () => {
             const hasVal = chatInput.value.trim().length > 0;
             micIcon.classList.toggle('hidden', hasVal);
             sendIcon.classList.toggle('hidden', !hasVal);
         };
 
-        // WhatsApp Voice Recording Logic
+        // Firebase-linked functions
+        window.createRoom = async () => {
+            const btn = document.getElementById('newSessionBtn');
+            btn.innerText = "INITIALIZING...";
+            const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+            try {
+                // Initialize room in Firebase
+                await setDoc(doc(db, "rooms", code), { messages: [], createdAt: Date.now() });
+                openWorkspace(code);
+            } catch(e) { 
+                console.error(e);
+                alert("Database Error"); 
+                btn.innerText = "New Session"; 
+            }
+        };
+
+        window.joinRoom = async () => {
+            const code = document.getElementById('roomCodeInput').value.trim().toUpperCase();
+            if(!code) return;
+            const snap = await getDoc(doc(db, "rooms", code));
+            if(snap.exists()) {
+                openWorkspace(code);
+            } else {
+                alert("Session Not Found");
+            }
+        };
+
+        function openWorkspace(code) {
+            currentRoom = code;
+            // Transition UI: Hide home screen
+            document.getElementById('home-view').style.display = 'none';
+            document.getElementById('status-text').innerText = "Online: " + code;
+
+            // Listen for messages in real-time
+            onSnapshot(doc(db, "rooms", code), (s) => {
+                const data = s.data(); 
+                if(!data) return;
+                allMessages = data.messages || [];
+                renderChat();
+            });
+        }
+
+        window.sendMessage = async () => {
+            const val = chatInput.value.trim(); 
+            if(!val) return;
+            const newMsg = { id: Date.now().toString(), user: myId, text: val, type: 'text', time: Date.now() };
+            allMessages.push(newMsg);
+            await updateDoc(doc(db, "rooms", currentRoom), { messages: allMessages });
+            chatInput.value = ""; 
+            chatInput.oninput();
+        };
+
+        async function uploadMedia(data, type) {
+            const msg = { id: Date.now().toString(), user: myId, data, type, time: Date.now() };
+            allMessages.push(msg);
+            await updateDoc(doc(db, "rooms", currentRoom), { messages: allMessages });
+        }
+
+        function renderChat() {
+            const chatBox = document.getElementById('chatBox');
+            const banner = document.getElementById('e2ee-banner');
+            chatBox.innerHTML = '';
+            chatBox.appendChild(banner); // Keep encryption banner at top
+            
+            allMessages.forEach(m => {
+                const div = document.createElement('div');
+                div.className = `flex flex-col ${m.user === myId ? 'items-end' : 'items-start'}`;
+                
+                let html = '';
+                if (m.type === 'text') {
+                    html = `<div class="bubble ${m.user === myId ? 'bubble-me' : 'bubble-them'}">${m.text}</div>`;
+                } else if (m.type === 'image' || m.type === 'doc') {
+                    html = `<img src="${m.data}" class="media-content" onclick="this.classList.toggle('expanded')">`;
+                } else if (m.type === 'audio') {
+                    html = `<div class="bubble ${m.user === myId ? 'bubble-me' : 'bubble-them'}"><audio controls class="h-8 w-44 brightness-90 invert"><source src="${m.data}"></audio></div>`;
+                }
+                
+                div.innerHTML = html;
+                chatBox.appendChild(div);
+            });
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        // Handle Audio Recording
         const startRec = async () => {
             if (chatInput.value.trim().length > 0) return;
             try {
@@ -140,93 +228,18 @@
             }
         };
 
-        // Improved Click/Hold Logic
-        mainAction.onmousedown = (e) => { if(chatInput.value.trim() === "") startRec(); };
-        mainAction.onmouseup = (e) => { if(chatInput.value.trim() === "") stopRec(); };
-        mainAction.ontouchstart = (e) => { e.preventDefault(); if(chatInput.value.trim() === "") startRec(); };
-        mainAction.ontouchend = (e) => { e.preventDefault(); if(chatInput.value.trim() === "") stopRec(); };
-        
-        mainAction.onclick = () => { 
-            if(chatInput.value.trim().length > 0) {
-                sendMessage(); 
-            }
-        };
+        // Inputs & Event Bindings
+        mainAction.onmousedown = () => { if(chatInput.value.trim() === "") startRec(); };
+        mainAction.onmouseup = () => stopRec();
+        mainAction.ontouchstart = (e) => { if(chatInput.value.trim() === "") { e.preventDefault(); startRec(); } };
+        mainAction.ontouchend = (e) => { e.preventDefault(); stopRec(); };
+        mainAction.onclick = () => { if(chatInput.value.trim().length > 0) sendMessage(); };
 
         window.processFile = (file) => {
             if(!file) return;
             const reader = new FileReader();
             reader.onload = (e) => uploadMedia(e.target.result, file.type.startsWith('image') ? 'image' : 'doc');
             reader.readAsDataURL(file);
-        };
-
-        async function uploadMedia(data, type) {
-            const msg = { id: Date.now().toString(), user: myId, data, type, time: Date.now() };
-            allMessages.push(msg);
-            await updateDoc(doc(db, "rooms", currentRoom), { messages: allMessages });
-        }
-
-        window.createRoom = async () => {
-            const btn = document.getElementById('newSessionBtn');
-            btn.innerText = "INITIALIZING...";
-            const code = Math.random().toString(36).substring(2, 8).toUpperCase();
-            try {
-                await setDoc(doc(db, "rooms", code), { messages: [], createdAt: Date.now() });
-                openWorkspace(code);
-            } catch(e) { alert("Database Error"); btn.innerText = "New Session"; }
-        };
-
-        window.joinRoom = async () => {
-            const code = document.getElementById('roomCodeInput').value.trim().toUpperCase();
-            if(!code) return;
-            const snap = await getDoc(doc(db, "rooms", code));
-            if(snap.exists()) openWorkspace(code); else alert("Session Not Found");
-        };
-
-        function openWorkspace(code) {
-            currentRoom = code;
-            document.getElementById('home-view').classList.add('hidden');
-            document.getElementById('status-text').innerText = "Online: " + code;
-
-            onSnapshot(doc(db, "rooms", code), (s) => {
-                const data = s.data(); if(!data) return;
-                allMessages = data.messages || [];
-                renderChat();
-            });
-        }
-
-        function renderChat() {
-            const chatBox = document.getElementById('chatBox');
-            const banner = document.getElementById('e2ee-banner');
-            chatBox.innerHTML = '';
-            chatBox.appendChild(banner);
-            
-            allMessages.forEach(m => {
-                const div = document.createElement('div');
-                div.className = `flex flex-col ${m.user === myId ? 'items-end' : 'items-start'}`;
-                
-                let html = '';
-                if (m.type === 'text') {
-                    html = `<div class="bubble ${m.user === myId ? 'bubble-me' : 'bubble-them'}">${m.text}</div>`;
-                } else if (m.type === 'image' || m.type === 'doc') {
-                    html = `<img src="${m.data}" class="media-content" onclick="this.classList.toggle('expanded')">`;
-                } else if (m.type === 'audio') {
-                    html = `<div class="bubble ${m.user === myId ? 'bubble-me' : 'bubble-them'}"><audio controls class="h-8 w-44 brightness-90 invert"><source src="${m.data}"></audio></div>`;
-                }
-                
-                div.innerHTML = html;
-                chatBox.appendChild(div);
-            });
-            chatBox.scrollTop = chatBox.scrollHeight;
-        }
-
-        window.sendMessage = async () => {
-            const val = chatInput.value.trim(); 
-            if(!val) return;
-            const newMsg = { id: Date.now().toString(), user: myId, text: val, type: 'text', time: Date.now() };
-            allMessages.push(newMsg);
-            await updateDoc(doc(db, "rooms", currentRoom), { messages: allMessages });
-            chatInput.value = ""; 
-            chatInput.oninput();
         };
     </script>
 </body>
