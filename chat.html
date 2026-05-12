@@ -2,112 +2,167 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Aethercore Pro</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Aethercore | Secure Communication</title>
+    <!-- CSS file will be linked here -->
     <link rel="stylesheet" href="chat.css">
+    <!-- Google Icons & Fonts -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
 </head>
 <body>
 
-    <!-- HOME SCREEN -->
-    <div id="screen-home" class="screen active">
-        <div class="ae-container">
-            <div class="brand">
-                <h1>AETHERCORE</h1>
-                <p>END-TO-END ENCRYPTED</p>
+    <!-- 1. ENTRY SCREEN (Create/Join Tabs) -->
+    <div id="auth-screen" class="screen active">
+        <div class="auth-container">
+            <div class="brand-header">
+                <div class="logo"></div>
+                <h1>Aethercore</h1>
+                <p>End-to-End Encrypted</p>
             </div>
 
             <div class="tabs">
-                <button onclick="switchTab('create')" id="tab-c" class="active">Create</button>
-                <button onclick="switchTab('join')" id="tab-j">Join</button>
+                <button class="tab-btn active" onclick="switchTab('create')">Create Room</button>
+                <button class="tab-btn" onclick="switchTab('join')">Join Room</button>
             </div>
 
-            <div id="panel-create" class="auth-panel">
-                <input type="text" id="c-user" placeholder="Your Name" oninput="validateAuth()">
-                <input type="text" id="c-group" placeholder="Group Name" oninput="validateAuth()">
-                <button id="btn-create" class="btn-locked" onclick="handleCreate()">CREATE ROOM</button>
-            </div>
+            <div class="tab-content">
+                <!-- Create Room Form -->
+                <form id="create-form" class="auth-form active">
+                    <div class="input-group">
+                        <label>Admin Name</label>
+                        <input type="text" id="admin-name" placeholder="Enter your name" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Group Name</label>
+                        <input type="text" id="group-name" placeholder="e.g. Project Alpha" required>
+                    </div>
+                    <button type="submit" id="btn-create" class="primary-btn" disabled>Create Experience</button>
+                </form>
 
-            <div id="panel-join" class="auth-panel hidden">
-                <input type="text" id="j-user" placeholder="Your Name" oninput="validateAuth()">
-                <input type="text" id="j-code" placeholder="6-Digit Code" oninput="validateAuth()">
-                <button id="btn-join" class="btn-locked" onclick="handleJoin()">JOIN ROOM</button>
+                <!-- Join Room Form -->
+                <form id="join-form" class="auth-form">
+                    <div class="input-group">
+                        <label>Your Name</label>
+                        <input type="text" id="user-name" placeholder="Enter your name" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Room Code</label>
+                        <input type="text" id="room-code-input" placeholder="Paste code here" required>
+                    </div>
+                    <button type="submit" id="btn-join" class="primary-btn" disabled>Knock to Join</button>
+                </form>
             </div>
         </div>
     </div>
 
-    <!-- CHAT SCREEN -->
-    <div id="screen-chat" class="screen">
+    <!-- 2. MAIN CHAT SCREEN -->
+    <div id="chat-screen" class="screen">
+        <!-- Header -->
         <header class="chat-header">
-            <div id="admin-banner" class="hidden" onclick="toggleApprovals(true)">
-                <i class="fa-solid fa-bell"></i> PENDING REQUESTS
-            </div>
-            
             <div class="header-main" onclick="openGroupInfo()">
-                <img id="header-pfp" src="" class="pfp-circle">
-                <div class="header-text">
-                    <h2 id="header-title">---</h2>
-                    <span id="header-code">CODE: ---</span>
+                <div id="group-avatar" class="avatar-container">
+                    <img src="default-group.png" alt="Group Profile" id="header-profile-img">
                 </div>
-                <div class="header-actions">
-                    <i class="fa-solid fa-paperclip" onclick="document.getElementById('doc-input').click()"></i>
+                <div class="header-info">
+                    <h2 id="display-group-name">Loading...</h2>
+                    <span id="display-room-code">Code: ----</span>
                 </div>
+            </div>
+            <div class="header-actions">
+                <span class="material-icons-round">more_vert</span>
             </div>
         </header>
 
-        <div id="chat-flow" class="chat-bg">
-            <!-- Messages load here -->
+        <!-- Admin Approval Notification Bar -->
+        <div id="admin-approval-bar" class="approval-strip hidden">
+            <p><span id="request-count">0</span> pending join requests</p>
+            <button onclick="openApprovalPopup()">View All</button>
         </div>
 
-        <footer class="input-area">
-            <div class="input-container">
-                <textarea id="msg-input" placeholder="Message..." rows="1" oninput="autoResize(this)"></textarea>
+        <!-- Chat Area with Doodle Background -->
+        <main id="chat-messages" class="chat-area">
+            <!-- Messages will be injected here via JS -->
+        </main>
+
+        <!-- Message Input Footer -->
+        <footer class="chat-footer">
+            <div class="input-wrapper">
+                <button class="icon-btn" id="attach-btn">
+                    <span class="material-icons-round">attach_file</span>
+                </button>
+                <textarea id="msg-input" placeholder="Type a message..." rows="1"></textarea>
+                <button class="icon-btn" id="voice-btn">
+                    <span class="material-icons-round" id="mic-icon">mic</span>
+                </button>
+                <button class="icon-btn hidden" id="send-btn">
+                    <span class="material-icons-round">send</span>
+                </button>
             </div>
-            <button id="action-btn" class="action-circle">
-                <i id="action-icon" class="fa-solid fa-microphone"></i>
-            </button>
         </footer>
     </div>
 
-    <!-- MODAL: GROUP INFO -->
-    <div id="modal-info" class="full-modal hidden">
-        <div class="modal-header">
-            <i class="fa-solid fa-arrow-left" onclick="closeGroupInfo()"></i>
-            <span>Group Info</span>
-            <i id="admin-delete" class="fa-solid fa-trash hidden" onclick="deleteGroup()"></i>
-        </div>
-        <div class="modal-body">
-            <div class="pfp-section">
-                <img id="info-pfp" onclick="viewPfpLarge()">
-                <label id="admin-pfp-edit" class="hidden">
-                    <i class="fa-solid fa-camera"></i>
-                    <input type="file" id="pfp-input" accept="image/*" class="hidden" onchange="updatePfp(this)">
-                </label>
+    <!-- 3. POPUPS & OVERLAYS -->
+
+    <!-- Group Info Sidebar/Overlay -->
+    <div id="group-info-overlay" class="overlay">
+        <div class="overlay-content full-screen">
+            <nav class="overlay-nav">
+                <span class="material-icons-round" onclick="closeOverlay('group-info-overlay')">arrow_back</span>
+                <span>Group Info</span>
+            </nav>
+            <div class="info-body">
+                <div class="info-profile-section">
+                    <img id="info-profile-img" src="default-group.png" onclick="viewLargeImage(this.src)">
+                    <button id="change-photo-btn" class="admin-only hidden">
+                        <span class="material-icons-round">photo_camera</span>
+                    </button>
+                </div>
+                <h2 id="info-group-title">Group Name</h2>
+                <p id="info-group-code" class="code-badge">Code: </p>
+                
+                <div class="info-actions">
+                    <div class="admin-only hidden">
+                        <button class="list-item text-danger" onclick="deleteGroup()">
+                            <span class="material-icons-round">delete_forever</span> Delete Group
+                        </button>
+                        <button class="list-item" onclick="renameGroup()">
+                            <span class="material-icons-round">edit</span> Rename Group
+                        </button>
+                    </div>
+                    <button class="list-item text-danger" onclick="leaveGroup()">
+                        <span class="material-icons-round">logout</span> Leave Group
+                    </button>
+                </div>
             </div>
-            <h2 id="info-title">---</h2>
-            <p id="info-code-display">---</p>
-            
-            <div class="member-list-card">
-                <h3>PARTICIPANTS</h3>
-                <div id="member-list"></div>
-            </div>
-            
-            <button class="btn-leave" onclick="leaveGroup()">Leave Group</button>
         </div>
     </div>
 
-    <!-- MODAL: APPROVALS -->
-    <div id="modal-approvals" class="popup-modal hidden">
-        <div class="popup-content">
-            <h3>Entry Requests</h3>
-            <div id="approval-items"></div>
-            <button onclick="toggleApprovals(false)">Close</button>
+    <!-- Approval Requests Popup -->
+    <div id="approval-popup" class="overlay">
+        <div class="overlay-content popup-small">
+            <h3>Join Requests</h3>
+            <div id="requests-list">
+                <!-- Requests injected here -->
+            </div>
+            <button onclick="closeOverlay('approval-popup')">Close</button>
         </div>
     </div>
 
-    <input type="file" id="doc-input" multiple class="hidden" onchange="handleFiles(this)">
+    <!-- Media Viewer (WhatsApp Style) -->
+    <div id="media-viewer" class="overlay">
+        <div class="media-container">
+            <nav class="media-nav">
+                <span class="material-icons-round" onclick="closeOverlay('media-viewer')">arrow_back</span>
+                <button id="download-media"><span class="material-icons-round">file_download</span></button>
+            </nav>
+            <img id="large-view-img" src="">
+        </div>
+    </div>
 
-    <!-- Firebase SDKs -->
-    <script type="module" src="chat.js"></script>
+    <!-- Hidden File Inputs -->
+    <input type="file" id="photo-upload" accept="image/*" style="display:none">
+    <input type="file" id="doc-upload" multiple style="display:none">
+
+    <!-- Firebase & Custom Scripts to be added later -->
 </body>
 </html>
