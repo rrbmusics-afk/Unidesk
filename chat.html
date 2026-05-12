@@ -6,54 +6,57 @@
     <title>Student Lounge | Aethercore</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        :root { --accent: #007AFF; --wa-green: #25D366; --bg-main: #0b141a; --bubble-me: #005c4b; --bubble-them: #202c33; }
+        :root { --accent: #007AFF; --wa-green: #25D366; --bg-main: #0b141a; --bubble-me: #005c4b; --bubble-them: #202c33; --border: rgba(255,255,255,0.08); }
         
         html, body { 
-            background: var(--bg-main); color: #e9edef; font-family: -apple-system, sans-serif; 
+            background: var(--bg-main); color: #e9edef; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
             margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
         }
         
-        /* Layer Management */
         .view-layer { position: fixed; inset: 0; display: none; flex-direction: column; z-index: 10; background: var(--bg-main); }
-        #home-view { display: flex; z-index: 100; justify-content: center; align-items: center; padding: 20px; }
+        #home-view { display: flex; z-index: 100; justify-content: center; align-items: center; padding: 24px; }
         #main-workspace { z-index: 50; }
-        #wait-view { z-index: 200; justify-content: center; align-items: center; background: rgba(11, 20, 26, 0.98); }
+        #wait-view { z-index: 200; justify-content: center; align-items: center; background: radial-gradient(circle at center, #111b21, #0b141a); }
 
-        .nav-bar { height: 60px; background: #202c33; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; cursor: pointer; }
-        .status-bar { height: 40px; background: #111b21; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .nav-bar { height: 64px; background: #202c33; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; cursor: pointer; box-shadow: 0 2px 10px rgba(0,0,0,0.3); }
+        .status-bar { height: 36px; background: #111b21; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; border-bottom: 1px solid var(--border); }
 
-        #chatBox { flex: 1; overflow-y: auto; padding: 20px 16px; display: flex; flex-direction: column; gap: 12px; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); background-blend-mode: overlay; background-color: #0b141a; }
+        #chatBox { flex: 1; overflow-y: auto; padding: 20px 16px; display: flex; flex-direction: column; gap: 8px; background-color: #0b141a; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); background-blend-mode: overlay; }
         
-        .bubble { max-width: 85%; padding: 8px 12px; border-radius: 8px; font-size: 14.5px; box-shadow: 0 1px 0.5px rgba(0,0,0,0.13); }
-        .bubble-me { background: var(--bubble-me); align-self: flex-end; border-top-right-radius: 0; }
-        .bubble-them { background: var(--bubble-them); align-self: flex-start; border-top-left-radius: 0; }
+        .bubble { max-width: 82%; padding: 8px 12px; border-radius: 12px; font-size: 15px; line-height: 1.4; box-shadow: 0 1px 0.5px rgba(0,0,0,0.2); position: relative; }
+        .bubble-me { background: var(--bubble-me); align-self: flex-end; border-bottom-right-radius: 2px; color: #e9edef; }
+        .bubble-them { background: var(--bubble-them); align-self: flex-start; border-bottom-left-radius: 2px; color: #e9edef; }
         
-        .footer { background: #202c33; padding: 10px 12px; display: flex; align-items: center; gap: 8px; }
-        .input-pill { background: #2a3942; border-radius: 24px; flex: 1; display: flex; align-items: center; padding: 0 14px; height: 44px; }
-        .action-btn { background: var(--wa-green); color: #0b141a; width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+        .footer { background: #202c33; padding: 8px 12px; display: flex; align-items: center; gap: 8px; padding-bottom: calc(8px + env(safe-area-inset-bottom)); }
+        .input-pill { background: #2a3942; border-radius: 24px; flex: 1; display: flex; align-items: center; padding: 0 16px; height: 42px; border: 1px solid var(--border); }
+        .action-btn { background: var(--wa-green); color: #0b141a; width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transform: rotate(45deg); }
         
         #info-overlay { display: none; position: fixed; inset: 0; background: #0b141a; z-index: 1000; flex-direction: column; }
+        .member-card { background: #111b21; border-radius: 12px; padding: 12px; display: flex; align-items: center; gap: 12px; margin-bottom: 8px; border: 1px solid var(--border); }
     </style>
 </head>
 <body>
 
     <!-- 1. ENTRY VIEW -->
     <div id="home-view" class="view-layer">
-        <div class="w-full max-w-xs space-y-6 text-center">
-            <h1 class="text-4xl font-black text-blue-500 italic tracking-tighter">Student Lounge</h1>
+        <div class="w-full max-w-sm space-y-8 text-center">
+            <div class="space-y-2">
+                <h1 class="text-5xl font-black text-blue-500 italic tracking-tighter">AETHER</h1>
+                <p class="text-xs font-bold text-gray-500 tracking-[0.3em] uppercase">Student Lounge</p>
+            </div>
             
             <div id="setup-inputs" class="space-y-4">
-                <input type="text" id="userName" placeholder="Enter Your Name" class="w-full bg-[#2a3942] p-5 rounded-2xl text-center outline-none text-white font-bold border border-white/5">
+                <input type="text" id="userName" placeholder="Your Display Name" class="w-full bg-[#2a3942] p-5 rounded-2xl text-center outline-none text-white font-semibold border border-white/5 focus:border-blue-500/50 transition-all">
                 
                 <div class="grid grid-cols-2 gap-3">
-                    <button onclick="handleAction('create')" class="bg-white/5 border border-white/10 p-4 rounded-2xl font-bold text-[10px] uppercase">Create Room</button>
-                    <button onclick="handleAction('join')" class="bg-blue-600/20 border border-blue-500/30 p-4 rounded-2xl font-bold text-[10px] uppercase text-blue-400">Join Room</button>
+                    <button onclick="handleAction('create')" class="bg-white/5 border border-white/10 p-4 rounded-2xl font-bold text-[11px] uppercase tracking-wider hover:bg-white/10 active:scale-95 transition-all">Create Room</button>
+                    <button onclick="handleAction('join')" class="bg-blue-600 border border-blue-500 p-4 rounded-2xl font-bold text-[11px] uppercase tracking-wider text-white shadow-lg active:scale-95 transition-all">Join Room</button>
                 </div>
 
-                <div id="extra-fields" class="hidden space-y-3 pt-4 border-t border-white/5">
-                    <input type="text" id="groupName" placeholder="Group Name (Admin Only)" class="hidden w-full bg-[#111b21] p-4 rounded-xl text-center outline-none text-white font-bold border border-blue-500/30">
-                    <input type="text" id="roomCode" placeholder="Enter 6-Digit Code" class="hidden w-full bg-[#111b21] p-4 rounded-xl text-center outline-none text-blue-400 font-bold uppercase border border-blue-500/30">
-                    <button id="finalSubmit" class="w-full bg-blue-600 p-4 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg">Confirm & Start</button>
+                <div id="extra-fields" class="hidden space-y-3 pt-6 animate-in fade-in duration-500">
+                    <input type="text" id="groupName" placeholder="Give your group a name" class="hidden w-full bg-[#111b21] p-4 rounded-xl text-center outline-none text-white font-bold border border-blue-500/20">
+                    <input type="text" id="roomCode" placeholder="Enter 6-Digit Code" class="hidden w-full bg-[#111b21] p-4 rounded-xl text-center outline-none text-blue-400 font-mono font-bold uppercase border border-blue-500/20 tracking-widest">
+                    <button id="finalSubmit" class="w-full bg-blue-600 p-4 rounded-xl font-black text-xs uppercase tracking-[0.2em] shadow-xl text-white">Initialize Session</button>
                 </div>
             </div>
         </div>
@@ -61,16 +64,16 @@
 
     <!-- 2. KNOCKING VIEW -->
     <div id="wait-view" class="view-layer">
-        <div class="text-center space-y-6">
-            <div class="relative w-24 h-24 mx-auto">
-                <div class="absolute inset-0 bg-blue-500 rounded-full animate-ping opacity-20"></div>
-                <div class="relative w-24 h-24 bg-blue-600 rounded-full flex items-center justify-center text-4xl">🚪</div>
+        <div class="text-center space-y-8">
+            <div class="relative w-32 h-32 mx-auto">
+                <div class="absolute inset-0 bg-blue-500 rounded-full animate-ping opacity-10"></div>
+                <div class="relative w-32 h-32 bg-[#111b21] border border-blue-500/30 rounded-full flex items-center justify-center text-4xl shadow-2xl">⚡</div>
             </div>
-            <div>
-                <h2 class="text-2xl font-black italic">KNOCKING...</h2>
-                <p class="text-gray-500 text-sm">The Admin is reviewing your request.</p>
+            <div class="space-y-2">
+                <h2 class="text-2xl font-black italic tracking-tight">WAITING...</h2>
+                <p class="text-gray-500 text-sm font-medium px-10">The room administrator will grant you access shortly.</p>
             </div>
-            <button onclick="location.reload()" class="text-red-500 text-[10px] font-black uppercase tracking-widest border border-red-500/20 px-6 py-2 rounded-full">Cancel Request</button>
+            <button onclick="location.reload()" class="text-gray-500 text-[10px] font-black uppercase tracking-widest px-8 py-3 rounded-full border border-white/5">Cancel Request</button>
         </div>
     </div>
 
@@ -78,52 +81,75 @@
     <div id="main-workspace" class="view-layer">
         <header class="nav-bar" onclick="openInfo()">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center font-bold text-white shadow-lg" id="header-initial">?</div>
+                <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-600 to-blue-400 flex items-center justify-center font-black text-white text-lg shadow-lg" id="header-initial">?</div>
                 <div class="flex flex-col">
-                    <span class="text-sm font-black tracking-tight">Student Lounge</span>
-                    <span id="sub-name" class="text-[9px] text-gray-400 font-bold uppercase">...</span>
+                    <span class="text-sm font-black tracking-tight leading-none mb-1">Student Lounge</span>
+                    <span id="sub-name" class="text-[9px] text-gray-400 font-bold uppercase tracking-wider truncate max-w-[140px]">...</span>
                 </div>
             </div>
-            <button id="admin-req-pill" onclick="event.stopPropagation(); toggleReqs(true)" class="hidden bg-orange-500 text-black px-4 py-1.5 rounded-full text-[9px] font-black animate-pulse">REQUESTS (<span id="req-count">0</span>)</button>
+            <button id="admin-req-pill" onclick="event.stopPropagation(); toggleReqs(true)" class="hidden bg-orange-500 text-black px-4 py-1.5 rounded-full text-[10px] font-black animate-pulse shadow-lg">KNOCK (<span id="req-count">0</span>)</button>
         </header>
 
         <div class="status-bar">
-            <span id="full-name-display" class="text-[11px] font-black uppercase truncate pr-4 text-white"></span>
-            <span id="display-code" class="text-blue-500 font-mono text-xs font-black tracking-tighter">------</span>
+            <span id="full-name-display" class="text-[11px] font-black uppercase tracking-widest text-white/70 truncate"></span>
+            <div class="flex items-center gap-2">
+                <div class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
+                <span id="display-code" class="text-blue-500 font-mono text-xs font-black">------</span>
+            </div>
         </div>
 
         <main id="chatBox"></main>
 
         <footer class="footer">
-            <div class="input-pill"><input type="text" id="msgInput" placeholder="Write a message..." class="w-full bg-transparent outline-none text-sm text-white"></div>
-            <button onclick="sendMsg()" class="action-btn">SEND</button>
+            <div class="input-pill">
+                <input type="text" id="msgInput" placeholder="Type a message..." class="w-full bg-transparent outline-none text-sm text-white placeholder-gray-500">
+            </div>
+            <button onclick="sendMsg()" class="action-btn">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+            </button>
         </footer>
     </div>
 
     <!-- ADMIN REQUESTS OVERLAY -->
-    <div id="req-overlay" class="fixed inset-0 bg-black/95 z-[2000] hidden flex-col justify-center items-center p-6">
-        <div class="bg-[#202c33] w-full max-w-xs rounded-3xl overflow-hidden shadow-2xl border border-white/5">
-            <div class="p-5 border-b border-white/5 font-black text-center text-orange-400 tracking-widest text-xs">KNOCKING LIST</div>
-            <div id="req-list" class="max-h-64 overflow-y-auto bg-[#111b21]"></div>
-            <button onclick="toggleReqs(false)" class="w-full p-5 text-[10px] text-gray-500 font-black uppercase bg-[#202c33]">Dismiss</button>
+    <div id="req-overlay" class="fixed inset-0 bg-black/90 z-[2000] hidden flex-col justify-end p-4">
+        <div class="bg-[#202c33] w-full max-w-md mx-auto rounded-3xl overflow-hidden shadow-2xl border border-white/5 animate-in slide-in-from-bottom duration-300">
+            <div class="p-5 border-b border-white/5 flex justify-between items-center">
+                <span class="text-xs font-black text-orange-400 tracking-widest uppercase">Join Requests</span>
+                <button onclick="toggleReqs(false)" class="text-gray-500 text-xs font-bold">Close</button>
+            </div>
+            <div id="req-list" class="max-h-[50vh] overflow-y-auto bg-[#111b21] p-4 space-y-2"></div>
         </div>
     </div>
 
-    <!-- GROUP INFO -->
+    <!-- GROUP INFO & MEMBERS -->
     <div id="info-overlay">
-        <div class="p-4 flex items-center bg-[#202c33] justify-between">
-            <button onclick="document.getElementById('info-overlay').style.display='none'" class="text-blue-500 font-bold">← Back</button>
-            <span class="font-bold">Room Management</span>
+        <div class="p-4 flex items-center bg-[#202c33] justify-between border-b border-white/5">
+            <button onclick="document.getElementById('info-overlay').style.display='none'" class="text-blue-500 font-bold text-sm">Cancel</button>
+            <span class="font-black text-xs uppercase tracking-widest">Group Settings</span>
             <div class="w-10"></div>
         </div>
-        <div class="p-10 flex flex-col items-center space-y-8">
-            <div class="w-32 h-32 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center text-5xl font-black shadow-2xl text-white" id="info-initial">?</div>
-            <h2 id="info-title" class="text-3xl font-black italic text-center"></h2>
-            <div class="w-full space-y-3">
-                <button id="edit-btn" onclick="editRoom()" class="hidden w-full bg-white/5 p-5 rounded-2xl text-[10px] font-black uppercase border border-white/10">✎ Rename Group</button>
-                <button id="del-btn" onclick="deleteRoom()" class="hidden w-full bg-red-600/10 text-red-500 p-5 rounded-2xl text-[10px] font-black uppercase border border-red-500/20">Delete Everything</button>
-                <button id="leave-btn" onclick="leaveRoom()" class="hidden w-full bg-white/5 p-5 rounded-2xl text-[10px] font-black uppercase border border-white/10">Leave Room</button>
+        <div class="flex-1 overflow-y-auto">
+            <div class="p-10 flex flex-col items-center space-y-4">
+                <div class="w-28 h-28 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center text-5xl font-black shadow-2xl text-white border-4 border-white/10" id="info-initial">?</div>
+                <div class="text-center">
+                    <h2 id="info-title" class="text-3xl font-black italic"></h2>
+                    <p class="text-blue-500 font-mono text-sm font-bold mt-1" id="info-code-display"></p>
+                </div>
             </div>
+
+            <!-- Members Section -->
+            <div class="px-6 space-y-4">
+                <h3 class="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] px-2">Active Members</h3>
+                <div id="members-list" class="space-y-1 pb-10">
+                    <!-- Members injected here -->
+                </div>
+            </div>
+        </div>
+
+        <div class="p-6 bg-[#111b21] border-t border-white/5 space-y-3">
+            <button id="edit-btn" onclick="editRoom()" class="hidden w-full bg-white/5 p-4 rounded-xl text-[11px] font-black uppercase border border-white/5">✎ Modify Room Name</button>
+            <button id="del-btn" onclick="deleteRoom()" class="hidden w-full bg-red-600/10 text-red-500 p-4 rounded-xl text-[11px] font-black uppercase border border-red-500/10">Terminate Group</button>
+            <button id="leave-btn" onclick="leaveRoom()" class="hidden w-full bg-white/5 p-4 rounded-xl text-[11px] font-black uppercase border border-white/5">Exit Room</button>
         </div>
     </div>
 
@@ -134,7 +160,6 @@
         const firebaseConfig = { apiKey: "AIzaSyDbfmd0zmv_mFV0CG2OrhKPPeU3zPYGOBg", authDomain: "unidesk-a70ac.firebaseapp.com", projectId: "unidesk-a70ac" };
         const db = getFirestore(initializeApp(firebaseConfig));
 
-        // CRITICAL: Treat each tab as a separate person by generating a session-only ID
         const myId = "USR-" + Math.random().toString(36).substr(2, 7).toUpperCase();
         let currentUserName = "";
         let currentRoom = "";
@@ -142,11 +167,9 @@
 
         window.handleAction = (mode) => {
             const name = document.getElementById('userName').value.trim();
-            if(!name) return alert("Please enter your name first!");
-            
+            if(!name) return alert("Identify yourself first!");
             currentUserName = name;
             document.getElementById('extra-fields').classList.remove('hidden');
-            
             if(mode === 'create') {
                 document.getElementById('groupName').classList.remove('hidden');
                 document.getElementById('roomCode').classList.add('hidden');
@@ -159,40 +182,26 @@
         };
 
         async function createRoom() {
-            const gName = document.getElementById('groupName').value.trim() || "Student Lounge";
+            const gName = document.getElementById('groupName').value.trim() || "Aether Lounge";
             const code = Math.random().toString(36).substr(2, 6).toUpperCase();
-            
             await setDoc(doc(db, "rooms", code), {
-                name: gName,
-                admin: myId,
-                members: [myId],
-                pending: [],
-                msgs: []
+                name: gName, admin: myId, members: [{id: myId, name: currentUserName}], memberIds: [myId], pending: [], msgs: []
             });
-            
             enterRoom(code);
         }
 
         async function joinRoom() {
             const code = document.getElementById('roomCode').value.trim().toUpperCase();
-            if(!code) return alert("Enter the room code!");
-
+            if(!code) return alert("Room code required.");
             const ref = doc(db, "rooms", code);
             const snap = await getDoc(ref);
-            if(!snap.exists()) return alert("Room not found!");
-
-            // Submit Knock Request
+            if(!snap.exists()) return alert("Room doesn't exist.");
             await updateDoc(ref, { pending: arrayUnion({ id: myId, name: currentUserName }) });
-            
             document.getElementById('home-view').style.display = 'none';
             document.getElementById('wait-view').style.display = 'flex';
-            
-            // Wait for Admin to add my ID to the 'members' array
             const unsub = onSnapshot(ref, (s) => {
-                if(s.exists() && s.data().members.includes(myId)) {
-                    unsub(); // Stop listening to the knock
-                    enterRoom(code);
-                }
+                if(s.exists() && s.data().memberIds.includes(myId)) { unsub(); enterRoom(code); }
+                if(!s.exists()) location.reload();
             });
         }
 
@@ -202,20 +211,19 @@
             document.getElementById('wait-view').style.display = 'none';
             document.getElementById('main-workspace').style.display = 'flex';
             document.getElementById('display-code').innerText = code;
+            document.getElementById('info-code-display').innerText = "SESSION CODE: " + code;
 
             onSnapshot(doc(db, "rooms", code), (s) => {
                 if(!s.exists()) { location.reload(); return; }
                 const data = s.data();
                 isAdmin = data.admin === myId;
 
-                // UI Updates
                 document.getElementById('full-name-display').innerText = data.name;
                 document.getElementById('sub-name').innerText = data.name;
                 document.getElementById('info-title').innerText = data.name;
                 document.getElementById('header-initial').innerText = data.name[0];
                 document.getElementById('info-initial').innerText = data.name[0];
 
-                // Permission UI
                 document.getElementById('edit-btn').style.display = isAdmin ? 'block' : 'none';
                 document.getElementById('del-btn').style.display = isAdmin ? 'block' : 'none';
                 document.getElementById('leave-btn').style.display = isAdmin ? 'none' : 'block';
@@ -225,22 +233,30 @@
                     document.getElementById('admin-req-pill').style.display = p.length > 0 ? 'block' : 'none';
                     document.getElementById('req-count').innerText = p.length;
                     document.getElementById('req-list').innerHTML = p.map(u => `
-                        <div class="p-5 border-b border-white/5 flex justify-between items-center bg-[#1a2329]">
-                            <div class="flex flex-col">
-                                <span class="text-sm font-black text-white">${u.name}</span>
-                                <span class="text-[8px] text-blue-400 font-bold uppercase tracking-tighter">Wants to Join</span>
-                            </div>
-                            <button onclick="approve('${u.id}', '${u.name}')" class="bg-blue-600 text-white px-4 py-2 rounded-xl text-[10px] font-black shadow-lg">ACCEPT</button>
+                        <div class="flex justify-between items-center bg-[#2a3942] p-4 rounded-2xl mb-2">
+                            <span class="text-sm font-bold">${u.name}</span>
+                            <button onclick="approve('${u.id}', '${u.name}')" class="bg-blue-600 text-[10px] font-black px-4 py-2 rounded-lg text-white">APPROVE</button>
                         </div>
                     `).join('');
                 }
 
-                // Chat Rendering
+                // Render Members List
+                document.getElementById('members-list').innerHTML = data.members.map(m => `
+                    <div class="member-card">
+                        <div class="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center text-xs font-black text-blue-400">
+                            ${m.name[0]}
+                        </div>
+                        <div class="flex-1">
+                            <div class="text-sm font-bold text-white">${m.name} ${m.id === data.admin ? '<span class="text-[8px] text-blue-500 ml-2 uppercase tracking-widest">Admin</span>' : ''}</div>
+                        </div>
+                    </div>
+                `).join('');
+
                 const box = document.getElementById('chatBox');
                 box.innerHTML = (data.msgs || []).map(m => `
                     <div class="bubble ${m.uid === myId ? 'bubble-me' : 'bubble-them'}">
                         ${m.uid !== myId ? `<div class="text-[9px] text-blue-400 font-black uppercase mb-1">${m.uName}</div>` : ''}
-                        <div class="leading-tight">${m.text}</div>
+                        <div class="text-sm">${m.text}</div>
                     </div>
                 `).join('');
                 box.scrollTop = box.scrollHeight;
@@ -250,7 +266,8 @@
         window.approve = async (id, name) => {
             await updateDoc(doc(db, "rooms", currentRoom), {
                 pending: arrayRemove({ id, name }),
-                members: arrayUnion(id)
+                members: arrayUnion({ id, name }),
+                memberIds: arrayUnion(id)
             });
         };
 
@@ -265,26 +282,28 @@
         };
 
         window.editRoom = async () => {
-            const n = prompt("Enter New Group Name:");
+            const n = prompt("Rename Room:");
             if(n) await updateDoc(doc(db, "rooms", currentRoom), { name: n });
         };
 
         window.deleteRoom = async () => {
-            if(confirm("DELETE GROUP? This will kick everyone out and delete history.")) {
-                await deleteDoc(doc(db, "rooms", currentRoom));
-            }
+            if(confirm("DANGER: This will permanently delete this session.")) await deleteDoc(doc(db, "rooms", currentRoom));
         };
 
         window.leaveRoom = async () => {
-            if(confirm("Leave this group? You will need to knock again to return.")) {
-                await updateDoc(doc(db, "rooms", currentRoom), { members: arrayRemove(myId) });
+            if(confirm("Exit this room?")) {
+                const roomData = (await getDoc(doc(db, "rooms", currentRoom))).data();
+                const me = roomData.members.find(m => m.id === myId);
+                await updateDoc(doc(db, "rooms", currentRoom), { 
+                    members: arrayRemove(me),
+                    memberIds: arrayRemove(myId) 
+                });
                 location.reload();
             }
         };
 
         window.openInfo = () => document.getElementById('info-overlay').style.display = 'flex';
         window.toggleReqs = (show) => document.getElementById('req-overlay').style.display = show ? 'flex' : 'none';
-        
         document.getElementById('msgInput').onkeypress = (e) => { if(e.key === 'Enter') sendMsg(); };
     </script>
 </body>
