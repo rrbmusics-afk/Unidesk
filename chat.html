@@ -23,7 +23,7 @@
         #main-workspace { display: none; flex-direction: column; height: 100%; width: 100%; position: relative; }
 
         .header { 
-            height: 64px; background: #202c33; display: flex; align-items: center; 
+            height: 70px; background: #202c33; display: flex; align-items: center; 
             justify-content: space-between; padding: 0 16px; border-bottom: 1px solid rgba(255,255,255,0.05); 
             z-index: 10; flex-shrink: 0; 
         }
@@ -63,6 +63,8 @@
         .input-field { width: 100%; background: #2a3942; padding: 15px; border-radius: 12px; text-align: center; outline: none; border: 1px solid rgba(255,255,255,0.05); color: #007AFF; font-weight: bold; }
         
         .recent-card { background: linear-gradient(145deg, #1e293b, #0f172a); border: 1px solid rgba(59, 130, 246, 0.3); padding: 20px; border-radius: 20px; text-align: left; position: relative; overflow: hidden; }
+        
+        .code-pill { background: rgba(0, 122, 255, 0.15); color: #007AFF; font-family: monospace; font-weight: 800; padding: 2px 8px; border-radius: 6px; font-size: 10px; border: 1px solid rgba(0, 122, 255, 0.3); letter-spacing: 1px; }
     </style>
 </head>
 <body>
@@ -84,14 +86,13 @@
                 <button onclick="showNamingView('create')" class="w-full bg-white/5 border border-white/10 p-5 rounded-2xl font-bold uppercase text-xs text-white/70">New Session</button>
                 <button onclick="showNamingView('join')" class="w-full bg-blue-600/10 border border-blue-500/20 p-5 rounded-2xl font-bold uppercase text-xs text-blue-500">Connect to Room</button>
                 
-                <!-- Recent Session Section -->
                 <div id="recent-session-area" class="hidden pt-4">
                     <div class="py-2 text-gray-600 text-[10px] font-bold uppercase tracking-[0.2em] mb-2">Resume Recent</div>
                     <div class="recent-card cursor-pointer" onclick="resumeRecent()">
                         <div class="flex justify-between items-start">
                             <div>
                                 <div id="recent-group-name" class="text-white font-bold text-lg">Group</div>
-                                <div id="recent-code" class="text-blue-400 text-xs font-mono tracking-widest mt-1">CODE: -----</div>
+                                <div id="recent-code-display" class="text-blue-400 text-xs font-mono tracking-widest mt-1">CODE: -----</div>
                             </div>
                             <div class="bg-blue-500/20 p-2 rounded-lg">
                                 <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"/></svg>
@@ -127,12 +128,13 @@
                 <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center font-bold text-sm shadow-inner">S</div>
                 <div class="flex flex-col">
                     <span class="text-[15px] font-bold leading-tight">Student Lounge</span>
-                    <div class="flex items-center gap-2">
-                        <span id="group-name-display" class="text-[11px] text-gray-400 tracking-wider uppercase">Loading...</span>
-                        <div id="admin-panel" onclick="openModal()">REQ: <span id="req-count">0</span></div>
+                    <div class="flex items-center gap-2 mt-0.5">
+                        <span id="group-name-display" class="text-[10px] text-gray-400 font-bold uppercase truncate max-w-[100px]">Loading...</span>
+                        <span id="header-code-pill" class="code-pill">------</span>
                     </div>
                 </div>
             </div>
+            <div id="admin-panel" onclick="openModal()">REQ: <span id="req-count">0</span></div>
         </header>
         <main id="chatBox">
             <div id="e2ee-banner" class="self-center bg-[#182229] text-[#ffd700] text-[10px] px-4 py-1.5 rounded-lg mb-4 border border-[#ffd700]/10 tracking-widest uppercase">End-to-End Encrypted</div>
@@ -165,7 +167,7 @@
             if(lastRoom && savedName) {
                 document.getElementById('recent-session-area').classList.remove('hidden');
                 document.getElementById('recent-group-name').innerText = lastGroup || "Recent Group";
-                document.getElementById('recent-code').innerText = "CODE: " + lastRoom;
+                document.getElementById('recent-code-display').innerText = "CODE: " + lastRoom;
             }
         };
 
@@ -271,14 +273,14 @@
             document.getElementById('home-view').style.display = 'none';
             document.getElementById('wait-view').style.display = 'none';
             document.getElementById('main-workspace').style.display = 'flex';
+            document.getElementById('header-code-pill').innerText = code;
             
             if (window.visualViewport) workspace.style.height = window.visualViewport.height + 'px';
 
             onSnapshot(doc(db, "rooms", code), s => {
                 const data = s.data();
                 if(!data) return;
-                
-                document.getElementById('group-name-display').innerText = data.groupName || "CODE: " + code;
+                document.getElementById('group-name-display').innerText = data.groupName || "Chat Room";
                 
                 if(isAdmin) {
                     const reqs = data.pendingRequests || [];
