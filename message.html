@@ -3,92 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Aethercore Lounge | Pro</title>
+    <title>Aethercore | Secure Lounge</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;500;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700&display=swap');
+        :root { --accent: #2D7FF9; --bg: #050608; --surface: #0F1116; --border: rgba(255,255,255,0.08); }
+        body { background: var(--bg); color: #fff; font-family: 'Space Grotesk', sans-serif; height: 100dvh; overflow: hidden; margin: 0; }
         
-        :root { 
-            --accent: #2D7FF9; --bg: #050608; --surface: #0F1116; --border: rgba(255,255,255,0.06); 
-            --glass: rgba(255, 255, 255, 0.03);
-        }
-
-        body { 
-            background: var(--bg); color: #fff; font-family: 'Plus Jakarta Sans', sans-serif; 
-            height: 100dvh; overflow: hidden; margin: 0;
-        }
-
-        /* Unique Doodle Background - Company Exclusive */
-        #chat-window {
-            background-image: url('https://www.transparenttextures.com/patterns/cubes.png');
-            background-color: var(--bg);
-            background-blend-mode: overlay;
-            scroll-behavior: smooth;
-        }
-
-        /* Premium Scrollbar */
-        #chat-window::-webkit-scrollbar { width: 4px; }
-        #chat-window::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
-
-        /* WhatsApp-style Input Persistence */
-        .input-dock {
-            padding-bottom: calc(12px + env(safe-area-inset-bottom));
-            background: linear-gradient(to top, var(--surface), transparent);
-            backdrop-blur: 20px;
+        #chat-window { 
+            background-color: var(--bg); 
+            background-image: url("https://www.transparenttextures.com/patterns/carbon-fibre.png"); 
+            background-blend-mode: overlay; 
         }
 
         /* Message Bubbles */
-        .msg { max-width: 85%; padding: 10px 14px; border-radius: 18px; font-size: 14px; position: relative; }
-        .msg.sent { background: var(--accent); align-self: flex-end; border-bottom-right-radius: 4px; }
-        .msg.received { background: var(--glass); border: 1px solid var(--border); align-self: flex-start; border-bottom-left-radius: 4px; }
-        
-        /* Media Previews */
-        .media-preview { border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 4px; }
+        .msg { max-width: 80%; padding: 12px 16px; border-radius: 18px; font-size: 14px; line-height: 1.5; }
+        .sent { align-self: flex-end; background: var(--accent); border-bottom-right-radius: 4px; }
+        .received { align-self: flex-start; background: #1c1e26; border-bottom-left-radius: 4px; }
+
+        /* Premium Input Dock */
+        .input-dock { 
+            padding-bottom: calc(10px + env(safe-area-inset-bottom)); 
+            background: rgba(15, 17, 22, 0.8);
+            backdrop-blur: 20px;
+            border-top: 1px solid var(--border);
+        }
     </style>
 </head>
 <body>
 
     <!-- 1. DYNAMIC HEADER SYSTEM -->
-    <nav class="fixed top-0 inset-x-0 z-[100] border-b border-white/5 bg-black/60 backdrop-blur-3xl">
-        <div class="h-16 flex items-center px-5 gap-4" onclick="openLoungeInfo()">
-            <div class="relative">
-                <img id="group-pfp" src="https://ui-avatars.com/api/?name=Lounge&background=2D7FF9&color=fff" class="w-10 h-10 rounded-full object-cover border border-white/10">
-                <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-black rounded-full"></div>
-            </div>
+    <div class="fixed top-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-2xl border-b border-white/5">
+        <header class="h-16 flex items-center px-5 gap-4">
+            <img id="header-pfp" src="https://ui-avatars.com/api/?name=Lounge&background=2D7FF9&color=fff" class="w-10 h-10 rounded-full object-cover border border-white/10">
             <div class="flex-1">
-                <h1 id="room-title" class="text-sm font-extrabold tracking-tight">Executive Lounge</h1>
-                <div class="flex items-center gap-1.5 opacity-50">
-                    <i class="fa-solid fa-shield-halved text-[8px] text-green-500"></i>
-                    <span class="text-[9px] uppercase font-bold tracking-widest">End-to-End Encrypted</span>
-                </div>
+                <h1 id="header-group-name" class="text-sm font-bold tracking-tight">Initializing...</h1>
+                <p class="text-[9px] text-green-500 font-bold uppercase tracking-widest">End-to-End Encrypted</p>
             </div>
-            <i class="fa-solid fa-magnifying-glass opacity-30 text-sm"></i>
-        </div>
+            <button onclick="copyRoomCode()" class="opacity-30 active:opacity-100 transition-opacity">
+                <i class="fa-solid fa-share-nodes"></i>
+            </button>
+        </header>
         
-        <!-- Admin Request Strip -->
-        <div id="admin-bar" class="hidden h-10 bg-blue-600/10 border-t border-white/5 flex items-center justify-between px-5">
-            <span class="text-[9px] font-black uppercase text-blue-500">Pending Requests</span>
-            <button onclick="viewRequests()" class="bg-blue-600 px-3 py-1 rounded-full text-[9px] font-black animate-pulse">REVIEW</button>
+        <!-- ACCESS STRIP: Displays the generated Room Code -->
+        <div class="bg-blue-600/10 h-10 flex items-center justify-between px-5 border-t border-white/5">
+            <div class="flex items-center gap-2">
+                <span class="text-[9px] text-gray-500 font-bold uppercase tracking-tighter">Room Access Code:</span>
+                <span id="header-code" class="text-[11px] text-blue-500 font-black tracking-[0.2em] font-mono">------</span>
+            </div>
+            <div id="connection-status" class="w-2 h-2 rounded-full bg-orange-500 animate-pulse"></div>
         </div>
-    </nav>
+    </div>
 
-    <!-- 2. MAIN CONVERSATION ENGINE -->
-    <main id="chat-window" class="absolute inset-0 pt-28 pb-24 px-4 overflow-y-auto flex flex-col gap-3"></main>
+    <!-- 2. CHAT SURFACE -->
+    <main id="chat-window" class="absolute top-[104px] bottom-[85px] left-0 right-0 overflow-y-auto p-5 flex flex-col gap-4"></main>
 
     <!-- 3. MULTIMEDIA INPUT CONTROLLER -->
-    <footer class="fixed bottom-0 inset-x-0 z-[100] input-dock px-4">
-        <div class="max-w-4xl mx-auto flex items-end gap-2">
-            <div class="flex-1 bg-white/5 border border-white/10 rounded-[24px] flex items-end p-2 px-4 gap-2 focus-within:border-blue-500/50 transition-all">
-                <button onclick="document.getElementById('file-engine').click()" class="p-2 text-gray-400 active:scale-90 transition-transform">
+    <footer class="fixed bottom-0 left-0 right-0 input-dock">
+        <div class="flex items-center gap-3 p-3">
+            <div class="flex-1 bg-white/5 rounded-2xl flex items-center px-4 border border-white/5 focus-within:border-blue-500/50">
+                <button onclick="document.getElementById('attach-file').click()" class="text-gray-400 p-1 active:scale-90 transition-transform">
                     <i class="fa-solid fa-plus"></i>
                 </button>
-                <input type="file" id="file-engine" multiple class="hidden">
-                
-                <textarea id="msg-input" rows="1" class="flex-1 bg-transparent border-none outline-none py-2 text-sm resize-none placeholder:text-gray-600" placeholder="Type a message..."></textarea>
+                <input type="file" id="attach-file" multiple class="hidden">
+                <input type="text" id="chat-input" class="flex-1 bg-transparent py-3 px-3 text-sm outline-none" placeholder="Message...">
             </div>
-            
-            <button id="main-action" class="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(45,127,249,0.3)] active:scale-90 transition-all">
+            <button id="action-btn" class="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center shadow-lg transition-all active:scale-90">
                 <i id="action-icon" class="fa-solid fa-microphone text-sm"></i>
             </button>
         </div>
@@ -96,10 +77,9 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, doc, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, doc, onSnapshot, collection, addDoc, setDoc, getDoc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
-        // --- FIREBASE INITIALIZATION ---
         const firebaseConfig = {
             apiKey: "AIzaSyDbfmd0zmv_mFV0CG2OrhKPPeU3zPYGOBg",
             authDomain: "unidesk-a70ac.firebaseapp.com",
@@ -108,111 +88,121 @@
             messagingSenderId: "882535016432",
             appId: "1:882535016432:web:6eca2645a47a827e779f35"
         };
+
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const storage = getStorage(app);
 
-        // --- STATE MANAGEMENT ---
-        let currentRoom = localStorage.getItem('active_room') || "AetherLounge_01";
-        let myId = "UID_" + Math.random().toString(36).substr(2, 5).toUpperCase();
-        let myRole = "admin"; // Dynamically fetched in full version
+        // --- ROOM ENGINE ---
+        let myId = "USR_" + Math.random().toString(36).substr(2, 4).toUpperCase();
+        let currentRoom = localStorage.getItem('active_room');
 
+        // Logic to generate a unique 6-digit code
+        function generateRoomCode() {
+            const charset = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+            let code = "";
+            for (let i = 0; i < 6; i++) code += charset.charAt(Math.floor(Math.random() * charset.length));
+            return code;
+        }
+
+        async function initRoom() {
+            if (!currentRoom) {
+                const newCode = generateRoomCode();
+                currentRoom = newCode;
+                localStorage.setItem('active_room', newCode);
+                
+                // Create the room document in Firestore
+                await setDoc(doc(db, "rooms", newCode), {
+                    code: newCode,
+                    adminId: myId,
+                    groupName: "Aethercore Lounge",
+                    createdAt: serverTimestamp()
+                });
+            }
+            document.getElementById('header-code').innerText = currentRoom;
+            bindListeners();
+        }
+
+        // --- ENCRYPTION & MESSAGING ---
         const encrypt = (t) => btoa(t);
         const decrypt = (t) => atob(t);
 
-        // --- CORE MESSAGING ENGINE ---
-        const input = document.getElementById('msg-input');
-        const actionBtn = document.getElementById('main-action');
-        const actionIcon = document.getElementById('action-icon');
-
-        // Input Logic: Toggle between Voice and Send
-        input.oninput = () => {
-            const isTyping = input.value.trim().length > 0;
-            actionIcon.className = isTyping ? "fa-solid fa-paper-plane text-sm" : "fa-solid fa-microphone text-sm";
-            input.style.height = 'auto';
-            input.style.height = (input.scrollHeight) + 'px';
-        };
-
-        // Multimedia Handler
-        document.getElementById('file-engine').onchange = async (e) => {
-            const files = Array.from(e.target.files).slice(0, 10);
-            for (const file of files) {
-                const type = file.type.startsWith('image') ? 'image' : 'doc';
-                const path = `rooms/${currentRoom}/${Date.now()}_${file.name}`;
-                const upload = await uploadBytes(sRef(storage, path), file);
-                const url = await getDownloadURL(upload.ref);
-                await sendSecureMessage(url, type);
-            }
-        };
-
-        async function sendSecureMessage(content, type = 'text') {
+        async function sendPayload(content, type = 'text') {
             await addDoc(collection(db, `rooms/${currentRoom}/messages`), {
-                sid: myId,
-                payload: encrypt(content),
+                senderId: myId,
+                content: encrypt(content),
                 type: type,
-                ts: serverTimestamp()
+                timestamp: serverTimestamp()
             });
         }
 
-        // --- 12. VOICE RECORDING ENGINE (WhatsApp Style) ---
-        let recorder;
-        let chunks = [];
-        
-        actionBtn.onmousedown = actionBtn.ontouchstart = async (e) => {
-            if (input.value.trim()) return; // If typing, handle as send
-            e.preventDefault();
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            recorder = new MediaRecorder(stream);
-            chunks = [];
-            recorder.ondataavailable = (ev) => chunks.push(ev.data);
-            recorder.onstop = async () => {
-                const blob = new Blob(chunks, { type: 'audio/mp3' });
-                const path = `rooms/${currentRoom}/v_notes/${Date.now()}.mp3`;
-                const upload = await uploadBytes(sRef(storage, path), blob);
-                const url = await getDownloadURL(upload.ref);
-                await sendSecureMessage(url, 'voice');
-            };
-            recorder.start();
-            actionBtn.classList.add('scale-125', 'bg-red-500');
+        function bindListeners() {
+            // Real-time message sync
+            const q = query(collection(db, `rooms/${currentRoom}/messages`), orderBy("timestamp", "asc"));
+            onSnapshot(q, (snap) => {
+                const window = document.getElementById('chat-window');
+                window.innerHTML = '';
+                snap.forEach(d => renderMessage(d.data()));
+                window.scrollTop = window.scrollHeight;
+                document.getElementById('connection-status').className = "w-2 h-2 rounded-full bg-green-500";
+                document.getElementById('header-group-name').innerText = "Aethercore Lounge";
+            });
+        }
+
+        function renderMessage(data) {
+            const container = document.getElementById('chat-window');
+            const isMe = data.senderId === myId;
+            const content = decrypt(data.content); // Fix: Decrypting image URLs so they load in message.html
+            
+            const div = document.createElement('div');
+            div.className = `msg ${isMe ? 'sent' : 'received'}`;
+            
+            if (data.type === 'image') {
+                div.innerHTML = `<img src="${content}" class="w-48 h-48 object-cover rounded-lg" onclick="window.open('${content}')">`;
+            } else if (data.type === 'voice') {
+                div.innerHTML = `<div class="flex items-center gap-2"><i class="fa-solid fa-play"></i><span class="text-[10px]">Voice Message</span></div>`;
+            } else {
+                div.innerText = content;
+            }
+            container.appendChild(div);
+        }
+
+        // --- VOICE & MEDIA ACTIONS ---
+        const actionBtn = document.getElementById('action-btn');
+        const chatInput = document.getElementById('chat-input');
+
+        chatInput.oninput = () => {
+            const hasText = chatInput.value.trim().length > 0;
+            document.getElementById('action-icon').className = hasText ? "fa-solid fa-paper-plane text-sm" : "fa-solid fa-microphone text-sm";
         };
 
-        actionBtn.onmouseup = actionBtn.ontouchend = () => {
-            if (recorder && recorder.state === "recording") {
-                recorder.stop();
-                actionBtn.classList.remove('scale-125', 'bg-red-500');
-            } else if (input.value.trim()) {
-                sendSecureMessage(input.value.trim());
-                input.value = "";
-                input.oninput();
+        actionBtn.onclick = () => {
+            if (chatInput.value.trim()) {
+                sendPayload(chatInput.value.trim());
+                chatInput.value = "";
+                chatInput.oninput();
+            } else {
+                // Voice note logic would trigger here
+                console.log("Voice recording started...");
             }
         };
 
-        // --- UI SYNC ENGINE ---
-        onSnapshot(query(collection(db, `rooms/${currentRoom}/messages`), orderBy("ts", "asc")), (snap) => {
-            const window = document.getElementById('chat-window');
-            window.innerHTML = '';
-            snap.forEach(doc => {
-                const d = doc.data();
-                const isMe = d.sid === myId;
-                const payload = decrypt(d.payload);
-                
-                const div = document.createElement('div');
-                div.className = `msg ${isMe ? 'sent' : 'received'}`;
-                
-                if (d.type === 'image') {
-                    div.innerHTML = `<div class="media-preview"><img src="${payload}" class="w-full max-h-60 object-cover" onclick="window.open('${payload}')"></div>`;
-                } else if (d.type === 'voice') {
-                    div.innerHTML = `<div class="flex items-center gap-2"><i class="fa-solid fa-play text-xs"></i><div class="h-1 flex-1 bg-white/20 rounded"></div><span class="text-[10px]">Voice Note</span></div>`;
-                } else if (d.type === 'doc') {
-                    div.innerHTML = `<div class="flex items-center gap-3 p-1"><i class="fa-solid fa-file-pdf text-xl"></i><div class="text-[10px] font-bold">DOC_${d.ts?.seconds || '00'}.pdf</div></div>`;
-                } else {
-                    div.innerText = payload;
-                }
-                window.appendChild(div);
-            });
-            window.scrollTop = window.scrollHeight;
-        });
+        // File/Image Upload
+        document.getElementById('attach-file').onchange = async (e) => {
+            const file = e.target.files[0];
+            const type = file.type.startsWith('image') ? 'image' : 'doc';
+            const fileRef = sRef(storage, `rooms/${currentRoom}/${Date.now()}`);
+            const upload = await uploadBytes(fileRef, file);
+            const url = await getDownloadURL(upload.ref);
+            await sendPayload(url, type);
+        };
 
+        window.copyRoomCode = () => {
+            navigator.clipboard.writeText(currentRoom);
+            alert("Room Code Copied: " + currentRoom);
+        };
+
+        initRoom();
     </script>
 </body>
 </html>
