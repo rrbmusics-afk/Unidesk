@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Aethercore | Secure Lounge</title>
+    <title>Aethercore Lounge | Secure</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
@@ -11,21 +11,20 @@
         :root { --accent: #2D7FF9; --bg: #050608; --surface: #0F1116; --border: rgba(255,255,255,0.08); }
         body { background: var(--bg); color: #fff; font-family: 'Space Grotesk', sans-serif; height: 100dvh; overflow: hidden; margin: 0; }
         
+        /* Premium Chat Surface */
         #chat-window { 
-            background-color: var(--bg); 
             background-image: url("https://www.transparenttextures.com/patterns/carbon-fibre.png"); 
             background-blend-mode: overlay; 
         }
 
-        /* Message Bubbles */
-        .msg { max-width: 80%; padding: 12px 16px; border-radius: 18px; font-size: 14px; line-height: 1.5; }
-        .sent { align-self: flex-end; background: var(--accent); border-bottom-right-radius: 4px; }
-        .received { align-self: flex-start; background: #1c1e26; border-bottom-left-radius: 4px; }
+        .msg { max-width: 80%; padding: 12px 16px; border-radius: 20px; font-size: 14px; line-height: 1.5; }
+        .sent { background: var(--accent); border-bottom-right-radius: 4px; }
+        .received { background: #1c1e26; border-bottom-left-radius: 4px; }
 
-        /* Premium Input Dock */
+        /* Smooth Bottom Dock */
         .input-dock { 
             padding-bottom: calc(10px + env(safe-area-inset-bottom)); 
-            background: rgba(15, 17, 22, 0.8);
+            background: rgba(15, 17, 22, 0.9);
             backdrop-blur: 20px;
             border-top: 1px solid var(--border);
         }
@@ -33,176 +32,190 @@
 </head>
 <body>
 
-    <!-- 1. DYNAMIC HEADER SYSTEM -->
+    <!-- 1. CORPORATE HEADER -->
     <div class="fixed top-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-2xl border-b border-white/5">
         <header class="h-16 flex items-center px-5 gap-4">
-            <img id="header-pfp" src="https://ui-avatars.com/api/?name=Lounge&background=2D7FF9&color=fff" class="w-10 h-10 rounded-full object-cover border border-white/10">
+            <img id="header-pfp" src="https://ui-avatars.com/api/?name=L&background=2D7FF9&color=fff" class="w-10 h-10 rounded-full object-cover border border-white/10">
             <div class="flex-1">
-                <h1 id="header-group-name" class="text-sm font-bold tracking-tight">Initializing...</h1>
-                <p class="text-[9px] text-green-500 font-bold uppercase tracking-widest">End-to-End Encrypted</p>
+                <h1 id="header-lounge-name" class="text-sm font-bold tracking-tight">Loading...</h1>
+                <p class="text-[9px] text-green-500 font-bold uppercase tracking-widest">Secured Connection</p>
             </div>
-            <button onclick="copyRoomCode()" class="opacity-30 active:opacity-100 transition-opacity">
-                <i class="fa-solid fa-share-nodes"></i>
+            <button onclick="copyCode()" class="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center active:scale-90 transition-transform">
+                <i class="fa-solid fa-link text-xs"></i>
             </button>
         </header>
         
-        <!-- ACCESS STRIP: Displays the generated Room Code -->
-        <div class="bg-blue-600/10 h-10 flex items-center justify-between px-5 border-t border-white/5">
+        <div class="bg-blue-600/10 h-9 flex items-center justify-between px-5 border-t border-white/5">
+            <span class="text-[10px] text-blue-500 font-black tracking-widest uppercase" id="display-code">------</span>
             <div class="flex items-center gap-2">
-                <span class="text-[9px] text-gray-500 font-bold uppercase tracking-tighter">Room Access Code:</span>
-                <span id="header-code" class="text-[11px] text-blue-500 font-black tracking-[0.2em] font-mono">------</span>
+                <span class="text-[8px] text-gray-500 font-bold">STATUS:</span>
+                <div class="w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_8px_#22c55e]"></div>
             </div>
-            <div id="connection-status" class="w-2 h-2 rounded-full bg-orange-500 animate-pulse"></div>
         </div>
     </div>
 
-    <!-- 2. CHAT SURFACE -->
-    <main id="chat-window" class="absolute top-[104px] bottom-[85px] left-0 right-0 overflow-y-auto p-5 flex flex-col gap-4"></main>
+    <!-- 2. MESSAGE STREAM -->
+    <main id="chat-window" class="absolute top-[100px] bottom-[85px] left-0 right-0 overflow-y-auto p-5 flex flex-col gap-5"></main>
 
-    <!-- 3. MULTIMEDIA INPUT CONTROLLER -->
-    <footer class="fixed bottom-0 left-0 right-0 input-dock">
-        <div class="flex items-center gap-3 p-3">
-            <div class="flex-1 bg-white/5 rounded-2xl flex items-center px-4 border border-white/5 focus-within:border-blue-500/50">
-                <button onclick="document.getElementById('attach-file').click()" class="text-gray-400 p-1 active:scale-90 transition-transform">
-                    <i class="fa-solid fa-plus"></i>
+    <!-- 3. ACTION BAR -->
+    <footer class="fixed bottom-0 left-0 right-0 input-dock px-4 py-3">
+        <div class="flex items-center gap-3 max-w-4xl mx-auto">
+            <div class="flex-1 bg-white/5 rounded-2xl flex items-center px-4 border border-white/5 focus-within:border-blue-500/50 transition-all">
+                <button onclick="document.getElementById('file-input').click()" class="text-gray-500 hover:text-blue-500 transition-colors">
+                    <i class="fa-solid fa-paperclip text-sm"></i>
                 </button>
-                <input type="file" id="attach-file" multiple class="hidden">
-                <input type="text" id="chat-input" class="flex-1 bg-transparent py-3 px-3 text-sm outline-none" placeholder="Message...">
+                <input type="file" id="file-input" class="hidden" accept="image/*">
+                <input type="text" id="chat-msg" class="flex-1 bg-transparent py-3.5 px-3 text-sm outline-none placeholder:text-gray-600" placeholder="Type message...">
             </div>
-            <button id="action-btn" class="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center shadow-lg transition-all active:scale-90">
-                <i id="action-icon" class="fa-solid fa-microphone text-sm"></i>
+            <button id="send-btn" class="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center shadow-lg active:scale-90 transition-all">
+                <i id="send-icon" class="fa-solid fa-microphone text-sm"></i>
             </button>
         </div>
     </footer>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, doc, onSnapshot, collection, addDoc, setDoc, getDoc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDbfmd0zmv_mFV0CG2OrhKPPeU3zPYGOBg",
-            authDomain: "unidesk-a70ac.firebaseapp.com",
+            databaseURL: "https://unidesk-a70ac-default-rtdb.firebaseio.com",
             projectId: "unidesk-a70ac",
-            storageBucket: "unidesk-a70ac.firebasestorage.app",
-            messagingSenderId: "882535016432",
-            appId: "1:882535016432:web:6eca2645a47a827e779f35"
+            storageBucket: "unidesk-a70ac.firebasestorage.app"
         };
 
         const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+        const db = getDatabase(app);
+        const fs = getFirestore(app);
         const storage = getStorage(app);
 
-        // --- ROOM ENGINE ---
-        let myId = "USR_" + Math.random().toString(36).substr(2, 4).toUpperCase();
-        let currentRoom = localStorage.getItem('active_room');
+        // --- SESSION DATA ---
+        const myName = localStorage.getItem('user_name');
+        const myPfp = localStorage.getItem('user_pfp');
+        const loungeCode = localStorage.getItem('lounge_code');
+        const loungeTitle = localStorage.getItem('lounge_title');
+        const myRole = localStorage.getItem('user_role');
+        const myId = "UID_" + Math.random().toString(36).substr(2, 4).toUpperCase();
 
-        // Logic to generate a unique 6-digit code
-        function generateRoomCode() {
-            const charset = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-            let code = "";
-            for (let i = 0; i < 6; i++) code += charset.charAt(Math.floor(Math.random() * charset.length));
-            return code;
+        document.getElementById('header-lounge-name').innerText = loungeTitle;
+        document.getElementById('display-code').innerText = loungeCode;
+
+        // --- 1. ADMIN APPROVAL ENGINE ---
+        if (myRole === 'admin') {
+            const reqRef = ref(db, `rooms/${loungeCode}/requests`);
+            onValue(reqRef, (snap) => {
+                const data = snap.val();
+                if (data) {
+                    Object.keys(data).forEach(uName => {
+                        if (data[uName].status === 'pending') {
+                            showBanner(uName, data[uName]);
+                        }
+                    });
+                }
+            });
         }
 
-        async function initRoom() {
-            if (!currentRoom) {
-                const newCode = generateRoomCode();
-                currentRoom = newCode;
-                localStorage.setItem('active_room', newCode);
-                
-                // Create the room document in Firestore
-                await setDoc(doc(db, "rooms", newCode), {
-                    code: newCode,
-                    adminId: myId,
-                    groupName: "Aethercore Lounge",
-                    createdAt: serverTimestamp()
-                });
+        function showBanner(name, info) {
+            const bId = `banner-${name.replace(/\s+/g, '')}`;
+            if (document.getElementById(bId)) return;
+
+            const banner = document.createElement('div');
+            banner.id = bId;
+            banner.className = "fixed top-20 left-4 right-4 bg-blue-600 p-4 rounded-3xl flex items-center justify-between z-[500] shadow-2xl animate-bounce";
+            banner.innerHTML = `
+                <div class="flex items-center gap-3">
+                    <img src="${info.pfp || 'https://ui-avatars.com/api/?name='+name}" class="w-10 h-10 rounded-full object-cover border-2 border-white/20">
+                    <div>
+                        <p class="text-[9px] font-black uppercase opacity-70">Entry Request</p>
+                        <p class="text-sm font-bold text-white">${name}</p>
+                    </div>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="approveUser('${name}')" class="bg-white text-black px-5 py-2.5 rounded-2xl text-[10px] font-black">ALLOW</button>
+                    <button onclick="this.parentElement.parentElement.remove()" class="bg-black/20 text-white px-3 rounded-2xl"><i class="fas fa-x"></i></button>
+                </div>
+            `;
+            document.body.appendChild(banner);
+        }
+
+        window.approveUser = async (name) => {
+            await update(ref(db, `rooms/${loungeCode}/requests/${name}`), { status: 'approved' });
+            document.getElementById(`banner-${name.replace(/\s+/g, '')}`)?.remove();
+        };
+
+        // --- 2. MESSAGING ENGINE ---
+        const input = document.getElementById('chat-msg');
+        const sendBtn = document.getElementById('send-btn');
+        const sendIcon = document.getElementById('send-icon');
+
+        input.oninput = () => {
+            const hasVal = input.value.trim().length > 0;
+            sendIcon.className = hasVal ? "fa-solid fa-paper-plane text-sm" : "fa-solid fa-microphone text-sm";
+        };
+
+        sendBtn.onclick = async () => {
+            if (input.value.trim()) {
+                await sendMessage(input.value.trim(), 'text');
+                input.value = "";
+                input.oninput();
             }
-            document.getElementById('header-code').innerText = currentRoom;
-            bindListeners();
-        }
+        };
 
-        // --- ENCRYPTION & MESSAGING ---
-        const encrypt = (t) => btoa(t);
-        const decrypt = (t) => atob(t);
-
-        async function sendPayload(content, type = 'text') {
-            await addDoc(collection(db, `rooms/${currentRoom}/messages`), {
-                senderId: myId,
-                content: encrypt(content),
+        async function sendMessage(payload, type) {
+            await addDoc(collection(fs, `rooms/${loungeCode}/chats`), {
+                uid: myId,
+                uName: myName,
+                uPfp: myPfp, // SYNCED: Sends local PFP to everyone
+                msg: btoa(payload),
                 type: type,
-                timestamp: serverTimestamp()
+                time: serverTimestamp()
             });
         }
 
-        function bindListeners() {
-            // Real-time message sync
-            const q = query(collection(db, `rooms/${currentRoom}/messages`), orderBy("timestamp", "asc"));
-            onSnapshot(q, (snap) => {
-                const window = document.getElementById('chat-window');
-                window.innerHTML = '';
-                snap.forEach(d => renderMessage(d.data()));
-                window.scrollTop = window.scrollHeight;
-                document.getElementById('connection-status').className = "w-2 h-2 rounded-full bg-green-500";
-                document.getElementById('header-group-name').innerText = "Aethercore Lounge";
+        // --- 3. LIVE STREAM LISTENER ---
+        const q = query(collection(fs, `rooms/${loungeCode}/chats`), orderBy("time", "asc"));
+        onSnapshot(q, (snap) => {
+            const win = document.getElementById('chat-window');
+            win.innerHTML = '';
+            snap.forEach(doc => {
+                const d = doc.data();
+                const isMe = d.uid === myId;
+                const body = atob(d.msg);
+
+                const div = document.createElement('div');
+                div.className = `flex flex-col ${isMe ? 'items-end' : 'items-start'}`;
+                div.innerHTML = `
+                    <div class="flex items-end gap-2 ${isMe ? 'flex-row-reverse' : 'flex-row'}">
+                        <img src="${d.uPfp || 'https://ui-avatars.com/api/?name='+d.uName}" class="w-8 h-8 rounded-full object-cover border border-white/5">
+                        <div class="msg ${isMe ? 'sent' : 'received'}">
+                            ${d.type === 'image' ? `<img src="${body}" class="rounded-xl w-full">` : body}
+                        </div>
+                    </div>
+                    <span class="text-[8px] text-gray-600 mt-1 uppercase font-bold tracking-widest mx-10">${d.uName}</span>
+                `;
+                win.appendChild(div);
             });
-        }
+            win.scrollTop = win.scrollHeight;
+        });
 
-        function renderMessage(data) {
-            const container = document.getElementById('chat-window');
-            const isMe = data.senderId === myId;
-            const content = decrypt(data.content); // Fix: Decrypting image URLs so they load in message.html
-            
-            const div = document.createElement('div');
-            div.className = `msg ${isMe ? 'sent' : 'received'}`;
-            
-            if (data.type === 'image') {
-                div.innerHTML = `<img src="${content}" class="w-48 h-48 object-cover rounded-lg" onclick="window.open('${content}')">`;
-            } else if (data.type === 'voice') {
-                div.innerHTML = `<div class="flex items-center gap-2"><i class="fa-solid fa-play"></i><span class="text-[10px]">Voice Message</span></div>`;
-            } else {
-                div.innerText = content;
-            }
-            container.appendChild(div);
-        }
-
-        // --- VOICE & MEDIA ACTIONS ---
-        const actionBtn = document.getElementById('action-btn');
-        const chatInput = document.getElementById('chat-input');
-
-        chatInput.oninput = () => {
-            const hasText = chatInput.value.trim().length > 0;
-            document.getElementById('action-icon').className = hasText ? "fa-solid fa-paper-plane text-sm" : "fa-solid fa-microphone text-sm";
-        };
-
-        actionBtn.onclick = () => {
-            if (chatInput.value.trim()) {
-                sendPayload(chatInput.value.trim());
-                chatInput.value = "";
-                chatInput.oninput();
-            } else {
-                // Voice note logic would trigger here
-                console.log("Voice recording started...");
-            }
-        };
-
-        // File/Image Upload
-        document.getElementById('attach-file').onchange = async (e) => {
+        // --- 4. MEDIA UPLOAD ---
+        document.getElementById('file-input').onchange = async (e) => {
             const file = e.target.files[0];
-            const type = file.type.startsWith('image') ? 'image' : 'doc';
-            const fileRef = sRef(storage, `rooms/${currentRoom}/${Date.now()}`);
-            const upload = await uploadBytes(fileRef, file);
-            const url = await getDownloadURL(upload.ref);
-            await sendPayload(url, type);
+            if (!file) return;
+            
+            const fRef = sRef(storage, `lounge/${loungeCode}/${Date.now()}`);
+            const up = await uploadBytes(fRef, file);
+            const url = await getDownloadURL(up.ref);
+            await sendMessage(url, 'image');
         };
 
-        window.copyRoomCode = () => {
-            navigator.clipboard.writeText(currentRoom);
-            alert("Room Code Copied: " + currentRoom);
+        window.copyCode = () => {
+            navigator.clipboard.writeText(loungeCode);
+            alert("Lounge Code Copied!");
         };
 
-        initRoom();
     </script>
 </body>
 </html>
