@@ -1,143 +1,150 @@
-:root {
-    --bg-main: #f0f2f5; /* Light grey corporate background */
-    --white: #ffffff;
-    --accent: #005cc5; /* Corporate Blue */
-    --text-primary: #111b21;
-    --text-secondary: #667781;
-    --bubble-sent: #d9fdd3; /* Soft WhatsApp Green */
-    --bubble-received: #ffffff;
-    --border: rgba(0, 0, 0, 0.08);
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
 }
 
 body {
-    margin: 0;
-    padding: 0;
-    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    background-color: var(--bg-main);
+    background-color: #dadbd3; /* Classic WhatsApp neutral background */
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    height: 100vh;
     display: flex;
     justify-content: center;
-    height: 100vh;
 }
 
-/* Chat Container */
 #chat-screen {
     width: 100%;
-    max-width: 500px; /* Standard Mobile/Web-app width */
-    height: 100%;
-    background: #efe7de; /* WhatsApp-style wallpaper color */
+    max-width: 500px;
+    height: 100vh;
     display: flex;
     flex-direction: column;
+    background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); /* Sublte WA Wallpaper */
+    background-color: #e5ddd5;
     position: relative;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
 }
 
-/* Professional Header */
+/* Header Styling */
 .chat-header {
-    background: var(--white);
-    padding: 12px 16px;
+    background: #075e54; /* WhatsApp Corporate Green */
+    color: white;
+    padding: 10px 16px;
     display: flex;
     align-items: center;
-    border-bottom: 1px solid var(--border);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     z-index: 10;
 }
 
 .header-avatar {
     width: 40px;
     height: 40px;
-    background: #ccc;
+    background: #128c7e;
     border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
     margin-right: 12px;
 }
 
-.header-info {
-    flex: 1;
-}
+.header-info { flex: 1; }
+.header-info h4 { font-size: 16px; font-weight: 600; }
+.header-info span { font-size: 12px; opacity: 0.8; }
 
-.header-info h4 {
-    margin: 0;
-    font-size: 16px;
-    color: var(--text-primary);
-    font-weight: 600;
-}
-
-.header-info span {
-    font-size: 12px;
-    color: var(--text-secondary);
+.admin-badge {
+    font-size: 10px;
+    border: 1px solid white;
+    padding: 2px 6px;
+    border-radius: 4px;
+    text-transform: uppercase;
 }
 
 /* Message Feed */
 .message-feed {
     flex: 1;
     overflow-y: auto;
-    padding: 20px 16px;
+    padding: 20px 10px;
     display: flex;
     flex-direction: column;
-    gap: 8px;
 }
 
-/* Bubble Styling */
-.msg {
-    max-width: 85%;
+.msg-group {
+    margin-bottom: 12px;
+    display: flex;
+    flex-direction: column;
+}
+
+.msg-bubble {
     padding: 8px 12px;
     border-radius: 8px;
+    max-width: 85%;
     font-size: 14.5px;
     position: relative;
-    box-shadow: 0 1px 0.5px rgba(0,0,0,0.13);
-    line-height: 1.5;
+    box-shadow: 0 1px 1px rgba(0,0,0,0.1);
 }
 
-.msg.sent {
-    align-self: flex-end;
-    background: var(--bubble-sent);
-    color: var(--text-primary);
-    border-top-right-radius: 0;
+.received { align-items: flex-start; }
+.received .msg-bubble { 
+    background: white; 
+    border-top-left-radius: 0; 
+}
+.sender-name { 
+    font-size: 12px; 
+    font-weight: bold; 
+    color: #35a591; 
+    margin-bottom: 2px; 
+    margin-left: 4px;
 }
 
-.msg.received {
-    align-self: flex-start;
-    background: var(--bubble-received);
-    color: var(--text-primary);
-    border-top-left-radius: 0;
+.sent { align-items: flex-end; }
+.sent .msg-bubble { 
+    background: #dcf8c6; 
+    border-top-right-radius: 0; 
 }
 
-/* Timestamp & Meta */
 .msg-time {
     font-size: 10px;
-    color: var(--text-secondary);
-    display: block;
-    text-align: right;
+    color: #888;
     margin-top: 4px;
+    text-align: right;
+    display: block;
 }
 
-/* Input Area (Modern Sticky) */
+/* Professional Bottom Input */
 .input-area {
-    background: var(--bg-main);
-    padding: 10px 12px;
+    padding: 8px;
     display: flex;
     align-items: center;
-    gap: 8px;
+    background: transparent;
 }
 
-.input-area input {
+.input-wrapper {
     flex: 1;
-    background: var(--white);
+    background: white;
+    border-radius: 25px;
+    padding: 5px 15px;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.input-wrapper input {
     border: none;
-    padding: 12px 18px;
-    border-radius: 24px;
-    font-size: 15px;
+    width: 100%;
+    padding: 8px 0;
+    font-size: 16px;
     outline: none;
 }
 
 #send-btn {
-    background: #00a884; /* WhatsApp Action Green */
+    background: #128c7e;
     color: white;
     border: none;
     width: 45px;
     height: 45px;
     border-radius: 50%;
+    margin-left: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
 }
