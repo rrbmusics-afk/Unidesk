@@ -3,110 +3,105 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Student Lounge | Chat</title>
+    <title>Student Lounge | Secure Chat</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700&display=swap');
         
         :root { 
             --accent: #2D7FF9; 
             --bg: #050608; 
             --surface: #0F1116;
-            --me: #005c4b; 
-            --them: #1f2c33; 
+            --bubble-me: #161B22; /* Deep Blue-Grey */
+            --bubble-them: #1C2128; 
+            --border: rgba(255,255,255,0.06);
         }
 
-        * { 
-            font-family: 'Space Grotesk', sans-serif; 
-            -webkit-tap-highlight-color: transparent; 
-            scrollbar-width: none; 
-        }
-        *::-webkit-scrollbar { display: none; }
-
+        * { font-family: 'Space Grotesk', sans-serif; -webkit-tap-highlight-color: transparent; outline: none; }
+        
         body { 
-            background: var(--bg); 
-            margin: 0; 
-            height: 100dvh; 
-            display: flex; 
-            flex-direction: column; 
-            overflow: hidden;
+            background: var(--bg); color: #fff; margin: 0; height: 100dvh; 
+            display: flex; flex-direction: column; overflow: hidden;
         }
 
-        /* Premium Header */
+        /* High-Fidelity Header */
         header {
             background: var(--surface);
-            padding: 10px 14px;
+            padding: 12px 16px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            border-bottom: 0.5px solid rgba(255,255,255,0.05);
+            border-bottom: 1px solid var(--border);
             padding-top: env(safe-area-inset-top);
         }
 
-        /* Message Area with Subtle Doodle */
+        /* Chat Scroller with Subtle Doodle */
         main {
             flex: 1;
             overflow-y: auto;
-            padding: 12px 14px;
-            background-color: var(--bg);
+            padding: 16px;
             background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png');
             background-blend-mode: soft-light;
-            background-size: 380px;
-            opacity: 0.95;
+            background-size: 400px;
+            background-color: var(--bg);
             display: flex;
             flex-direction: column;
-            gap: 4px;
+            gap: 8px;
         }
 
-        /* WhatsApp-Style Bubbles */
+        /* Themed Bubbles (No Green) */
         .bubble {
-            max-width: 85%;
-            padding: 7px 11px 5px;
-            font-size: 14.5px;
+            max-width: 82%;
+            padding: 10px 14px;
+            font-size: 14px;
+            line-height: 1.5;
             position: relative;
-            box-shadow: 0 1px 1px rgba(0,0,0,0.15);
-            word-wrap: break-word;
+            border: 1px solid var(--border);
         }
         
         .me {
             align-self: flex-end;
-            background: var(--me);
-            color: #e9edef;
-            border-radius: 12px 0 12px 12px;
+            background: var(--bubble-me);
+            border-radius: 18px 18px 4px 18px;
+            border-color: rgba(45, 127, 249, 0.2); /* Slight Blue Tint */
         }
 
         .them {
             align-self: flex-start;
-            background: var(--them);
-            color: #e9edef;
-            border-radius: 0 12px 12px 12px;
+            background: var(--bubble-them);
+            border-radius: 18px 18px 18px 4px;
         }
 
-        .time {
-            font-size: 10px;
-            opacity: 0.5;
-            float: right;
-            margin-top: 4px;
-            margin-left: 8px;
+        .meta {
+            font-size: 9px;
             text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            margin-top: 6px;
+            opacity: 0.4;
+            display: flex;
+            justify-content: flex-end;
+            gap: 4px;
         }
 
-        /* Input Bar Engineering */
+        /* Themed Input Bar */
         footer {
-            background: #111b21;
-            padding: 8px 10px;
+            background: var(--surface);
+            padding: 10px 16px;
             display: flex;
             align-items: center;
-            gap: 8px;
-            padding-bottom: calc(env(safe-area-inset-bottom) + 8px);
+            gap: 12px;
+            border-top: 1px solid var(--border);
+            padding-bottom: calc(env(safe-area-inset-bottom) + 10px);
         }
 
-        .input-container {
+        .input-pill {
             flex: 1;
-            background: #2a3942;
-            border-radius: 24px;
-            padding: 8px 14px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 10px 16px;
             display: flex;
             align-items: center;
         }
@@ -116,105 +111,99 @@
             border: none;
             color: #fff;
             width: 100%;
-            outline: none;
-            font-size: 16px; /* Prevents iOS auto-zoom */
+            font-size: 15px;
         }
 
-        .circle-btn {
-            width: 46px;
-            height: 46px;
-            border-radius: 50%;
-            background: #00a884;
+        .action-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 15px; /* Squircle style */
+            background: var(--accent);
+            color: #fff;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #fff;
-            font-size: 18px;
-            transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            border: none;
+            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 8px 16px rgba(45, 127, 249, 0.2);
         }
-        
-        .circle-btn.send { background: var(--accent); transform: rotate(0deg); }
+
+        .action-btn:active { transform: scale(0.9); opacity: 0.8; }
     </style>
 </head>
 <body>
 
     <header>
-        <div class="flex items-center gap-2">
-            <i class="fas fa-arrow-left text-gray-400 p-2" onclick="history.back()"></i>
-            <div class="relative">
-                <img id="display-pfp" src="" class="w-10 h-10 rounded-full bg-gray-800 border border-white/5 object-cover">
-                <div class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-[#0F1116] rounded-full"></div>
-            </div>
-            <div class="ml-1">
-                <h3 id="display-title" class="text-[15px] font-bold text-white tracking-tight leading-tight">Student Hub</h3>
-                <span class="text-[10px] text-green-500 font-black uppercase tracking-widest">Active Now</span>
+        <div class="flex items-center gap-3">
+            <i class="fas fa-chevron-left text-gray-500 text-lg" onclick="history.back()"></i>
+            <img id="head-pfp" src="" class="w-10 h-10 rounded-2xl border border-white/10 bg-gray-900 object-cover">
+            <div>
+                <h3 id="head-title" class="text-[15px] font-bold tracking-tight text-white leading-none">Lounge</h3>
+                <span id="head-code" class="text-[10px] text-[#2D7FF9] font-black uppercase tracking-[0.2em] mt-1 block">#000000</span>
             </div>
         </div>
-        <div class="flex gap-5 text-gray-400 text-lg mr-2">
-            <i class="fas fa-video-camera text-sm"></i>
+        <div class="flex gap-5 text-gray-500">
+            <i class="fas fa-shield-halved text-sm"></i>
             <i class="fas fa-ellipsis-vertical text-sm"></i>
         </div>
     </header>
 
-    <main id="chat-scroller">
-        <div class="flex justify-center my-3">
-            <span class="bg-[#182229] text-[9px] text-amber-200/50 px-3 py-1 rounded font-bold uppercase tracking-widest border border-white/5">
-                <i class="fas fa-lock mr-2 text-[8px]"></i> End-to-End Encrypted
+    <main id="chat-flow">
+        <div class="flex justify-center my-4">
+            <span class="bg-blue-500/5 text-[9px] text-[#2D7FF9] px-4 py-1.5 rounded-full border border-blue-500/20 font-bold uppercase tracking-widest">
+                <i class="fas fa-bolt-lightning mr-2"></i> Encrypted Session Active
             </span>
         </div>
 
         <div class="bubble them">
-            <span class="text-[10px] font-bold text-blue-400 block mb-1">SYSTEM CORE</span>
-            Identity verified. Your session in <span id="lounge-span" class="text-white">Hub</span> is now live.
-            <span class="time">10:24 PM</span>
+            <span class="text-[9px] font-black text-[#2D7FF9] block mb-1 uppercase tracking-wider">Lounge Bot</span>
+            Authentication successful. Welcome to the Student Lounge.
+            <div class="meta">Connected</div>
         </div>
 
         <div class="bubble me">
-            Ready to initialize the project files. 
-            <span class="time">10:25 PM <i class="fas fa-check-double ml-1 text-blue-400"></i></span>
+            Initialize secure data transfer.
+            <div class="meta">
+                12:45 PM <i class="fas fa-check-double text-[#2D7FF9]"></i>
+            </div>
         </div>
     </main>
 
     <footer>
-        <i class="fas fa-plus text-gray-400 text-xl mx-1"></i>
-        <div class="input-container">
-            <input type="text" id="msg-input" placeholder="Message..." oninput="handleTyping()">
-            <i class="far fa-face-smile text-gray-400 ml-2 text-xl"></i>
+        <button class="text-gray-500 text-xl"><i class="fas fa-plus"></i></button>
+        <div class="input-pill">
+            <input type="text" id="user-msg" placeholder="Type a message..." oninput="syncUI()">
+            <i class="far fa-face-smile text-gray-600 ml-2"></i>
         </div>
-        <button id="main-action" class="circle-btn">
-            <i id="action-icon" class="fas fa-microphone"></i>
+        <button id="send-btn" class="action-btn">
+            <i id="send-icon" class="fas fa-microphone"></i>
         </button>
     </footer>
 
     <script>
-        // On Page Load: Retrieve data from chat.html
         window.onload = () => {
             const pfp = localStorage.getItem('user_pfp');
             const name = localStorage.getItem('user_name');
-            const lounge = localStorage.getItem('lounge_title');
+            const title = localStorage.getItem('lounge_title');
+            
+            // Generate a random code for display if none exists
+            const code = localStorage.getItem('lounge_code') || Math.floor(100000 + Math.random() * 900000);
 
-            if(pfp) document.getElementById('display-pfp').src = pfp;
-            if(lounge) {
-                document.getElementById('display-title').innerText = lounge;
-                document.getElementById('lounge-span').innerText = lounge;
-            }
+            if(pfp) document.getElementById('head-pfp').src = pfp;
+            if(title) document.getElementById('head-title').innerText = title;
+            document.getElementById('head-code').innerText = "#" + code;
 
-            // Scroll to bottom
-            const scroller = document.getElementById('chat-scroller');
-            scroller.scrollTop = scroller.scrollHeight;
+            const chat = document.getElementById('chat-flow');
+            chat.scrollTop = chat.scrollHeight;
         };
 
-        // UI Logic for Input Swapping
-        function handleTyping() {
-            const input = document.getElementById('msg-input');
-            const btn = document.getElementById('main-action');
-            const icon = document.getElementById('action-icon');
-
+        function syncUI() {
+            const input = document.getElementById('user-msg');
+            const icon = document.getElementById('send-icon');
+            
             if(input.value.trim().length > 0) {
-                btn.classList.add('send');
-                icon.className = 'fas fa-paper-plane ml-0.5';
+                icon.className = 'fas fa-paper-plane';
             } else {
-                btn.classList.remove('send');
                 icon.className = 'fas fa-microphone';
             }
         }
