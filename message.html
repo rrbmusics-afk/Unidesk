@@ -3,90 +3,221 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Aethercore | Lounge</title>
+    <title>Student Lounge | Chat</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&display=swap');
-        :root { --accent: #2D7FF9; --bg: #050608; --surface: #0F1116; --me: #005c4b; --them: #202c33; }
-        * { font-family: 'Space Grotesk', sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background: var(--bg); margin: 0; height: 100dvh; display: flex; flex-direction: column; }
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap');
         
-        header { background: var(--surface); padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        
-        main {
-            flex: 1; overflow-y: auto; padding: 15px;
-            background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png');
-            background-blend-mode: overlay; background-size: 450px; background-color: var(--bg);
-            display: flex; flex-direction: column; gap: 6px;
+        :root { 
+            --accent: #2D7FF9; 
+            --bg: #050608; 
+            --surface: #0F1116;
+            --me: #005c4b; 
+            --them: #1f2c33; 
         }
 
-        .bubble { max-width: 82%; padding: 8px 12px; font-size: 14px; position: relative; box-shadow: 0 1px 1px rgba(0,0,0,0.2); }
-        .me { align-self: flex-end; background: var(--me); border-radius: 12px 0 12px 12px; color: #e9edef; }
-        .them { align-self: flex-start; background: var(--them); border-radius: 0 12px 12px 12px; color: #e9edef; }
-        
-        footer { background: #111b21; padding: 10px 14px; display: flex; align-items: center; gap: 10px; }
-        .input-pill { flex: 1; background: #2a3942; border-radius: 25px; padding: 9px 15px; display: flex; items-center; }
-        input { background: transparent; border: none; color: #fff; width: 100%; outline: none; font-size: 15px; }
-        
-        .action-btn { 
-            width: 45px; height: 45px; border-radius: 50%; background: #00a884; 
-            display: flex; items-center; justify-content: center; border: none; color: #fff; 
+        * { 
+            font-family: 'Space Grotesk', sans-serif; 
+            -webkit-tap-highlight-color: transparent; 
+            scrollbar-width: none; 
         }
-        .action-btn.send { background: var(--accent); }
+        *::-webkit-scrollbar { display: none; }
+
+        body { 
+            background: var(--bg); 
+            margin: 0; 
+            height: 100dvh; 
+            display: flex; 
+            flex-direction: column; 
+            overflow: hidden;
+        }
+
+        /* Premium Header */
+        header {
+            background: var(--surface);
+            padding: 10px 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 0.5px solid rgba(255,255,255,0.05);
+            padding-top: env(safe-area-inset-top);
+        }
+
+        /* Message Area with Subtle Doodle */
+        main {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px 14px;
+            background-color: var(--bg);
+            background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png');
+            background-blend-mode: soft-light;
+            background-size: 380px;
+            opacity: 0.95;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        /* WhatsApp-Style Bubbles */
+        .bubble {
+            max-width: 85%;
+            padding: 7px 11px 5px;
+            font-size: 14.5px;
+            position: relative;
+            box-shadow: 0 1px 1px rgba(0,0,0,0.15);
+            word-wrap: break-word;
+        }
+        
+        .me {
+            align-self: flex-end;
+            background: var(--me);
+            color: #e9edef;
+            border-radius: 12px 0 12px 12px;
+        }
+
+        .them {
+            align-self: flex-start;
+            background: var(--them);
+            color: #e9edef;
+            border-radius: 0 12px 12px 12px;
+        }
+
+        .time {
+            font-size: 10px;
+            opacity: 0.5;
+            float: right;
+            margin-top: 4px;
+            margin-left: 8px;
+            text-transform: uppercase;
+        }
+
+        /* Input Bar Engineering */
+        footer {
+            background: #111b21;
+            padding: 8px 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding-bottom: calc(env(safe-area-inset-bottom) + 8px);
+        }
+
+        .input-container {
+            flex: 1;
+            background: #2a3942;
+            border-radius: 24px;
+            padding: 8px 14px;
+            display: flex;
+            align-items: center;
+        }
+
+        input {
+            background: transparent;
+            border: none;
+            color: #fff;
+            width: 100%;
+            outline: none;
+            font-size: 16px; /* Prevents iOS auto-zoom */
+        }
+
+        .circle-btn {
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            background: #00a884;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 18px;
+            transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .circle-btn.send { background: var(--accent); transform: rotate(0deg); }
     </style>
 </head>
 <body>
 
     <header>
-        <div class="flex items-center gap-3">
-            <i class="fas fa-arrow-left text-gray-500" onclick="history.back()"></i>
-            <img src="https://api.dicebear.com/7.x/bottts/svg?seed=Strategy" class="w-10 h-10 rounded-full bg-gray-900 border border-white/10">
-            <div>
-                <h3 class="text-sm font-bold">Strategy Hub</h3>
-                <span class="text-[10px] text-green-500 font-bold uppercase">Online</span>
+        <div class="flex items-center gap-2">
+            <i class="fas fa-arrow-left text-gray-400 p-2" onclick="history.back()"></i>
+            <div class="relative">
+                <img id="display-pfp" src="" class="w-10 h-10 rounded-full bg-gray-800 border border-white/5 object-cover">
+                <div class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-[#0F1116] rounded-full"></div>
+            </div>
+            <div class="ml-1">
+                <h3 id="display-title" class="text-[15px] font-bold text-white tracking-tight leading-tight">Student Hub</h3>
+                <span class="text-[10px] text-green-500 font-black uppercase tracking-widest">Active Now</span>
             </div>
         </div>
-        <i class="fas fa-ellipsis-v text-gray-500"></i>
+        <div class="flex gap-5 text-gray-400 text-lg mr-2">
+            <i class="fas fa-video-camera text-sm"></i>
+            <i class="fas fa-ellipsis-vertical text-sm"></i>
+        </div>
     </header>
 
-    <main id="chat">
-        <div class="flex justify-center my-4">
-            <span class="bg-black/40 text-[10px] text-amber-200/50 px-3 py-1 rounded-md uppercase font-bold tracking-tighter">
-                <i class="fas fa-lock mr-1"></i> Aethercore Encryption Active
+    <main id="chat-scroller">
+        <div class="flex justify-center my-3">
+            <span class="bg-[#182229] text-[9px] text-amber-200/50 px-3 py-1 rounded font-bold uppercase tracking-widest border border-white/5">
+                <i class="fas fa-lock mr-2 text-[8px]"></i> End-to-End Encrypted
             </span>
         </div>
 
         <div class="bubble them">
-            <span class="text-[10px] font-bold text-blue-400 block mb-1 uppercase">Admin</span>
-            The project files have been uploaded to the cloud.
-            <div class="text-[9px] text-right opacity-40 mt-1">11:02 PM</div>
+            <span class="text-[10px] font-bold text-blue-400 block mb-1">SYSTEM CORE</span>
+            Identity verified. Your session in <span id="lounge-span" class="text-white">Hub</span> is now live.
+            <span class="time">10:24 PM</span>
         </div>
 
         <div class="bubble me">
-            Awesome! I'll start the review now.
-            <div class="text-[9px] text-right opacity-40 mt-1">11:03 PM <i class="fas fa-check-double ml-1 text-blue-400"></i></div>
+            Ready to initialize the project files. 
+            <span class="time">10:25 PM <i class="fas fa-check-double ml-1 text-blue-400"></i></span>
         </div>
     </main>
 
     <footer>
-        <i class="fas fa-plus text-gray-500 text-xl"></i>
-        <div class="input-pill">
-            <input type="text" id="msg-in" placeholder="Message..." oninput="t()">
+        <i class="fas fa-plus text-gray-400 text-xl mx-1"></i>
+        <div class="input-container">
+            <input type="text" id="msg-input" placeholder="Message..." oninput="handleTyping()">
+            <i class="far fa-face-smile text-gray-400 ml-2 text-xl"></i>
         </div>
-        <button id="btn" class="action-btn"><i id="ico" class="fas fa-microphone"></i></button>
+        <button id="main-action" class="circle-btn">
+            <i id="action-icon" class="fas fa-microphone"></i>
+        </button>
     </footer>
 
     <script>
-        function t() {
-            const v = document.getElementById('msg-in').value.trim();
-            const b = document.getElementById('btn');
-            const i = document.getElementById('ico');
-            if(v) { b.classList.add('send'); i.className = 'fas fa-paper-plane ml-0.5'; }
-            else { b.classList.remove('send'); i.className = 'fas fa-microphone'; }
+        // On Page Load: Retrieve data from chat.html
+        window.onload = () => {
+            const pfp = localStorage.getItem('user_pfp');
+            const name = localStorage.getItem('user_name');
+            const lounge = localStorage.getItem('lounge_title');
+
+            if(pfp) document.getElementById('display-pfp').src = pfp;
+            if(lounge) {
+                document.getElementById('display-title').innerText = lounge;
+                document.getElementById('lounge-span').innerText = lounge;
+            }
+
+            // Scroll to bottom
+            const scroller = document.getElementById('chat-scroller');
+            scroller.scrollTop = scroller.scrollHeight;
+        };
+
+        // UI Logic for Input Swapping
+        function handleTyping() {
+            const input = document.getElementById('msg-input');
+            const btn = document.getElementById('main-action');
+            const icon = document.getElementById('action-icon');
+
+            if(input.value.trim().length > 0) {
+                btn.classList.add('send');
+                icon.className = 'fas fa-paper-plane ml-0.5';
+            } else {
+                btn.classList.remove('send');
+                icon.className = 'fas fa-microphone';
+            }
         }
-        const c = document.getElementById('chat');
-        c.scrollTop = c.scrollHeight;
     </script>
 </body>
 </html>
