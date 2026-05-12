@@ -2,178 +2,70 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Aethercore</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Aethercore | Secure Lounge</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
-    
-    <style>
-        :root { --accent: #2D7FF9; --bg: #050608; --pod: #0F1116; --border: rgba(255,255,255,0.08); }
-        
-        * { box-sizing: border-box; font-family: 'Space Grotesk', sans-serif; -webkit-tap-highlight-color: transparent; }
-        
-        body { 
-            background: var(--bg); color: #fff; margin: 0; 
-            height: 100dvh; display: flex; align-items: center; justify-content: center;
-            background-image: radial-gradient(circle at 50% 50%, #111827 0%, #050608 100%);
-        }
-
-        /* The Compact Pod */
-        .pod {
-            width: 320px; background: var(--pod); border-radius: 35px;
-            padding: 24px; border: 1px solid var(--border);
-            box-shadow: 0 30px 60px rgba(0,0,0,0.8), inset 0 1px 1px rgba(255,255,255,0.1);
-            text-align: center; position: relative;
-        }
-
-        /* Small Tab Switch */
-        .switcher {
-            display: inline-flex; background: #000; padding: 4px; 
-            border-radius: 100px; margin-bottom: 25px; border: 1px solid var(--border);
-        }
-        .s-btn {
-            border: none; background: transparent; color: #555;
-            padding: 8px 16px; border-radius: 100px; font-size: 11px;
-            font-weight: 700; cursor: pointer; transition: 0.3s;
-        }
-        .s-btn.active { background: var(--accent); color: #fff; }
-
-        /* Mini Avatar */
-        .avatar-box {
-            width: 80px; height: 80px; margin: 0 auto 20px; position: relative;
-        }
-        #pfp { 
-            width: 100%; height: 100%; border-radius: 25px; object-fit: cover;
-            border: 2px solid var(--border); background: #161B22;
-        }
-        .add-icon {
-            position: absolute; -right: 5px; -bottom: 5px;
-            background: var(--accent); width: 24px; height: 24px;
-            border-radius: 8px; font-size: 10px; display: flex;
-            align-items: center; justify-content: center; border: 3px solid var(--pod);
-        }
-
-        /* Slim Inputs */
-        input {
-            width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--border);
-            padding: 14px; border-radius: 15px; color: #fff; text-align: center;
-            margin-bottom: 10px; font-size: 14px; transition: 0.3s;
-        }
-        input:focus { border-color: var(--accent); outline: none; background: rgba(45,127,249,0.05); }
-
-        /* The "Interesting" Button */
-        .go-btn {
-            width: 100%; padding: 16px; border-radius: 18px; border: none;
-            background: #1c2128; color: #444; font-weight: 700;
-            margin-top: 10px; transition: 0.4s; cursor: pointer;
-            display: flex; align-items: center; justify-content: center; gap: 8px;
-        }
-        .go-btn.ready { background: #fff; color: #000; box-shadow: 0 10px 20px rgba(255,255,255,0.1); }
-        .go-btn:active { transform: scale(0.95); }
-
-        .hidden { display: none !important; }
-
-        /* Knocking Pulse */
-        .knock { position: fixed; inset: 0; background: var(--bg); z-index: 10; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .dot { width: 12px; height: 12px; background: var(--accent); border-radius: 50%; animation: pulse 1s infinite alternate; }
-        @keyframes pulse { from { transform: scale(1); opacity: 1; box-shadow: 0 0 0px var(--accent); } to { transform: scale(2); opacity: 0.5; box-shadow: 0 0 20px var(--accent); } }
-    </style>
+    <link rel="stylesheet" href="chat.css">
 </head>
 <body>
 
-    <div class="pod" id="main">
-        <div class="switcher">
-            <button class="s-btn active" id="tc" onclick="m('create')">CREATE</button>
-            <button class="s-btn" id="tj" onclick="m('join')">JOIN</button>
-        </div>
-
-        <div id="pfp-ui" onclick="document.getElementById('fi').click()">
-            <div class="avatar-box">
-                <img id="pfp" src="https://api.dicebear.com/7.x/bottts/svg?seed=Aether">
-                <div class="add-icon"><i class="fas fa-plus"></i></div>
+    <!-- Header: Corporate Branding & Info Trigger -->
+    <header class="main-header" onclick="toggleInfo()">
+        <div class="h-content">
+            <div class="pfp-mini-wrapper">
+                <img id="header-pfp" src="https://api.dicebear.com/7.x/bottts/svg?seed=Aether" class="pfp-circle">
+                <div class="status-dot"></div>
             </div>
-            <input type="file" id="fi" class="hidden" onchange="prev(this)">
+            <div class="h-meta">
+                <h3 id="room-name-display">Aethercore Hub</h3>
+                <span id="room-status">Encrypted Lounge</span>
+            </div>
         </div>
+        <div class="h-actions">
+            <i class="fas fa-shield-halved"></i>
+        </div>
+    </header>
 
-        <input type="text" id="un" placeholder="Username" oninput="v()">
-        <input type="text" id="ln" placeholder="Lounge Name" oninput="v()">
-        <input type="text" id="lc" class="hidden" placeholder="6-Digit Code" maxlength="6" oninput="v()">
-
-        <button id="gb" class="go-btn" onclick="run()">
-            <span>CONNECT</span>
-            <i class="fas fa-bolt-lightning"></i>
-        </button>
+    <!-- Admin Notification: Real-time "Knock" Management -->
+    <div id="admin-banner" class="admin-banner hidden" onclick="openApprovals()">
+        <div class="banner-flex">
+            <i class="fas fa-user-plus"></i>
+            <span><b id="req-count">0</b> Pending Entry Requests</span>
+        </div>
+        <i class="fas fa-chevron-right"></i>
     </div>
 
-    <div id="kn" class="knock hidden">
-        <div class="dot"></div>
-        <p style="margin-top:20px; font-size:12px; letter-spacing:2px; color:var(--accent)">KNOCKING</p>
+    <!-- The Message Theatre -->
+    <main id="chat-scroller" class="doodle-surface">
+        <div class="e2ee-notice">
+            <i class="fas fa-lock"></i>
+            Messages are secured via Aethercore End-to-End protocols. No one outside this lounge can read them.
+        </div>
+        <div id="message-container"></div>
+    </main>
+
+    <!-- Professional Input Bar -->
+    <footer class="input-bar">
+        <div class="input-container">
+            <button class="tool-btn"><i class="fas fa-plus"></i></button>
+            <input type="text" id="msg-input" placeholder="Message..." autocomplete="off" oninput="toggleInputState()">
+            <button id="send-btn" class="action-btn circle-mode" onclick="handleSend()">
+                <i id="action-icon" class="fas fa-microphone"></i>
+            </button>
+        </div>
+    </footer>
+
+    <!-- Approval Modal (Managed by Admin) -->
+    <div id="approval-modal" class="modal hidden">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>Entry Requests</h3>
+                <button onclick="closeApprovals()">&times;</button>
+            </div>
+            <div id="req-list" class="modal-list"></div>
+        </div>
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
-
-        const cfg = {
-            apiKey: "AIzaSyDbfmd0zmv_mFV0CG2OrhKPPeU3zPYGOBg",
-            authDomain: "unidesk-a70ac.firebaseapp.com",
-            projectId: "unidesk-a70ac",
-            storageBucket: "unidesk-a70ac.firebasestorage.app",
-            appId: "1:882535016432:web:6eca2645a47a827e779f35"
-        };
-
-        const app = initializeApp(cfg);
-        const db = getFirestore(app);
-        const st = getStorage(app);
-
-        let mode = 'create';
-        const uid = 'A-' + Math.random().toString(36).substr(2, 5).toUpperCase();
-
-        window.m = (val) => {
-            mode = val;
-            document.getElementById('tc').classList.toggle('active', mode==='create');
-            document.getElementById('tj').classList.toggle('active', mode==='join');
-            document.getElementById('pfp-ui').classList.toggle('hidden', mode==='join');
-            document.getElementById('ln').classList.toggle('hidden', mode==='join');
-            document.getElementById('lc').classList.toggle('hidden', mode==='create');
-            v();
-        }
-
-        window.prev = (el) => { if(el.files[0]) document.getElementById('pfp').src = URL.createObjectURL(el.files[0]); }
-
-        window.v = () => {
-            const u = document.getElementById('un').value.trim();
-            const l = document.getElementById('ln').value.trim();
-            const c = document.getElementById('lc').value.trim();
-            const ok = (mode === 'create') ? (u && l) : (u && c.length === 6);
-            document.getElementById('gb').classList.toggle('ready', ok);
-        }
-
-        window.run = async () => {
-            const name = document.getElementById('un').value;
-            if(mode === 'create') {
-                const code = Math.floor(100000 + Math.random()*900000).toString();
-                let url = document.getElementById('pfp').src;
-                const file = document.getElementById('fi').files[0];
-                if(file) {
-                    const r = ref(st, `p/${code}`);
-                    await uploadBytes(r, file);
-                    url = await getDownloadURL(r);
-                }
-                await setDoc(doc(db, "rooms", code), { name: document.getElementById('ln').value, code, avatar: url, admin: uid });
-                location.href = `page.html?code=${code}&uid=${uid}&name=${name}`;
-            } else {
-                const code = document.getElementById('lc').value;
-                const s = await getDoc(doc(db, "rooms", code));
-                if(!s.exists()) return alert("Dead Link");
-                document.getElementById('main').classList.add('hidden');
-                document.getElementById('kn').classList.remove('hidden');
-                const rRef = doc(db, "rooms", code, "requests", uid);
-                await setDoc(rRef, { name, uid });
-                onSnapshot(rRef, (snap) => { if(!snap.exists()) location.href = `page.html?code=${code}&uid=${uid}&name=${name}`; });
-            }
-        }
-    </script>
+    <script type="module" src="chat.js"></script>
 </body>
 </html>
