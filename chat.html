@@ -3,166 +3,126 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Aethercore | Secure Communication</title>
+    <title>Aethercore | Secure</title>
     <link rel="stylesheet" href="chat.css">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 </head>
 <body>
 
-    <div id="app-viewport">
+    <div id="app-container">
         
-        <section id="screen-auth" class="app-screen active">
-            <div class="brand-section">
-                <div class="brand-logo"></div>
-                <h1>Aethercore</h1>
-                <p>E2E ENCRYPTED ARCHITECTURE</p>
-            </div>
-
-            <div class="auth-card">
-                <div class="tab-header">
-                    <button id="tab-create-btn" class="tab-trigger active" onclick="ui.switchTab('create')">Create Room</button>
-                    <button id="tab-join-btn" class="tab-trigger" onclick="ui.switchTab('join')">Join Room</button>
+        <section id="view-auth" class="view active">
+            <div class="auth-center">
+                <div class="brand-header">
+                    <div class="brand-logo"></div>
+                    <h1>Aethercore</h1>
+                    <p>SECURE END-TO-END ENCRYPTED</p>
                 </div>
 
-                <div class="tab-body">
-                    <div id="form-create" class="form-panel active">
-                        <div class="input-field">
-                            <label>Admin Name</label>
-                            <input type="text" id="create-admin-name" placeholder="Full Name" required>
-                        </div>
-                        <div class="input-field">
-                            <label>Group Identity</label>
-                            <input type="text" id="create-group-name" placeholder="Group Name" required>
-                        </div>
-                        <button id="btn-submit-create" class="action-btn" onclick="app.createRoom()" disabled>Initialize Room</button>
+                <div class="auth-card">
+                    <div class="tab-switcher">
+                        <button id="t-create" class="tab-btn active" onclick="ui.switchTab('create')">Create Room</button>
+                        <button id="t-join" class="tab-btn" onclick="ui.switchTab('join')">Join Room</button>
                     </div>
 
-                    <div id="form-join" class="form-panel">
-                        <div class="input-field">
-                            <label>Your Identity</label>
-                            <input type="text" id="join-user-name" placeholder="Enter name" required>
+                    <div id="form-create" class="auth-form active">
+                        <div class="input-box">
+                            <label>Admin Name</label>
+                            <input type="text" id="admin-name" placeholder="Enter your name" autocomplete="off">
                         </div>
-                        <div class="input-field">
-                            <label>Secure Room Code</label>
-                            <input type="text" id="join-room-code" placeholder="6-digit code" required>
+                        <div class="input-box">
+                            <label>Group Name</label>
+                            <input type="text" id="group-name" placeholder="Enter group identity" autocomplete="off">
                         </div>
-                        <button id="btn-submit-join" class="action-btn" onclick="app.joinRoom()" disabled>Request Entry</button>
+                        <button id="btn-create" class="main-btn" disabled onclick="core.createRoom()">Create Experience</button>
+                    </div>
+
+                    <div id="form-join" class="auth-form">
+                        <div class="input-box">
+                            <label>Your Name</label>
+                            <input type="text" id="join-name" placeholder="Enter your name" autocomplete="off">
+                        </div>
+                        <div class="input-box">
+                            <label>Room Code</label>
+                            <input type="text" id="join-code" placeholder="6-digit secure code" autocomplete="off">
+                        </div>
+                        <button id="btn-join" class="main-btn" disabled onclick="core.joinRoom()">Knock to Join</button>
                     </div>
                 </div>
             </div>
         </section>
 
-        <section id="screen-chat" class="app-screen">
-            <header class="app-header" onclick="ui.toggleOverlay('group-info', true)">
-                <div class="header-content">
-                    <div class="group-avatar-container">
-                        <img id="chat-avatar" src="https://cdn-icons-png.flaticon.com/512/924/924915.png" alt="Group">
+        <section id="view-chat" class="view">
+            <header class="chat-header" onclick="ui.toggleInfo(true)">
+                <div class="header-left">
+                    <div class="group-pfp">
+                        <img id="display-pfp" src="https://cdn-icons-png.flaticon.com/512/924/924915.png">
                     </div>
-                    <div class="group-meta">
-                        <h2 id="chat-group-name">Loading...</h2>
-                        <span id="chat-group-code">Code: ------</span>
+                    <div class="group-info-text">
+                        <h2 id="display-group-name">Group Name</h2>
+                        <span id="display-group-code">Code: ------</span>
                     </div>
                 </div>
-                <div class="header-more">
+                <div class="header-right">
                     <span class="material-icons-round">more_vert</span>
                 </div>
             </header>
 
-            <div id="admin-req-bar" class="approval-strip hidden" onclick="ui.openApprovals()">
-                <div class="strip-info">
-                    <span class="material-icons-round">person_add</span>
-                    <p><span id="req-count">0</span> New Join Requests</p>
-                </div>
+            <div id="approval-strip" class="admin-only hidden" onclick="ui.showApprovals()">
+                <p><span id="req-count">0</span> Pending Join Requests</p>
                 <span class="material-icons-round">chevron_right</span>
             </div>
 
-            <main id="chat-flow" class="doodle-background">
+            <main id="chat-messages" class="doodle-bg">
                 </main>
 
-            <footer class="app-footer">
-                <div class="input-container">
-                    <button class="tool-btn" onclick="ui.triggerDocs()">
-                        <span class="material-icons-round">attach_file</span>
-                    </button>
-                    <textarea id="msg-input" placeholder="Secure Message..." rows="1"></textarea>
-                    <div id="input-actions">
-                        <button id="mic-btn" class="mic-send-btn">
-                            <span class="material-icons-round">mic</span>
-                        </button>
-                        <button id="send-btn" class="mic-send-btn hidden">
-                            <span class="material-icons-round">send</span>
-                        </button>
+            <footer class="chat-footer">
+                <div class="input-wrapper">
+                    <button class="icon-btn" onclick="ui.triggerDocs()"><span class="material-icons-round">attach_file</span></button>
+                    <textarea id="msg-input" placeholder="Message..." rows="1"></textarea>
+                    <div id="action-area">
+                        <button id="mic-btn" class="mic-btn"><span class="material-icons-round">mic</span></button>
+                        <button id="send-btn" class="mic-btn hidden" onclick="core.sendMessage()"><span class="material-icons-round">send</span></button>
                     </div>
                 </div>
             </footer>
         </section>
 
-        <div id="overlay-group-info" class="overlay">
-            <div class="panel-full">
-                <nav class="panel-nav">
-                    <span class="material-icons-round" onclick="ui.toggleOverlay('group-info', false)">arrow_back</span>
-                    <h3>Group Information</h3>
-                </nav>
-                <div class="panel-scroll">
-                    <div class="profile-hero">
-                        <div class="hero-img-wrap" onclick="ui.zoomProfile()">
-                            <img id="info-avatar" src="https://cdn-icons-png.flaticon.com/512/924/924915.png">
-                            <button id="admin-change-photo" class="admin-feature hidden" onclick="ui.triggerPhoto()">
-                                <span class="material-icons-round">photo_camera</span>
-                            </button>
-                        </div>
-                        <h2 id="info-name-display">Group Name</h2>
-                        <div class="code-chip">
-                            <span>Room Code:</span>
-                            <b id="info-code-display">------</b>
-                        </div>
+        <div id="overlay-info" class="overlay">
+            <div class="info-panel">
+                <div class="panel-nav">
+                    <span class="material-icons-round" onclick="ui.toggleInfo(false)">arrow_back</span>
+                    <h3>Group Info</h3>
+                </div>
+                <div class="info-content">
+                    <div class="pfp-big-wrap">
+                        <img id="info-pfp" src="https://cdn-icons-png.flaticon.com/512/924/924915.png" onclick="ui.zoomImg(this.src)">
+                        <button class="admin-only hidden" onclick="ui.triggerPfp()"><span class="material-icons-round">photo_camera</span></button>
                     </div>
-                    
-                    <div class="options-list">
-                        <button class="opt-item admin-feature hidden" onclick="app.renameGroup()">
-                            <span class="material-icons-round">edit</span>
-                            <span>Rename Group</span>
-                        </button>
-                        <button class="opt-item text-danger" onclick="app.leaveGroup()">
-                            <span class="material-icons-round">logout</span>
-                            <span>Leave Group</span>
-                        </button>
-                        <button class="opt-item text-danger admin-feature hidden" onclick="app.deleteGroup()">
-                            <span class="material-icons-round">delete_forever</span>
-                            <span>Destroy Group for Everyone</span>
-                        </button>
+                    <h2 id="info-group-name">Group Name</h2>
+                    <p id="info-group-code">Code: ------</p>
+                    <div class="info-actions">
+                        <button class="action-row admin-only hidden" onclick="core.renameGroup()"><span class="material-icons-round">edit</span> Rename</button>
+                        <button class="action-row admin-only hidden text-red" onclick="core.deleteGroup()"><span class="material-icons-round">delete</span> Delete Group</button>
+                        <button class="action-row text-red" onclick="core.leaveGroup()"><span class="material-icons-round">logout</span> Leave Group</button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div id="overlay-approvals" class="overlay">
-            <div class="modal-center">
-                <h3>Membership Requests</h3>
-                <div id="request-list-inject" class="req-scroll">
-                    </div>
-                <button class="close-modal" onclick="ui.toggleOverlay('approvals', false)">Dismiss</button>
+        <div id="overlay-zoom" class="overlay zoom-overlay" onclick="this.classList.remove('active')">
+            <div class="zoom-box">
+                <img id="zoom-img">
+                <button id="download-btn" onclick="ui.downloadMedia()">Download</button>
             </div>
         </div>
-
-        <div id="overlay-media" class="overlay">
-            <div class="media-viewer">
-                <div class="media-nav">
-                    <span class="material-icons-round" onclick="ui.toggleOverlay('media', false)">close</span>
-                    <button id="media-download-btn"><span class="material-icons-round">file_download</span></button>
-                </div>
-                <img id="zoom-target" src="">
-            </div>
-        </div>
-
     </div>
 
-    <input type="file" id="input-photo" accept="image/*" hidden>
-    <input type="file" id="input-docs" multiple hidden>
+    <input type="file" id="pfp-input" accept="image/*" hidden>
+    <input type="file" id="doc-input" multiple hidden>
 
     <script src="chat.js"></script>
 </body>
