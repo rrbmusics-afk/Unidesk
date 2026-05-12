@@ -3,371 +3,339 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Student Lounge | Aethercore</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&display=swap" rel="stylesheet">
+    <title>Unidesk | Student Lounge</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
     
     <style>
         :root {
-            --ac-blue: #4A90E2;
-            --ac-dark: #0B141B;
-            --ac-card: #FFFFFF;
-            --ac-bg: #F0F2F5;
-            --ac-gray: #667781;
-            --ac-mine: #D9FDD3;
-            --ac-theirs: #FFFFFF;
+            --bg: #F5F5F7;
+            --card: #FFFFFF;
+            --primary: #000000;
+            --input-bg: #FFFFFF;
+            --border: #E5E5EA;
+            --text-main: #1C1C1E;
+            --text-dim: #666666;
+            --whatsapp-green: #25D366;
+            --msg-mine: #D9FDD3;
         }
 
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { margin: 0; font-family: 'Inter', sans-serif; background-color: var(--ac-bg); height: 100vh; overflow: hidden; }
-
+        * { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
+        body { margin: 0; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text-main); overflow: hidden; height: 100vh; }
+        
         .hidden { display: none !important; }
 
-        /* --- DOODLE BACKGROUND --- */
-        .doodle-bg {
-            background-color: #e5ddd5;
-            background-image: url("https://web.whatsapp.com/img/bg-chat-tile-dark_a4be512e71a7b32e17e29d05c504bac5.png");
-            background-repeat: repeat;
-            opacity: 0.4;
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            z-index: -1;
+        /* --- HOME SCREEN (EXACT REFERENCE MATCH) --- */
+        #entrance-view { height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .ac-card { 
+            background: var(--card); padding: 50px 35px; border-radius: 40px; width: 100%; max-width: 400px; 
+            text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.06); 
         }
+        .brand { font-weight: 800; font-size: 42px; margin: 0; letter-spacing: -1.5px; color: var(--primary); }
+        .subtitle { font-size: 14px; letter-spacing: 2px; color: var(--text-dim); margin: 10px 0 35px; font-weight: 500; }
 
-        /* --- HOME SCREEN --- */
-        .entrance-container {
-            display: flex; justify-content: center; align-items: center; height: 100vh; padding: 20px;
+        .tabs { display: flex; background: #E5E5EA; padding: 4px; border-radius: 14px; margin-bottom: 25px; }
+        .tab-btn { 
+            flex: 1; border: none; padding: 12px; border-radius: 12px; font-weight: 600; 
+            cursor: pointer; background: transparent; color: #8E8E93; transition: 0.3s; 
         }
-        .ac-card {
-            background: var(--ac-card); padding: 40px 30px; border-radius: 28px;
-            width: 100%; max-width: 400px; box-shadow: 0 12px 40px rgba(0,0,0,0.12);
-            text-align: center; position: relative; z-index: 10;
-        }
-        .brand-logo { font-weight: 800; font-size: 32px; letter-spacing: -1px; margin: 0; }
-        .brand-sub { font-size: 12px; letter-spacing: 2px; color: var(--ac-gray); margin-bottom: 30px; }
-
-        .tab-wrapper { display: flex; background: #eee; border-radius: 12px; padding: 4px; margin-bottom: 25px; }
-        .tab-btn { flex: 1; border: none; padding: 12px; border-radius: 10px; font-weight: 600; cursor: pointer; color: #555; background: transparent; transition: 0.3s; }
         .tab-btn.active { background: white; color: black; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
 
-        input[type="text"], input[type="file"] {
-            width: 100%; padding: 16px; margin: 8px 0; border: 1px solid #ddd; border-radius: 14px; font-size: 15px; outline: none;
+        input { 
+            width: 100%; padding: 18px; margin: 10px 0; border: 1px solid var(--border); 
+            border-radius: 16px; font-size: 16px; outline: none; transition: 0.2s;
         }
-        .primary-btn {
-            width: 100%; padding: 16px; border: none; border-radius: 14px; background: black; color: white;
-            font-weight: 700; cursor: pointer; margin-top: 15px; transition: 0.3s;
-        }
-        .primary-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+        input:focus { border-color: #000; }
 
-        /* --- CHAT INTERFACE --- */
-        #chat-view { height: 100vh; display: flex; flex-direction: column; position: relative; }
+        .primary-btn { 
+            width: 100%; padding: 18px; border: none; border-radius: 16px; background: var(--primary); 
+            color: white; font-weight: 700; cursor: pointer; margin-top: 15px; letter-spacing: 0.5px;
+        }
+        .primary-btn:disabled { opacity: 0.2; cursor: not-allowed; }
+
+        /* --- CHAT VIEW --- */
+        #chat-view { height: 100vh; display: flex; flex-direction: column; position: relative; background: #E5DDD5; }
+        .doodle-overlay { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png');
+            opacity: 0.08; pointer-events: none; 
+        }
+
         header { 
-            background: white; padding: 12px 16px; display: flex; align-items: center; 
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05); z-index: 20; cursor: pointer;
+            background: white; padding: 10px 16px; display: flex; align-items: center; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05); z-index: 10; position: relative;
         }
-        .group-avatar { width: 45px; height: 45px; border-radius: 50%; background: #ddd; object-fit: cover; margin-right: 12px; }
-        .header-info { flex: 1; }
-        .header-info h3 { margin: 0; font-size: 16px; }
-        .header-info span { font-size: 12px; color: var(--ac-gray); }
+        .avatar { width: 42px; height: 42px; border-radius: 50%; background: #eee; margin-right: 12px; object-fit: cover; }
+        .header-text h3 { margin: 0; font-size: 16px; font-weight: 700; }
+        .header-text p { margin: 0; font-size: 11px; color: var(--text-dim); font-weight: 600; }
 
-        .approval-bar {
-            background: #fff9c4; padding: 10px 16px; display: flex; justify-content: space-between;
-            align-items: center; font-size: 13px; font-weight: 600; border-bottom: 1px solid #eee;
+        #messages-container { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 8px; z-index: 5; }
+        .msg-bubble { 
+            padding: 8px 12px; border-radius: 12px; max-width: 80%; font-size: 15px; 
+            position: relative; box-shadow: 0 1px 1px rgba(0,0,0,0.1); line-height: 1.4;
         }
-
-        #messages-area { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 8px; position: relative; }
-        .msg { 
-            padding: 8px 12px; border-radius: 12px; max-width: 75%; position: relative; font-size: 14px;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.1); line-height: 1.4;
-        }
-        .msg.mine { align-self: flex-end; background: var(--ac-mine); border-top-right-radius: 2px; }
-        .msg.theirs { align-self: flex-start; background: var(--ac-theirs); border-top-left-radius: 2px; }
+        .msg-mine { align-self: flex-end; background: var(--msg-mine); border-top-right-radius: 2px; }
+        .msg-theirs { align-self: flex-start; background: #fff; border-top-left-radius: 2px; }
 
         /* --- INPUT BAR --- */
-        .bottom-bar { background: #f0f2f5; padding: 10px; display: flex; align-items: center; gap: 8px; }
-        .input-pill { 
-            background: white; flex: 1; border-radius: 25px; padding: 5px 15px;
-            display: flex; align-items: center; gap: 10px;
-        }
-        .input-pill input { border: none; flex: 1; padding: 10px 0; font-size: 15px; outline: none; }
-        .action-icon { color: var(--ac-gray); font-size: 20px; cursor: pointer; }
-        .record-btn { 
-            width: 45px; height: 45px; border-radius: 50%; background: var(--ac-blue);
-            display: flex; justify-content: center; align-items: center; color: white; border: none;
+        .bottom-bar { background: #F0F2F5; padding: 10px 12px; display: flex; align-items: center; gap: 10px; z-index: 10; }
+        .input-box { background: white; flex: 1; border-radius: 25px; padding: 5px 15px; display: flex; align-items: center; }
+        .input-box input { border: none; padding: 10px 0; margin: 0; font-size: 16px; }
+        
+        .circle-btn { 
+            width: 45px; height: 45px; border-radius: 50%; background: #008069; 
+            border: none; color: white; display: flex; align-items: center; justify-content: center; font-size: 18px;
         }
 
         /* --- POPUPS --- */
-        .overlay { 
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.7); display: flex; justify-content: center; align-items: center;
-            z-index: 100; transition: 0.3s;
+        .full-overlay { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.5); z-index: 100; display: flex; align-items: center; justify-content: center;
         }
-        .popup { background: white; border-radius: 20px; width: 90%; max-width: 400px; padding: 25px; }
-
+        .approval-popup { background: white; width: 85%; border-radius: 24px; padding: 25px; max-height: 70vh; overflow-y: auto; }
+        
+        .req-card { 
+            display: flex; justify-content: space-between; align-items: center; 
+            background: #F8F9FA; padding: 12px; border-radius: 12px; margin-bottom: 8px;
+        }
+        .req-card button { background: #000; color: #fff; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 600; }
     </style>
 </head>
 <body>
 
     <div id="app">
-        <section id="entrance-view" class="entrance-container">
+        <section id="entrance-view">
             <div class="ac-card">
-                <h1 class="brand-logo">UNIDESK</h1>
-                <p class="brand-sub">STUDENT UTILITY SUITE</p>
+                <h1 class="brand">UNIDESK</h1>
+                <p class="subtitle">STUDENT LOUNGE</p>
                 
-                <div class="tab-wrapper">
-                    <button id="tab-create" class="tab-btn active" onclick="setMode('create')">Create Lounge</button>
-                    <button id="tab-join" class="tab-btn" onclick="setMode('join')">Join Lounge</button>
+                <div class="tabs">
+                    <button id="btn-tab-create" class="tab-btn active">Create</button>
+                    <button id="btn-tab-join" class="tab-btn">Join</button>
                 </div>
 
-                <div id="form-body">
-                    <input type="text" id="user-name" placeholder="Your Display Name" oninput="checkInputs()">
-                    <input type="text" id="room-name" placeholder="Lounge Name" oninput="checkInputs()">
-                    <div id="admin-only-fields">
-                        <label style="font-size: 12px; color: gray;">Group Icon (1:1)</label>
-                        <input type="file" id="group-icon" accept="image/*" onchange="checkInputs()">
-                    </div>
-                    <input type="text" id="room-code-input" class="hidden" placeholder="Enter Room Code" oninput="checkInputs()">
+                <div id="form-content">
+                    <input type="text" id="inp-username" placeholder="Your Name">
+                    <input type="text" id="inp-lounge-name" placeholder="Lounge Name">
+                    <input type="text" id="inp-lounge-code" class="hidden" placeholder="Lounge Code">
                     
-                    <button id="submit-btn" class="primary-btn" disabled onclick="initLounge()">CONTINUE</button>
+                    <div id="avatar-section" style="margin-top: 10px; text-align: left;">
+                        <label style="font-size: 12px; color: #666; margin-left: 5px;">Group Profile Photo (Admin Only)</label>
+                        <input type="file" id="inp-avatar" accept="image/*">
+                    </div>
+
+                    <button id="btn-main-action" class="primary-btn" disabled>START COMMUNICATION</button>
                 </div>
+            </div>
+        </section>
+
+        <section id="knocking-view" class="hidden" style="height: 100vh; display: flex; align-items: center; justify-content: center;">
+            <div class="ac-card">
+                <div style="font-size: 40px; margin-bottom: 20px;">⏳</div>
+                <h2 style="margin: 0;">Knocking...</h2>
+                <p style="color: #666; margin-top: 10px;">Waiting for the Admin to let you in.</p>
             </div>
         </section>
 
         <section id="chat-view" class="hidden">
-            <div class="doodle-bg"></div>
-            <header onclick="showGroupInfo()">
-                <img id="header-img" class="group-avatar" src="" alt="">
-                <div class="header-info">
-                    <h3 id="header-name">Lounge Name</h3>
-                    <span id="header-code-sub">Code: #0000</span>
+            <div class="doodle-overlay"></div>
+            
+            <header>
+                <img id="head-avatar" class="avatar" src="https://cdn-icons-png.flaticon.com/512/9131/9131529.png">
+                <div class="header-text" style="flex: 1;">
+                    <h3 id="head-name">Lounge Name</h3>
+                    <p id="head-code">Code: #000000</p>
+                </div>
+                <div id="admin-notif" class="hidden" style="background: #FF3B30; color: white; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 800; cursor: pointer;">
+                    REQUESTS
                 </div>
             </header>
 
-            <div id="admin-approval-banner" class="approval-bar hidden" onclick="showApprovalList()">
-                <span>New Approval Requests</span>
-                <i class="fas fa-chevron-right"></i>
-            </div>
-
-            <div id="messages-area">
-                </div>
+            <div id="messages-container"></div>
 
             <div class="bottom-bar">
-                <div class="input-pill">
-                    <i class="fas fa-paperclip action-icon" onclick="triggerDocs()"></i>
-                    <input type="text" id="msg-input" placeholder="Message" oninput="toggleInputMode()">
-                    <i class="fas fa-camera action-icon"></i>
+                <div class="input-box">
+                    <i class="far fa-smile" style="color: #667781; font-size: 22px; margin-right: 12px;"></i>
+                    <input type="text" id="inp-msg" placeholder="Message">
+                    <i class="fas fa-paperclip" style="color: #667781; transform: rotate(45deg); margin-left: 10px;"></i>
                 </div>
-                <button id="mic-send-btn" class="record-btn" onmousedown="startRecording()" onmouseup="stopRecording()">
-                    <i id="btn-icon" class="fas fa-microphone"></i>
+                <button id="btn-send" class="circle-btn">
+                    <i class="fas fa-microphone"></i>
                 </button>
             </div>
         </section>
 
-        <div id="popup-overlay" class="overlay hidden">
-            <div id="approval-popup" class="popup">
-                <h3 style="margin-top: 0;">Pending Requests</h3>
-                <div id="request-list"></div>
-                <button class="primary-btn" onclick="closePopup()">Close</button>
+        <div id="overlay-requests" class="full-overlay hidden">
+            <div class="approval-popup">
+                <h3 style="margin-top: 0;">Pending Approvals</h3>
+                <div id="list-pending"></div>
+                <button class="primary-btn" onclick="document.getElementById('overlay-requests').classList.add('hidden')">Close</button>
             </div>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, doc, setDoc, getDoc, updateDoc, onSnapshot, collection, addDoc, query, orderBy, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+        import { getFirestore, doc, setDoc, getDoc, updateDoc, onSnapshot, collection, addDoc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDbfmd0zmv_mFV0CG2OrhKPPeU3zPYGOBg",
             authDomain: "unidesk-a70ac.firebaseapp.com",
             projectId: "unidesk-a70ac",
+            databaseURL: "https://unidesk-a70ac-default-rtdb.firebaseio.com",
             storageBucket: "unidesk-a70ac.firebasestorage.app",
-            messagingSenderId: "882535016432",
             appId: "1:882535016432:web:6eca2645a47a827e779f35"
         };
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-        const storage = getStorage(app);
 
-        let currentMode = 'create';
-        let currentUser = null;
-        let activeLounge = null;
-        let isRecording = false;
-        let mediaRecorder;
-        let audioChunks = [];
+        let mode = 'create'; // create or join
+        let myUid = localStorage.getItem('unidesk_uid') || 'u_' + Math.random().toString(36).substr(2, 9);
+        localStorage.setItem('unidesk_uid', myUid);
 
-        // Logic: Tab Switching
-        window.setMode = (mode) => {
-            currentMode = mode;
-            document.getElementById('tab-create').classList.toggle('active', mode === 'create');
-            document.getElementById('tab-join').classList.toggle('active', mode === 'join');
-            document.getElementById('admin-only-fields').classList.toggle('hidden', mode === 'join');
-            document.getElementById('room-name').classList.toggle('hidden', mode === 'join');
-            document.getElementById('room-code-input').classList.toggle('hidden', mode === 'create');
-            checkInputs();
-        };
+        let activeRoom = null;
+        let myName = "";
 
-        window.checkInputs = () => {
-            const name = document.getElementById('user-name').value;
-            const rName = document.getElementById('room-name').value;
-            const code = document.getElementById('room-code-input').value;
-            const btn = document.getElementById('submit-btn');
+        // --- BUTTON TRIGGERS ---
+        document.getElementById('btn-tab-create').onclick = () => switchTab('create');
+        document.getElementById('btn-tab-join').onclick = () => switchTab('join');
+        document.getElementById('btn-main-action').onclick = handleInitialAction;
+        document.getElementById('inp-username').oninput = validate;
+        document.getElementById('inp-lounge-name').oninput = validate;
+        document.getElementById('inp-lounge-code').oninput = validate;
+        document.getElementById('admin-notif').onclick = () => document.getElementById('overlay-requests').classList.remove('hidden');
 
-            if(currentMode === 'create') {
-                btn.disabled = !(name && rName);
-            } else {
-                btn.disabled = !(name && code);
-            }
-        };
+        function switchTab(t) {
+            mode = t;
+            document.getElementById('btn-tab-create').classList.toggle('active', t === 'create');
+            document.getElementById('btn-tab-join').classList.toggle('active', t === 'join');
+            document.getElementById('inp-lounge-name').classList.toggle('hidden', t === 'join');
+            document.getElementById('avatar-section').classList.toggle('hidden', t === 'join');
+            document.getElementById('inp-lounge-code').classList.toggle('hidden', t === 'create');
+            validate();
+        }
 
-        // Logic: Initialization
-        window.initLounge = async () => {
-            const name = document.getElementById('user-name').value;
-            const rName = document.getElementById('room-name').value;
-            const codeInput = document.getElementById('room-code-input').value;
-            const uid = 'user_' + Date.now();
+        function validate() {
+            const user = document.getElementById('inp-username').value.trim();
+            const lName = document.getElementById('inp-lounge-name').value.trim();
+            const lCode = document.getElementById('inp-lounge-code').value.trim();
+            const btn = document.getElementById('btn-main-action');
+            
+            if(mode === 'create') btn.disabled = !(user && lName);
+            else btn.disabled = !(user && lCode);
+        }
 
-            if(currentMode === 'create') {
+        async function handleInitialAction() {
+            myName = document.getElementById('inp-username').value.trim();
+            const lName = document.getElementById('inp-lounge-name').value.trim();
+            const lCode = document.getElementById('inp-lounge-code').value.trim();
+
+            if(mode === 'create') {
                 const newCode = Math.floor(100000 + Math.random() * 900000).toString();
-                const loungeData = {
-                    name: rName,
+                const roomData = {
+                    name: lName,
                     code: newCode,
-                    admin: uid,
-                    avatar: 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png',
-                    members: [uid],
+                    admin: myUid,
+                    members: [myUid],
                     pending: []
                 };
-                await setDoc(doc(db, "lounges", newCode), loungeData);
-                enterChat(loungeData, {uid, name, role: 'admin'});
+                await setDoc(doc(db, "rooms", newCode), roomData);
+                startChat(roomData, true);
             } else {
-                const docRef = doc(db, "lounges", codeInput);
-                const docSnap = await getDoc(docRef);
-                if(docSnap.exists()){
-                    const data = docSnap.data();
-                    await updateDoc(docRef, {
-                        pending: [...data.pending, {uid, name}]
+                const snap = await getDoc(doc(db, "rooms", lCode));
+                if(snap.exists()) {
+                    const data = snap.data();
+                    const updatedPending = data.pending || [];
+                    updatedPending.push({ uid: myUid, name: myName });
+                    await updateDoc(doc(db, "rooms", lCode), { pending: updatedPending });
+                    
+                    document.getElementById('entrance-view').classList.add('hidden');
+                    document.getElementById('knocking-view').classList.remove('hidden');
+                    
+                    // Listen for Approval
+                    onSnapshot(doc(db, "rooms", lCode), (doc) => {
+                        if(doc.data().members.includes(myUid)) startChat(doc.data(), false);
                     });
-                    alert("Knocking... Wait for admin approval.");
-                } else {
-                    alert("Invalid Lounge Code");
-                }
+                } else { alert("Invalid Room Code"); }
             }
-        };
+        }
 
-        function enterChat(lounge, user) {
-            currentUser = user;
-            activeLounge = lounge;
+        function startChat(room, isAdmin) {
+            activeRoom = room;
             document.getElementById('entrance-view').classList.add('hidden');
+            document.getElementById('knocking-view').classList.add('hidden');
             document.getElementById('chat-view').classList.remove('hidden');
-            document.getElementById('header-name').innerText = lounge.name;
-            document.getElementById('header-code-sub').innerText = "Code: #" + lounge.code;
-            document.getElementById('header-img').src = lounge.avatar;
-            
-            if(user.role === 'admin') {
-                listenForRequests(lounge.code);
-            }
-            listenForMessages(lounge.code);
-        }
+            document.getElementById('head-name').innerText = room.name;
+            document.getElementById('head-code').innerText = "Code: #" + room.code;
 
-        // Real-time Listeners
-        function listenForMessages(code) {
-            onSnapshot(collection(db, "lounges", code, "messages"), (querySnapshot) => {
-                const area = document.getElementById('messages-area');
-                area.innerHTML = '';
-                querySnapshot.docs.forEach(doc => {
-                    const m = doc.data();
-                    const div = document.createElement('div');
-                    div.className = `msg ${m.senderId === currentUser.uid ? 'mine' : 'theirs'}`;
-                    div.innerText = `${m.senderName}: ${m.text}`;
-                    area.appendChild(div);
+            if(isAdmin) {
+                onSnapshot(doc(db, "rooms", room.code), (doc) => {
+                    const pend = doc.data().pending || [];
+                    document.getElementById('admin-notif').classList.toggle('hidden', pend.length === 0);
+                    renderPending(pend);
                 });
-                area.scrollTop = area.scrollHeight;
-            });
-        }
-
-        function listenForRequests(code) {
-            onSnapshot(doc(db, "lounges", code), (doc) => {
-                const data = doc.data();
-                if(data.pending.length > 0) {
-                    document.getElementById('admin-approval-banner').classList.remove('hidden');
-                    updateRequestList(data.pending);
-                } else {
-                    document.getElementById('admin-approval-banner').classList.add('hidden');
-                }
-            });
-        }
-
-        // Audio Logic
-        window.startRecording = async () => {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            mediaRecorder = new MediaRecorder(stream);
-            mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-            mediaRecorder.onstop = sendAudio;
-            audioChunks = [];
-            mediaRecorder.start();
-            document.getElementById('btn-icon').className = "fas fa-circle-notch fa-spin";
-        };
-
-        window.stopRecording = () => {
-            if(mediaRecorder) {
-                mediaRecorder.stop();
-                document.getElementById('btn-icon').className = "fas fa-microphone";
             }
-        };
 
-        async function sendAudio() {
-            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-            // Upload to storage then addDoc to messages
-            console.log("Audio ready to send:", audioBlob);
+            const q = query(collection(db, "rooms", room.code, "messages"), orderBy("createdAt", "asc"));
+            onSnapshot(q, (snap) => {
+                const cont = document.getElementById('messages-container');
+                cont.innerHTML = "";
+                snap.forEach(m => {
+                    const d = m.data();
+                    const div = document.createElement('div');
+                    div.className = `msg-bubble ${d.uid === myUid ? 'msg-mine' : 'msg-theirs'}`;
+                    div.innerHTML = `<small style="display:block; font-size:10px; opacity:0.6">${d.sender}</small>${d.text}`;
+                    cont.appendChild(div);
+                });
+                cont.scrollTop = cont.scrollHeight;
+            });
         }
 
-        window.toggleInputMode = () => {
-            const input = document.getElementById('msg-input').value;
-            const btn = document.getElementById('mic-send-btn');
-            const icon = document.getElementById('btn-icon');
-            if(input.length > 0) {
+        function renderPending(list) {
+            const cont = document.getElementById('list-pending');
+            cont.innerHTML = "";
+            list.forEach(u => {
+                const d = document.createElement('div');
+                d.className = "req-card";
+                d.innerHTML = `<span>${u.name}</span> <button onclick="approveUser('${u.uid}')">Approve</button>`;
+                cont.appendChild(d);
+            });
+        }
+
+        window.approveUser = async (uid) => {
+            const snap = await getDoc(doc(db, "rooms", activeRoom.code));
+            const data = snap.data();
+            const newMembers = data.members;
+            newMembers.push(uid);
+            const newPending = data.pending.filter(x => x.uid !== uid);
+            await updateDoc(doc(db, "rooms", activeRoom.code), { members: newMembers, pending: newPending });
+        };
+
+        // --- MESSAGE SENDING ---
+        document.getElementById('inp-msg').oninput = (e) => {
+            const icon = document.querySelector('#btn-send i');
+            if(e.target.value.length > 0) {
                 icon.className = "fas fa-paper-plane";
-                btn.onmousedown = null;
-                btn.onclick = sendMessage;
+                document.getElementById('btn-send').onclick = sendMsg;
             } else {
                 icon.className = "fas fa-microphone";
-                btn.onclick = null;
-                btn.onmousedown = startRecording;
+                document.getElementById('btn-send').onclick = null;
             }
         };
 
-        window.sendMessage = async () => {
-            const input = document.getElementById('msg-input');
-            if(!input.value) return;
-            await addDoc(collection(db, "lounges", activeLounge.code, "messages"), {
-                text: input.value,
-                senderId: currentUser.uid,
-                senderName: currentUser.name,
-                timestamp: Date.now()
+        async function sendMsg() {
+            const txt = document.getElementById('inp-msg').value;
+            if(!txt) return;
+            await addDoc(collection(db, "rooms", activeRoom.code, "messages"), {
+                text: txt,
+                uid: myUid,
+                sender: myName,
+                createdAt: serverTimestamp()
             });
-            input.value = '';
-            toggleInputMode();
-        };
-
-        // Approval Management
-        function updateRequestList(pending) {
-            const list = document.getElementById('request-list');
-            list.innerHTML = '';
-            pending.forEach(p => {
-                const item = document.createElement('div');
-                item.style = "display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;";
-                item.innerHTML = `<span>${p.name}</span> <button onclick="approveUser('${p.uid}')" style="background:green; color:white; border:none; padding:5px 10px; border-radius:5px;">Approve</button>`;
-                list.appendChild(item);
-            });
+            document.getElementById('inp-msg').value = "";
+            document.querySelector('#btn-send i').className = "fas fa-microphone";
         }
-
-        window.showApprovalList = () => {
-            document.getElementById('popup-overlay').classList.remove('hidden');
-        };
-        window.closePopup = () => {
-            document.getElementById('popup-overlay').classList.add('hidden');
-        };
     </script>
 </body>
 </html>
