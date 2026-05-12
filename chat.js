@@ -1,8 +1,3 @@
-/**
- * Aethercore Core Engine - Senior Build
- */
-
-// 1. CONFIGURATION
 const firebaseConfig = {
     apiKey: "AIzaSyDbfmd0zmv_mFV0CG2OrhKPPeU3zPYGOBg",
     authDomain: "unidesk-a70ac.firebaseapp.com",
@@ -14,109 +9,58 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
-const storage = firebase.storage();
 
-let session = { user: '', role: 'member', roomId: '', code: '', uid: '' };
+let state = { user: '', role: 'member', room: '', code: '' };
 
-// 2. UI LOGIC (Switching, Locking, Validation)
-const logic = {
-    switchTab: (tab) => {
-        document.querySelectorAll('.tab-trigger, .panel').forEach(el => el.classList.remove('active'));
-        document.getElementById(`tab-${tab}`).classList.add('active');
-        document.getElementById(`panel-${tab}`).classList.add('active');
+const ui = {
+    tab: (t) => {
+        document.querySelectorAll('.tabs button, .panel').forEach(el => el.classList.remove('active'));
+        document.getElementById(`t-${t[0]}`).classList.add('active');
+        document.getElementById(`p-${t}`).classList.add('active');
     },
-    validate: () => {
-        // Create Logic
-        const aName = document.getElementById('admin-name').value.trim();
-        const gName = document.getElementById('group-name').value.trim();
-        document.getElementById('btn-create').disabled = !(aName && gName);
+    check: () => {
+        const a = document.getElementById('a-name').value;
+        const g = document.getElementById('g-name').value;
+        document.getElementById('b-c').disabled = !(a && g);
 
-        // Join Logic
-        const jName = document.getElementById('join-name').value.trim();
-        const jCode = document.getElementById('join-code').value.trim();
-        document.getElementById('btn-join').disabled = !(jName && jCode);
+        const j = document.getElementById('j-name').value;
+        const c = document.getElementById('j-code').value;
+        document.getElementById('b-j').disabled = !(j && c);
     },
-    showInfo: () => document.getElementById('overlay-info').classList.add('active'),
-    hideInfo: () => document.getElementById('overlay-info').classList.remove('active'),
-    pickPhoto: () => document.getElementById('pfp-gate').click(),
-    pickDocs: () => document.getElementById('doc-gate').click()
+    overlay: (id, show) => document.getElementById(`${id}-ov`).classList.toggle('active', show),
+    pfp: () => document.getElementById('f-pfp').click(),
+    docs: () => document.getElementById('f-doc').click()
 };
 
-// Initialization of Listeners
-document.querySelectorAll('input').forEach(i => i.addEventListener('input', logic.validate));
-
-// 3. ENGINE OPERATIONS
-const engine = {
-    initRoom: async () => {
-        const admin = document.getElementById('admin-name').value;
-        const group = document.getElementById('group-name').value;
+const core = {
+    create: async () => {
+        const admin = document.getElementById('a-name').value;
+        const group = document.getElementById('g-name').value;
         const code = Math.random().toString(36).substring(2, 8).toUpperCase();
 
         const ref = await db.collection('rooms').add({
-            name: group,
-            code: code,
-            adminId: admin + Date.now(),
-            photo: 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png',
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            name: group, code: code, admin: admin, 
+            pfp: 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png'
         });
 
-        session = { user: admin, role: 'admin', roomId: ref.id, code: code, uid: admin + Date.now() };
-        engine.launch();
+        state = { user: admin, role: 'admin', room: ref.id, code: code, name: group };
+        core.launch();
     },
-
-    requestEntry: async () => {
-        const name = document.getElementById('join-name').value;
-        const code = document.getElementById('join-code').value.toUpperCase();
-
-        const snap = await db.collection('rooms').where('code', '==', code).get();
-        if(snap.empty) return alert("Access Denied: Room Code Invalid");
-
-        const roomId = snap.docs[0].id;
-        await db.collection('rooms').doc(roomId).collection('requests').add({
-            name: name,
-            uid: name + Date.now(),
-            status: 'pending'
-        });
-
-        alert("Knock sent. Waiting for Admin approval...");
-    },
-
     launch: () => {
-        document.getElementById('view-auth').classList.remove('active');
-        document.getElementById('view-hub').classList.add('active');
-        
-        document.getElementById('hub-title').innerText = session.name || "Aether Group";
-        document.getElementById('hub-code-sub').innerText = "Code: " + session.code;
-        document.getElementById('info-title').innerText = session.name || "Aether Group";
-        document.getElementById('info-code').innerText = session.code;
+        document.getElementById('auth-screen').classList.remove('active');
+        document.getElementById('chat-screen').classList.add('active');
+        document.getElementById('h-name').innerText = state.name;
+        document.getElementById('h-code').innerText = "Code: " + state.code;
+        document.getElementById('i-name').innerText = state.name;
+        document.getElementById('i-code').innerText = "Room Code: " + state.code;
 
-        if(session.role === 'admin') {
-            document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden'));
-            engine.listenRequests();
-        }
-    },
-
-    listenRequests: () => {
-        db.collection('rooms').doc(session.roomId).collection('requests')
-        .where('status', '==', 'pending')
-        .onSnapshot(snap => {
-            const banner = document.getElementById('approval-banner');
-            document.getElementById('req-count').innerText = snap.size;
-            banner.classList.toggle('hidden', snap.size === 0);
-        });
+        if(state.role === 'admin') document.querySelectorAll('.adm').forEach(e => e.classList.remove('hidden'));
     }
 };
 
-// 4. ANDROID SPECIAL: KEYBOARD FIX (Requirement 6)
-const lockViewport = () => {
-    const meta = document.querySelector('meta[name=viewport]');
-    meta.setAttribute('content', meta.content + ', height=' + window.innerHeight);
-};
-window.addEventListener('load', lockViewport);
-
-// WhatsApp style send button toggle
-document.getElementById('msg-input').oninput = function() {
-    const hasValue = this.value.trim().length > 0;
-    document.getElementById('mic-btn').classList.toggle('hidden', hasValue);
-    document.getElementById('send-btn').classList.toggle('hidden', !hasValue);
+// Toggle send button
+document.getElementById('input').oninput = function() {
+    const val = this.value.trim().length > 0;
+    document.getElementById('mic').classList.toggle('hidden', val);
+    document.getElementById('send').classList.toggle('hidden', !val);
 };
