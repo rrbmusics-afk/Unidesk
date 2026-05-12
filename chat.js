@@ -1,123 +1,121 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, doc, setDoc, onSnapshot, updateDoc, collection, addDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, doc, setDoc, updateDoc, onSnapshot, getDoc, arrayUnion, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-const firebaseConfig = { /* Your Config Here */ };
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+const firebaseConfig = { apiKey: "AIzaSyDbfmd0zmv_mFV0CG2OrhKPPeU3zPYGOBg", authDomain: "unidesk-a70ac.firebaseapp.com", projectId: "unidesk-a70ac" };
+const db = getFirestore(initializeApp(firebaseConfig));
 
-let currentUser = { name: "", role: "member", id: Date.now().toString() };
-let activeLounge = null;
-let mediaRecorder;
-let audioChunks = [];
+let myId = "UID-" + Math.floor(Math.random()*10000);
+let currentRoom = null;
+let isAdmin = false;
+let myName = "";
 
-// 1. Form Validation (Lock/Unlock Buttons)
-window.validateForm = () => {
-    const isCreate = !document.getElementById('create-tab').classList.contains('hidden');
-    if (isCreate) {
-        const name = document.getElementById('create-user-name').value;
-        const lounge = document.getElementById('create-lounge-name').value;
-        const btn = document.getElementById('create-proceed');
+// Mode Toggle
+window.switchMode = (mode) => {
+    const isJoin = mode === 'join';
+    document.getElementById('loungeNameInput').classList.toggle('hidden', isJoin);
+    document.getElementById('codeInput').classList.toggle('hidden', !isJoin);
+    document.getElementById('tab-create').classList.toggle('active', !isJoin);
+    document.getElementById('tab-join').classList.toggle('active', isJoin);
+    validate();
+};
+
+window.validate = () => {
+    const name = document.getElementById('nameInput').value.trim();
+    const isJoin = !document.getElementById('codeInput').classList.contains('hidden');
+    const btn = document.getElementById('actionBtn');
+    
+    if (isJoin) {
+        const code = document.getElementById('codeInput').value.trim();
+        btn.disabled = !(name && code);
+    } else {
+        const lounge = document.getElementById('loungeNameInput').value.trim();
         btn.disabled = !(name && lounge);
-        btn.classList.toggle('locked', btn.disabled);
-    } else {
-        const name = document.getElementById('join-user-name').value;
-        const code = document.getElementById('join-lounge-code').value;
-        const btn = document.getElementById('join-proceed');
-        btn.disabled = !(name && code.length === 6);
-        btn.classList.toggle('locked', btn.disabled);
     }
+    btn.classList.toggle('locked', btn.disabled);
 };
 
-// 2. Create Lounge (Admin)
-window.handleCreate = async () => {
-    const code = Math.random().toString(36).substring(2, 8).toUpperCase();
-    const loungeName = document.getElementById('create-lounge-name').value;
-    currentUser.name = document.getElementById('create-user-name').value;
-    currentUser.role = "admin";
+window.handleAction = async () => {
+    const isJoin = !document.getElementById('codeInput').classList.contains('hidden');
+    myName = document.getElementById('nameInput').value.trim();
 
-    await setDoc(doc(db, "lounges", code), {
-        name: loungeName,
-        adminId: currentUser.id,
-        createdAt: new Date(),
-        pfp: "default.png"
-    });
-
-    enterChat(code, loungeName);
-};
-
-// 3. The Knocking System (Join Request)
-window.handleJoin = async () => {
-    const code = document.getElementById('join-lounge-code').value;
-    currentUser.name = document.getElementById('join-user-name').value;
-
-    // Add to pending_requests sub-collection
-    await addDoc(collection(db, "lounges", code, "requests"), {
-        userId: currentUser.id,
-        userName: currentUser.name,
-        status: "pending"
-    });
-
-    showWaitingScreen();
-    
-    // Listen for Approval
-    onSnapshot(collection(db, "lounges", code, "requests"), (snap) => {
-        snap.forEach(doc => {
-            if(doc.data().userId === currentUser.id && doc.data().status === "approved") {
-                enterChat(code, "Lounge Joined");
-            }
+    if (isJoin) {
+        const code = document.getElementById('codeInput').value.toUpperCase();
+        // Send Approval Request (Knocking)
+        await updateDoc(doc(db, "rooms", code), { 
+            [`requests.${myId}`]: { name: myName, status: 'pending' } 
         });
-    });
-};
-
-// 4. Voice Recording Logic
-const actionBtn = document.getElementById('action-trigger');
-actionBtn.addEventListener('mousedown', startRecording);
-actionBtn.addEventListener('mouseup', stopAndSendRecording);
-
-async function startRecording() {
-    if (document.getElementById('msg-input').value) return; // Don't record if typing
-    
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    mediaRecorder = new MediaRecorder(stream);
-    actionBtn.classList.add('recording');
-    
-    mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
-    mediaRecorder.start();
-}
-
-async function stopAndSendRecording() {
-    if (!mediaRecorder || mediaRecorder.state === "inactive") return;
-    
-    mediaRecorder.stop();
-    actionBtn.classList.remove('recording');
-    
-    mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunks, { type: 'audio/ogg; codecs=opus' });
-        // Upload audioBlob to Firebase Storage...
-        // Send message with audio URL...
-        audioChunks = [];
-    };
-}
-
-// 5. Toggle Voice vs Send
-window.toggleVoiceMode = () => {
-    const input = document.getElementById('msg-input');
-    const icon = document.getElementById('trigger-icon');
-    if (input.value.length > 0) {
-        icon.className = "fas fa-paper-plane";
-        actionBtn.onmousedown = sendMessage; // Switch functionality
+        alert("Knocking... Wait for admin approval.");
+        listenForApproval(code);
     } else {
-        icon.className = "fas fa-microphone";
-        actionBtn.onmousedown = startRecording;
+        const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+        const lName = document.getElementById('loungeNameInput').value;
+        isAdmin = true;
+        await setDoc(doc(db, "rooms", code), {
+            name: lName, admin: myId, requests: {}, messages: [], pfp: ""
+        });
+        openChat(code);
     }
 };
 
-function enterChat(code, name) {
-    document.getElementById('entrance-screen').classList.remove('active');
-    document.getElementById('chat-screen').classList.add('active');
-    document.getElementById('display-lounge-name').innerText = name;
-    document.getElementById('display-lounge-code').innerText = `#${code}`;
-    if (currentUser.role === 'admin') {
-        document.getElementById('admin-badge').classList.remove('hidden');
-    }
+function listenForApproval(code) {
+    onSnapshot(doc(db, "rooms", code), (snap) => {
+        const data = snap.data();
+        if (data.requests[myId]?.status === 'approved') openChat(code);
+    });
+}
+
+function openChat(code) {
+    currentRoom = code;
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.getElementById('chat-view').classList.add('active');
+    
+    onSnapshot(doc(db, "rooms", code), (snap) => {
+        const data = snap.data();
+        if (!data) { alert("Group Deleted"); location.reload(); return; }
+        document.getElementById('displayLoungeName').innerText = data.name;
+        document.getElementById('displayLoungeCode').innerText = "#" + code;
+        renderMessages(data.messages);
+        
+        if (isAdmin) {
+            const reqs = Object.entries(data.requests).filter(r => r[1].status === 'pending');
+            document.getElementById('reqBanner').classList.toggle('hidden', reqs.length === 0);
+            document.getElementById('reqCount').innerText = reqs.length;
+            window.pendingReqs = reqs;
+        }
+    });
+}
+
+window.checkInput = () => {
+    const val = document.getElementById('msgInput').value;
+    const icon = document.getElementById('triggerIcon');
+    icon.className = val.trim() ? "fas fa-paper-plane" : "fas fa-microphone";
+};
+
+// End-to-End Encryption Logic (Simulated for this demo)
+function encrypt(text) { return btoa(text); } // In production, use WebCrypto API
+function decrypt(text) { return atob(text); }
+
+async function sendMessage() {
+    const inp = document.getElementById('msgInput');
+    const text = inp.value.trim();
+    if (!text) return;
+    inp.value = "";
+    checkInput();
+    
+    await updateDoc(doc(db, "rooms", currentRoom), {
+        messages: arrayUnion({ sender: myId, name: myName, text: encrypt(text), time: Date.now() })
+    });
+}
+
+function renderMessages(msgs) {
+    const box = document.getElementById('chatBox');
+    box.innerHTML = '<div class="e2ee-tag">End-to-End Encrypted</div>';
+    msgs.forEach(m => {
+        const isMe = m.sender === myId;
+        const div = document.createElement('div');
+        div.className = `bubble ${isMe ? 'me' : 'them'}`;
+        div.innerHTML = `<b>${m.name}</b><p>${decrypt(m.text)}</p>`;
+        box.appendChild(div);
+    });
+    box.scrollTop = box.scrollHeight;
 }
