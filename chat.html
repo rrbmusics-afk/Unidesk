@@ -14,210 +14,135 @@
             --ac-gray-100: #F2F2F7;
             --ac-gray-200: #E5E5EA;
             --ac-gray-500: #8E8E93;
-            --ac-accent: #007AFF;
             --whatsapp-green: #008069;
             --bubble-mine: #E7FFDB;
             --bubble-theirs: #FFFFFF;
-            --safe-top: env(safe-area-inset-top);
         }
 
-        /* Standard Reset */
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
-        body, html { 
-            margin: 0; padding: 0; height: 100%; width: 100%; 
-            font-family: 'Inter', -apple-system, sans-serif; 
-            background: var(--ac-gray-100); overflow: hidden;
-        }
-
+        body, html { margin: 0; padding: 0; height: 100%; width: 100%; font-family: 'Inter', sans-serif; background: var(--ac-gray-100); overflow: hidden; }
         .hidden { display: none !important; }
 
-        /* --- HOME SCREEN ARCHITECTURE --- */
-        #view-entrance {
-            height: 100vh; display: flex; align-items: center; justify-content: center;
-            background: linear-gradient(180deg, #FFFFFF 0%, #F2F2F7 100%);
+        /* --- HOME SCREEN --- */
+        #view-entrance { height: 100vh; display: flex; align-items: center; justify-content: center; background: #fff; }
+        .auth-card { width: 90%; max-width: 400px; padding: 40px; text-align: center; }
+        .brand-h1 { font-weight: 800; font-size: 44px; letter-spacing: -2px; margin: 0; }
+        
+        /* Profile Image Upload Circle (WhatsApp Style) */
+        .profile-upload-wrapper {
+            position: relative; width: 110px; height: 110px; margin: 20px auto 30px;
         }
-        .auth-card {
-            width: 90%; max-width: 400px; background: var(--ac-white);
-            padding: 48px 32px; border-radius: 42px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
-            text-align: center; border: 1px solid rgba(0,0,0,0.05);
+        #preview-img { 
+            width: 100%; height: 100%; border-radius: 50%; object-fit: cover; 
+            border: 2px solid var(--ac-gray-200); background: #f9f9f9;
         }
-        .brand-h1 { font-weight: 800; font-size: 48px; letter-spacing: -2px; margin: 0; line-height: 1; }
-        .brand-sub { font-size: 13px; letter-spacing: 3px; color: var(--ac-gray-500); margin: 12px 0 40px; font-weight: 600; }
-
-        .segment-pill {
-            display: flex; background: var(--ac-gray-100); padding: 4px; 
-            border-radius: 16px; margin-bottom: 24px;
+        .upload-icon-overlay {
+            position: absolute; bottom: 0; right: 0; background: var(--ac-black);
+            color: white; width: 34px; height: 34px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; font-size: 14px;
+            cursor: pointer; border: 3px solid white;
         }
-        .segment-btn {
-            flex: 1; border: none; padding: 12px; border-radius: 12px;
-            font-weight: 700; font-size: 14px; cursor: pointer; color: var(--ac-gray-500);
-            background: transparent; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .segment-btn.active { background: var(--ac-white); color: var(--ac-black); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
 
         .ac-input {
-            width: 100%; padding: 18px 20px; margin: 10px 0;
-            border: 1.5px solid var(--ac-gray-200); border-radius: 18px;
-            font-size: 16px; font-weight: 500; transition: all 0.2s;
+            width: 100%; padding: 16px; margin: 8px 0; border: 1.5px solid var(--ac-gray-200);
+            border-radius: 14px; font-size: 16px; font-weight: 500;
         }
-        .ac-input:focus { border-color: var(--ac-black); background: #fff; }
-
         .btn-action {
-            width: 100%; padding: 20px; border: none; border-radius: 18px;
-            background: var(--ac-black); color: var(--ac-white);
-            font-weight: 800; font-size: 15px; cursor: pointer;
-            margin-top: 20px; letter-spacing: 1px; transition: opacity 0.3s;
+            width: 100%; padding: 18px; border: none; border-radius: 14px;
+            background: var(--ac-black); color: #fff; font-weight: 700;
+            margin-top: 20px; cursor: pointer; transition: 0.3s;
         }
-        .btn-action:disabled { opacity: 0.2; cursor: not-allowed; }
+        .btn-action:disabled { opacity: 0.2; }
 
-        /* --- CHAT ARCHITECTURE --- */
-        #view-chat { 
-            height: 100vh; display: flex; flex-direction: column; 
-            background: #E5DDD5; position: relative; 
-        }
-        .chat-doodle {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        /* --- CHAT VIEW --- */
+        #view-chat { height: 100vh; display: flex; flex-direction: column; background: #E5DDD5; position: relative; }
+        .chat-doodle { 
+            position: absolute; inset: 0; 
             background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png');
-            opacity: 0.06; pointer-events: none; z-index: 1;
+            opacity: 0.06; pointer-events: none; 
         }
 
         header {
-            background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);
-            padding: 12px 16px; display: flex; align-items: center;
+            background: #fff; padding: 10px 16px; display: flex; align-items: center;
             border-bottom: 1px solid rgba(0,0,0,0.05); z-index: 10;
         }
-        .group-img { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; margin-right: 14px; background: #eee; }
-        .header-meta { flex: 1; overflow: hidden; }
-        .header-meta h2 { margin: 0; font-size: 17px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .header-meta p { margin: 0; font-size: 12px; color: var(--ac-gray-500); font-weight: 500; }
+        .group-img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; margin-right: 12px; }
+        .header-meta h2 { margin: 0; font-size: 16px; font-weight: 700; }
+        .header-meta p { margin: 0; font-size: 11px; color: var(--ac-gray-500); }
 
         #msg-flow { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 8px; z-index: 2; }
-        
-        .bubble-wrap { display: flex; flex-direction: column; max-width: 80%; position: relative; }
-        .mine { align-self: flex-end; }
-        .theirs { align-self: flex-start; }
-
         .bubble {
-            padding: 8px 12px; border-radius: 14px; font-size: 15px; line-height: 1.4;
+            padding: 8px 12px; border-radius: 14px; font-size: 15px; max-width: 80%;
             position: relative; box-shadow: 0 1px 0.5px rgba(0,0,0,0.13);
         }
-        .mine .bubble { background: var(--bubble-mine); border-top-right-radius: 2px; }
-        .theirs .bubble { background: var(--bubble-theirs); border-top-left-radius: 2px; }
-        
-        .sender-tag { font-size: 11px; font-weight: 700; margin-bottom: 2px; color: var(--whatsapp-green); }
+        .mine { align-self: flex-end; background: var(--bubble-mine); border-top-right-radius: 2px; }
+        .theirs { align-self: flex-start; background: var(--bubble-theirs); border-top-left-radius: 2px; }
 
-        /* --- INPUT BAR (STATIC KEYBOARD READY) --- */
-        .bottom-shelf {
-            background: #F0F2F5; padding: 10px 12px; display: flex; align-items: center; 
-            gap: 10px; z-index: 10; padding-bottom: calc(10px + env(safe-area-inset-bottom));
-        }
-        .input-container {
-            flex: 1; background: var(--ac-white); border-radius: 24px;
-            display: flex; align-items: center; padding: 4px 14px;
-        }
-        .input-container input {
-            flex: 1; border: none; padding: 10px 0; font-size: 16px;
-        }
-        .icon-btn { color: #667781; font-size: 22px; cursor: pointer; padding: 5px; }
-
-        .circle-action {
-            width: 48px; height: 48px; border-radius: 50%; background: var(--whatsapp-green);
-            color: white; border: none; display: flex; align-items: center; justify-content: center;
-            font-size: 18px; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        /* --- MESSAGE ACTIONS POPUP --- */
-        .context-menu {
-            position: fixed; background: white; border-radius: 12px; width: 180px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2); z-index: 1000; overflow: hidden;
-        }
-        .menu-item { padding: 14px 18px; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 10px; }
-        .menu-item:active { background: #f0f0f0; }
-        .menu-item.danger { color: #FF3B30; }
-
-        /* Admin Requests Banner */
-        .admin-request-toast {
-            background: var(--ac-black); color: white; padding: 12px 20px;
-            display: flex; justify-content: space-between; align-items: center;
-            font-size: 13px; font-weight: 600;
-        }
+        .bottom-shelf { background: #F0F2F5; padding: 10px; display: flex; align-items: center; gap: 10px; z-index: 10; }
+        .input-container { flex: 1; background: #fff; border-radius: 24px; padding: 4px 15px; display: flex; align-items: center; }
+        .input-container input { flex: 1; border: none; padding: 10px 0; font-size: 16px; }
+        .circle-action { width: 45px; height: 45px; border-radius: 50%; background: var(--whatsapp-green); color: #fff; border: none; }
     </style>
 </head>
 <body>
 
-    <div id="app-root">
-        
+    <div id="app">
         <section id="view-entrance">
             <div class="auth-card">
                 <h1 class="brand-h1">UNIDESK</h1>
-                <p class="brand-sub">AETHERCORE STUDENT LOUNGE</p>
+                <p style="color: gray; font-size: 12px; letter-spacing: 2px; font-weight: 600; margin-bottom: 30px;">STUDENT LOUNGE</p>
                 
-                <div class="segment-pill">
-                    <button class="segment-btn active" onclick="ui.setMode('create')">Create</button>
-                    <button class="segment-btn" onclick="ui.setMode('join')">Join</button>
+                <div id="avatar-container" class="profile-upload-wrapper">
+                    <img id="preview-img" src="https://cdn-icons-png.flaticon.com/512/9131/9131529.png">
+                    <label for="field-avatar" class="upload-icon-overlay">
+                        <i class="fas fa-camera"></i>
+                    </label>
+                    <input type="file" id="field-avatar" accept="image/*" class="hidden" onchange="ui.previewAvatar(this)">
                 </div>
 
                 <div id="auth-fields">
-                    <input type="text" id="field-user" class="ac-input" placeholder="Display Name">
+                    <input type="text" id="field-user" class="ac-input" placeholder="Your Display Name">
                     <input type="text" id="field-room-name" class="ac-input" placeholder="Lounge Name">
-                    <input type="text" id="field-room-code" class="ac-input hidden" placeholder="6-Digit Code">
+                    <input type="text" id="field-room-code" class="ac-input hidden" placeholder="Enter 6-Digit Code">
                     
-                    <div id="admin-extras" style="text-align: left; margin-top: 10px;">
-                        <span style="font-size: 11px; color: gray; font-weight: 700;">LOUNGE ICON</span>
-                        <input type="file" id="field-avatar" accept="image/*" class="ac-input" style="padding: 10px;">
+                    <div style="display:flex; gap: 10px; margin-top: 20px;">
+                        <button id="tab-create" style="flex:1; border:none; background:#eee; padding:10px; border-radius:10px; font-weight:700;" onclick="ui.setMode('create')">CREATE</button>
+                        <button id="tab-join" style="flex:1; border:none; background:#eee; padding:10px; border-radius:10px; font-weight:700;" onclick="ui.setMode('join')">JOIN</button>
                     </div>
 
-                    <button id="btn-submit" class="btn-action" disabled onclick="core.init()">START COMMUNICATION</button>
+                    <button id="btn-submit" class="btn-action" onclick="core.init()">START COMMUNICATION</button>
                 </div>
             </div>
         </section>
 
         <section id="view-chat" class="hidden">
             <div class="chat-doodle"></div>
-            
-            <div id="admin-banner" class="admin-request-toast hidden" onclick="ui.toggleApprovals(true)">
-                <span>PENDING APPROVAL REQUESTS</span>
-                <i class="fas fa-chevron-right"></i>
-            </div>
-
-            <header onclick="ui.showGroupInfo()">
-                <img id="chat-avatar" class="group-img" src="https://cdn-icons-png.flaticon.com/512/9131/9131529.png">
+            <header>
+                <img id="chat-avatar" class="group-img" src="">
                 <div class="header-meta">
                     <h2 id="chat-name-display">Lounge Name</h2>
                     <p id="chat-code-display">#000000</p>
                 </div>
-                <i class="fas fa-ellipsis-v icon-btn" style="font-size: 18px;"></i>
             </header>
 
             <div id="msg-flow"></div>
 
             <div class="bottom-shelf">
                 <div class="input-container">
-                    <i class="far fa-smile icon-btn"></i>
-                    <input type="text" id="msg-input" placeholder="Message" oninput="ui.handleInputTyping()">
-                    <i class="fas fa-paperclip icon-btn" onclick="ui.triggerDocs()"></i>
-                    <i class="fas fa-camera icon-btn"></i>
+                    <input type="text" id="msg-input" placeholder="Message">
+                    <i class="fas fa-paperclip" style="color: gray;"></i>
                 </div>
-                <button id="main-voice-btn" class="circle-action">
-                    <i id="action-icon" class="fas fa-microphone"></i>
+                <button class="circle-action" onclick="core.sendMessage()">
+                    <i class="fas fa-paper-plane"></i>
                 </button>
             </div>
         </section>
-
-        <div id="overlay-requests" class="hidden" style="position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:2000; display:flex; align-items:center; justify-content:center;">
-            <div class="auth-card" style="max-height: 80vh; overflow-y: auto;">
-                <h3 style="margin-top: 0;">Lounge Entry Requests</h3>
-                <div id="req-list-container"></div>
-                <button class="btn-action" onclick="ui.toggleApprovals(false)">Close</button>
-            </div>
-        </div>
-
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, doc, setDoc, getDoc, updateDoc, onSnapshot, collection, addDoc, query, orderBy, serverTimestamp, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, updateDoc, onSnapshot, collection, addDoc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDbfmd0zmv_mFV0CG2OrhKPPeU3zPYGOBg",
@@ -229,130 +154,85 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        const storage = getStorage(app);
 
-        // Core Engine State
         const state = {
             mode: 'create',
-            uid: localStorage.getItem('ae_uid') || 'u' + Date.now(),
-            userName: '',
+            uid: 'u' + Math.random().toString(36).substr(2, 9),
             activeRoom: null,
-            isAdmin: false,
-            mediaRecorder: null,
-            chunks: []
+            selectedFile: null
         };
-        localStorage.setItem('ae_uid', state.uid);
 
-        // UI Controller
         const ui = {
             setMode: (m) => {
                 state.mode = m;
-                document.querySelectorAll('.segment-btn').forEach(b => b.classList.toggle('active', b.innerText.toLowerCase() === m));
                 document.getElementById('field-room-name').classList.toggle('hidden', m === 'join');
-                document.getElementById('admin-extras').classList.toggle('hidden', m === 'join');
+                document.getElementById('avatar-container').classList.toggle('hidden', m === 'join');
                 document.getElementById('field-room-code').classList.toggle('hidden', m === 'create');
-                ui.validate();
             },
-            validate: () => {
-                const user = document.getElementById('field-user').value.trim();
-                const room = document.getElementById('field-room-name').value.trim();
-                const code = document.getElementById('field-room-code').value.trim();
-                document.getElementById('btn-submit').disabled = (state.mode === 'create') ? !(user && room) : !(user && code);
-            },
-            handleInputTyping: () => {
-                const val = document.getElementById('msg-input').value;
-                const icon = document.getElementById('action-icon');
-                if(val.length > 0) {
-                    icon.className = "fas fa-paper-plane";
-                    document.getElementById('main-voice-btn').onmousedown = null;
-                    document.getElementById('main-voice-btn').onclick = core.sendMessage;
-                } else {
-                    icon.className = "fas fa-microphone";
-                    document.getElementById('main-voice-btn').onclick = null;
-                    document.getElementById('main-voice-btn').onmousedown = core.startVoice;
-                    document.getElementById('main-voice-btn').onmouseup = core.stopVoice;
+            previewAvatar: (input) => {
+                if (input.files && input.files[0]) {
+                    state.selectedFile = input.files[0];
+                    const reader = new FileReader();
+                    reader.onload = e => document.getElementById('preview-img').src = e.target.result;
+                    reader.readAsDataURL(input.files[0]);
                 }
-            },
-            toggleApprovals: (show) => document.getElementById('overlay-requests').classList.toggle('hidden', !show)
+            }
         };
 
-        // Functional Core
         const core = {
             init: async () => {
-                state.userName = document.getElementById('field-user').value.trim();
-                if(state.mode === 'create') {
-                    const code = Math.floor(100000 + Math.random() * 900000).toString();
+                const userName = document.getElementById('field-user').value;
+                const roomName = document.getElementById('field-room-name').value;
+                const code = state.mode === 'create' ? Math.floor(100000 + Math.random() * 900000).toString() : document.getElementById('field-room-code').value;
+
+                if (state.mode === 'create') {
+                    let downloadURL = "https://cdn-icons-png.flaticon.com/512/9131/9131529.png";
+                    
+                    // --- STORAGE UPLOAD LOGIC ---
+                    if (state.selectedFile) {
+                        const storageRef = ref(storage, `lounges/${code}/profile.jpg`);
+                        await uploadBytes(storageRef, state.selectedFile);
+                        downloadURL = await getDownloadURL(storageRef);
+                    }
+
                     const roomData = {
-                        name: document.getElementById('field-room-name').value.trim(),
+                        name: roomName,
                         code: code,
                         admin: state.uid,
-                        members: [state.uid],
-                        pending: []
+                        avatar: downloadURL,
+                        members: [state.uid]
                     };
                     await setDoc(doc(db, "lounges", code), roomData);
-                    core.launchChat(roomData, true);
+                    core.launchChat(roomData, userName);
                 } else {
-                    const code = document.getElementById('field-room-code').value.trim();
-                    const ref = doc(db, "lounges", code);
-                    const snap = await getDoc(ref);
-                    if(snap.exists()) {
-                        const data = snap.data();
-                        await updateDoc(ref, { pending: [...(data.pending || []), {uid: state.uid, name: state.userName}] });
-                        alert("Knocking... Admin will review your request.");
-                        onSnapshot(ref, (s) => { if(s.data().members.includes(state.uid)) core.launchChat(s.data(), false); });
-                    }
+                    const snap = await getDoc(doc(db, "lounges", code));
+                    if(snap.exists()) core.launchChat(snap.data(), userName);
                 }
             },
-            launchChat: (room, isAdmin) => {
+            launchChat: (room, userName) => {
                 state.activeRoom = room;
-                state.isAdmin = isAdmin;
+                state.userName = userName;
                 document.getElementById('view-entrance').classList.add('hidden');
                 document.getElementById('view-chat').classList.remove('hidden');
                 document.getElementById('chat-name-display').innerText = room.name;
-                document.getElementById('chat-code-display').innerText = `Lounge Code: #${room.code}`;
-
-                if(isAdmin) core.listenRequests();
+                document.getElementById('chat-code-display').innerText = `#${room.code}`;
+                document.getElementById('chat-avatar').src = room.avatar;
                 core.listenMessages();
             },
             listenMessages: () => {
                 const q = query(collection(db, "lounges", state.activeRoom.code, "messages"), orderBy("ts", "asc"));
-                onSnapshot(q, (snap) => {
+                onSnapshot(q, snap => {
                     const flow = document.getElementById('msg-flow');
                     flow.innerHTML = '';
                     snap.forEach(d => {
                         const m = d.data();
-                        const item = document.createElement('div');
-                        item.className = `bubble-wrap ${m.uid === state.uid ? 'mine' : 'theirs'}`;
-                        item.innerHTML = `
-                            <div class="bubble">
-                                <div class="sender-tag">${m.sender}</div>
-                                <div>${m.text}</div>
-                            </div>`;
-                        item.oncontextmenu = (e) => core.showMsgActions(e, d.id, m.uid);
-                        flow.appendChild(item);
+                        const div = document.createElement('div');
+                        div.className = `bubble ${m.uid === state.uid ? 'mine' : 'theirs'}`;
+                        div.innerHTML = `<small style="font-weight:700; display:block; color:#008069">${m.sender}</small>${m.text}`;
+                        flow.appendChild(div);
                     });
                     flow.scrollTop = flow.scrollHeight;
-                });
-            },
-            listenRequests: () => {
-                onSnapshot(doc(db, "lounges", state.activeRoom.code), (s) => {
-                    const data = s.data();
-                    document.getElementById('admin-banner').classList.toggle('hidden', data.pending.length === 0);
-                    const list = document.getElementById('req-list-container');
-                    list.innerHTML = '';
-                    data.pending.forEach(p => {
-                        const div = document.createElement('div');
-                        div.style = "display:flex; justify-content:space-between; align-items:center; background:#f9f9f9; padding:12px; border-radius:12px; margin-bottom:10px;";
-                        div.innerHTML = `<span style="font-weight:600;">${p.name}</span> <button class="btn-action" style="width:auto; padding:8px 15px; margin:0;" onclick="core.approve('${p.uid}')">ALLOW</button>`;
-                        list.appendChild(div);
-                    });
-                });
-            },
-            approve: async (uid) => {
-                const ref = doc(db, "lounges", state.activeRoom.code);
-                const data = (await getDoc(ref)).data();
-                await updateDoc(ref, {
-                    members: [...data.members, uid],
-                    pending: data.pending.filter(x => x.uid !== uid)
                 });
             },
             sendMessage: async () => {
@@ -365,34 +245,11 @@
                     ts: serverTimestamp()
                 });
                 inp.value = '';
-                ui.handleInputTyping();
-            },
-            startVoice: async () => {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                state.mediaRecorder = new MediaRecorder(stream);
-                state.mediaRecorder.ondataavailable = e => state.chunks.push(e.data);
-                state.mediaRecorder.onstop = core.uploadVoice;
-                state.chunks = [];
-                state.mediaRecorder.start();
-                document.getElementById('action-icon').className = "fas fa-dot-circle fa-beat";
-            },
-            stopVoice: () => {
-                if(state.mediaRecorder) {
-                    state.mediaRecorder.stop();
-                    document.getElementById('action-icon').className = "fas fa-microphone";
-                }
             }
         };
 
-        // Attach Listeners
         window.ui = ui;
         window.core = core;
-        document.getElementById('field-user').addEventListener('input', ui.validate);
-        document.getElementById('field-room-name').addEventListener('input', ui.validate);
-        document.getElementById('field-room-code').addEventListener('input', ui.validate);
-        document.getElementById('main-voice-btn').onmousedown = core.startVoice;
-        document.getElementById('main-voice-btn').onmouseup = core.stopVoice;
-
     </script>
 </body>
 </html>
