@@ -2,111 +2,80 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>UNIDESK | Student Lounge</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Student Lounge | Aethercore</title>
     <link rel="stylesheet" href="chat.css">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.x.x/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.x.x/firebase-database.js"></script>
 </head>
 <body>
 
-    <div id="unidesk-app">
-        <section id="view-home" class="view active">
-            <header class="brand-center">
-                <h1 class="unidesk-logo">STUDENT LOUNGE</h1>
-                <p class="sub-brand">AETHERCORE INTERACTIVE</p>
-            </header>
+    <!-- Stage 1: Entrance -->
+    <div id="entrance-screen" class="screen active">
+        <header class="premium-header">
+            <h1>Student Lounge</h1>
+            <p>Aethercore Interactive</p>
+        </header>
+        <div class="action-cards">
+            <button onclick="showFlow('create')" class="card-btn primary">
+                <span>Create Lounge</span>
+                <small>Start a new private hub</small>
+            </button>
+            <button onclick="showFlow('join')" class="card-btn secondary">
+                <span>Join Lounge</span>
+                <small>Enter existing code</small>
+            </button>
+        </div>
+    </div>
 
-            <div class="action-grid">
-                <button class="main-card" onclick="ui.showView('view-create')">
-                    <div class="icon-box blue"><span class="material-symbols-rounded">add_circle</span></div>
-                    <div class="card-txt">
-                        <h3>Create Lounge</h3>
-                        <p>Initialize a new secure space</p>
-                    </div>
-                </button>
-
-                <button class="main-card" onclick="ui.showView('view-join')">
-                    <div class="icon-box"><span class="material-symbols-rounded">sensor_door</span></div>
-                    <div class="card-txt">
-                        <h3>Join Lounge</h3>
-                        <p>Enter an existing code</p>
-                    </div>
-                </button>
+    <!-- Stage 2: Forms -->
+    <div id="form-screen" class="screen">
+        <div class="glass-form">
+            <h2 id="form-title">Lounge Setup</h2>
+            <div class="input-group">
+                <input type="text" id="user-name" placeholder="Your Name" required>
+                <input type="text" id="lounge-name" class="create-only" placeholder="Lounge Name">
+                <input type="text" id="lounge-code-input" class="join-only" placeholder="Lounge Code">
             </div>
-            <footer class="legal-footer">© 2026 AETHERCORE INTERACTIVE</footer>
-        </section>
+            <button id="submit-btn" class="submit-btn">Continue</button>
+        </div>
+    </div>
 
-        <section id="view-create" class="view">
-            <nav class="top-nav"><span class="material-symbols-rounded" onclick="ui.showView('view-home')">arrow_back</span></nav>
-            <div class="form-body">
-                <h2>Initialize Lounge</h2>
-                <div class="field">
-                    <label>Your Name</label>
-                    <input type="text" id="c-user" placeholder="Enter your full name">
-                </div>
-                <div class="field">
-                    <label>Lounge Name</label>
-                    <input type="text" id="c-lounge" placeholder="e.g. Science Study Group">
-                </div>
-                <button class="prime-btn" onclick="lounge.create()">Create Experience</button>
+    <!-- Stage 3: Waiting Area -->
+    <div id="waiting-screen" class="screen">
+        <div class="loader-content">
+            <div class="pulse-ring"></div>
+            <h3>Knocking...</h3>
+            <p>Waiting for admin approval</p>
+        </div>
+    </div>
+
+    <!-- Stage 4: Chat Module -->
+    <div id="chat-screen" class="screen">
+        <div class="chat-header" onclick="openLoungeInfo()">
+            <div class="header-info">
+                <h4 id="active-lounge-name">Lounge Name</h4>
+                <span id="active-lounge-code">#CODE123</span>
             </div>
-        </section>
+            <div class="admin-badge" id="admin-indicator">Admin</div>
+        </div>
 
-        <section id="view-join" class="view">
-            <nav class="top-nav"><span class="material-symbols-rounded" onclick="ui.showView('view-home')">arrow_back</span></nav>
-            <div class="form-body">
-                <h2>Knock to Enter</h2>
-                <div class="field">
-                    <label>Your Name</label>
-                    <input type="text" id="j-user" placeholder="Enter your full name">
-                </div>
-                <div class="field">
-                    <label>Lounge Code</label>
-                    <input type="text" id="j-code" placeholder="Paste 6-digit code">
-                </div>
-                <button class="prime-btn" onclick="lounge.knock()">Send Knock Request</button>
-            </div>
-        </section>
+        <div id="message-container" class="message-feed"></div>
 
-        <section id="view-waiting" class="view">
-            <div class="waiting-box">
-                <div class="pulse-loader"></div>
-                <h2>Knocking...</h2>
-                <p>The Lounge Admin is reviewing your request. Please stay on this screen.</p>
-            </div>
-        </section>
+        <div id="typing-indicator" class="hidden">Someone is typing...</div>
 
-        <section id="view-hub" class="view">
-            <header class="hub-header">
-                <div class="h-meta">
-                    <h2 id="display-lounge-name">Lounge Name</h2>
-                    <span id="display-lounge-code">Code: ------</span>
-                </div>
-                <div id="admin-tools" class="hidden">
-                    <button class="req-trigger" onclick="ui.togglePopup(true)">
-                        <span class="material-symbols-rounded">notifications</span>
-                        <span id="req-badge">0</span>
-                    </button>
-                </div>
-            </header>
-            <main id="chat-feed"></main>
-            <footer class="input-bar">
-                <div class="input-pill">
-                    <input type="text" id="msg-input" placeholder="Secure Message...">
-                    <button class="send-trigger"><span class="material-symbols-rounded">send</span></button>
-                </div>
-            </footer>
-        </section>
+        <div class="input-area">
+            <input type="text" id="msg-input" placeholder="Write a message...">
+            <button id="send-btn">Send</button>
+        </div>
 
-        <div id="req-popup" class="popup-overlay hidden">
-            <div class="popup-card">
-                <div class="popup-head">
-                    <h3>Knock Requests</h3>
-                    <span class="material-symbols-rounded" onclick="ui.togglePopup(false)">close</span>
-                </div>
-                <div id="req-list"></div>
+        <!-- Admin Request Panel -->
+        <div id="request-panel" class="request-popup hidden">
+            <p><span id="requester-name">User</span> wants to join</p>
+            <div class="req-actions">
+                <button class="accept" onclick="respondToRequest(true)">Accept</button>
+                <button class="reject" onclick="respondToRequest(false)">Reject</button>
             </div>
         </div>
     </div>
