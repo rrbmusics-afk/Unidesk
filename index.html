@@ -3,93 +3,159 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Aethercore | Unidesk</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Aethercore Secure Chat</title>
+    <link rel="stylesheet" href="chat.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     <style>
-        :root { --bg: #0b141a; --card: #1c272e; --accent: #007AFF; }
-        body { 
-            background: var(--bg); 
-            color: #e9edef; 
-            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-            min-height: 100vh;
-        }
-        .glass-card { 
-            background: rgba(255, 255, 255, 0.03); 
-            border: 1px solid rgba(255, 255, 255, 0.08); 
-            transition: all 0.3s ease;
-        }
-        .glass-card:hover {
-            background: rgba(255, 255, 255, 0.06);
-            border-color: var(--accent);
-        }
-        .tool-sub-card {
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
+        /* Critical fix for the stacking issue seen in your screenshot */
+        .auth-form { display: none; }
+        .auth-form.active { display: flex; flex-direction: column; }
+        .screen { display: none; }
+        .screen.active { display: flex; flex-direction: column; }
     </style>
 </head>
-<body class="flex flex-col items-center justify-center p-6">
+<body>
 
-    <div class="w-full max-w-md space-y-8">
-        <!-- Branding Header -->
-        <header class="text-center">
-            <h1 class="text-5xl font-black text-blue-500 tracking-tighter italic">UNIDESK</h1>
-            <p class="text-[10px] uppercase tracking-[0.4em] text-gray-500 font-bold mt-2">Student Utility Suite</p>
-        </header>
-
-        <!-- Main Navigation -->
-        <div class="space-y-6">
-            
-            <!-- UniDesk Shield (Primary Chat) -->
-            <a href="chat.html" class="glass-card p-6 rounded-[2rem] flex items-center justify-between group">
-                <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-600/20">
-                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
-                    </div>
-                    <div>
-                        <h3 class="font-bold text-lg">Student Lounge</h3>
-                        <p class="text-gray-500 text-xs uppercase tracking-widest font-semibold">Secure Communication</p>
-                    </div>
-                </div>
-                <svg class="w-5 h-5 text-gray-600 group-hover:text-blue-500 transition-colors" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
-            </a>
-
-            <!-- TOOLS SECTION -->
-            <div class="space-y-3">
-                <h2 class="text-[10px] uppercase tracking-[0.3em] text-gray-600 font-black ml-4">Toolkit</h2>
-                
-                <div class="grid grid-cols-1 gap-3">
-                    <!-- Page Forge -->
-                    <a href="https://sharanmusician.github.io/Page-Forge/" class="tool-sub-card p-4 rounded-3xl flex items-center gap-4 hover:border-blue-500/50 transition-all">
-                        <div class="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center text-blue-400">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                        </div>
-                        <div>
-                            <h4 class="font-bold text-sm">Page Forge</h4>
-                            <p class="text-gray-500 text-[11px]">Images to PDF Converter</p>
-                        </div>
-                    </a>
-
-                    <!-- Resume Maker -->
-                    <div class="tool-sub-card p-4 rounded-3xl flex items-center gap-4 cursor-pointer opacity-60 hover:opacity-100 transition-all">
-                        <div class="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center text-amber-500">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-                        </div>
-                        <div>
-                            <h4 class="font-bold text-sm text-gray-300">Resume Maker</h4>
-                            <p class="text-gray-500 text-[11px]">Professional CV Builder</p>
-                        </div>
-                    </div>
-                </div>
+    <div id="auth-screen" class="screen active">
+        <div class="auth-container">
+            <div class="brand-header">
+                <h1>Aethercore</h1>
+                <p>End-to-End Encrypted</p>
             </div>
 
+            <div class="tabs">
+                <button id="tab-create" class="tab-btn active" onclick="switchTab('create')">Create Room</button>
+                <button id="tab-join" class="tab-btn" onclick="switchTab('join')">Join Room</button>
+            </div>
+
+            <div class="tab-content">
+                <form id="create-form" class="auth-form active" onsubmit="return false;">
+                    <div class="input-group">
+                        <label>Admin Name</label>
+                        <input type="text" id="admin-name" placeholder="Enter your name" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Group Name</label>
+                        <input type="text" id="group-name" placeholder="e.g. Project Alpha" required>
+                    </div>
+                    <button type="button" id="btn-create" class="primary-btn" onclick="handleCreate()" disabled>Create Experience</button>
+                </form>
+
+                <form id="join-form" class="auth-form" onsubmit="return false;">
+                    <div class="input-group">
+                        <label>Your Name</label>
+                        <input type="text" id="user-name" placeholder="Enter your name" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Room Code</label>
+                        <input type="text" id="room-code-input" placeholder="Paste code here" required>
+                    </div>
+                    <button type="button" id="btn-join" class="primary-btn" onclick="handleJoin()" disabled>Knock to Join</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="chat-screen" class="screen">
+        <header class="chat-header" onclick="openGroupInfo()">
+            <div class="header-left">
+                <div class="header-avatar">
+                    <img id="header-img" src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png">
+                </div>
+                <div class="header-text">
+                    <h2 id="chat-title">Group Name</h2>
+                    <span id="chat-subtitle">Code: -----</span>
+                </div>
+            </div>
+            <div class="header-right">
+                <span class="material-icons-round">more_vert</span>
+            </div>
+        </header>
+
+        <div id="admin-approval-banner" class="approval-banner hidden">
+            <p><b id="req-count">0</b> Pending Requests</p>
+            <button onclick="showApprovalPopup()">View</button>
         </div>
 
-        <!-- Footer -->
-        <footer class="pt-8 text-center">
-            <p class="text-[9px] text-gray-700 uppercase font-bold tracking-[0.4em]">&copy; 2026 Aethercore Interactive</p>
+        <main id="chat-window" class="chat-main">
+            </main>
+
+        <footer class="chat-footer">
+            <div class="input-area">
+                <button class="action-icon" id="attach-btn" onclick="document.getElementById('doc-input').click()">
+                    <span class="material-icons-round">attach_file</span>
+                </button>
+                <textarea id="message-input" placeholder="Message" rows="1"></textarea>
+                <button class="voice-send-btn" id="voice-send-wrapper">
+                    <span class="material-icons-round" id="mic-icon">mic</span>
+                    <span class="material-icons-round hidden" id="send-icon">send</span>
+                </button>
+            </div>
         </footer>
     </div>
 
+    <div id="group-info-overlay" class="overlay">
+        <div class="overlay-card">
+            <div class="overlay-header">
+                <span class="material-icons-round" onclick="closeOverlay('group-info-overlay')">close</span>
+                <h3>Group Info</h3>
+            </div>
+            <div class="info-content">
+                <div class="profile-display">
+                    <img id="info-img" src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" onclick="zoomImage(this.src)">
+                    <button class="admin-only hidden" onclick="document.getElementById('img-input').click()">
+                        <span class="material-icons-round">photo_camera</span>
+                    </button>
+                </div>
+                <h2 id="info-name">Group Name</h2>
+                <p id="info-code" class="code-text">Code: </p>
+                
+                <div class="info-menu">
+                    <button class="menu-item admin-only hidden" onclick="renameGroup()">Rename Group</button>
+                    <button class="menu-item admin-only hidden text-red" onclick="deleteGroup()">Delete Group</button>
+                    <button class="menu-item text-red" onclick="leaveGroup()">Leave Group</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="zoom-overlay" class="overlay" onclick="closeOverlay('zoom-overlay')">
+        <div class="zoom-container">
+            <img id="zoomed-image">
+            <div class="zoom-actions">
+                <button id="download-btn">Download</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="approval-overlay" class="overlay">
+        <div class="overlay-card">
+            <h3>Pending Members</h3>
+            <div id="approval-list"></div>
+            <button class="close-btn" onclick="closeOverlay('approval-overlay')">Close</button>
+        </div>
+    </div>
+
+    <input type="file" id="img-input" accept="image/*" hidden>
+    <input type="file" id="doc-input" multiple hidden>
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+    
+    <script>
+        // Your Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDbfmd0zmv_mFV0CG2OrhKPPeU3zPYGOBg",
+            authDomain: "unidesk-a70ac.firebaseapp.com",
+            projectId: "unidesk-a70ac",
+            storageBucket: "unidesk-a70ac.firebasestorage.app",
+            messagingSenderId: "882535016432",
+            appId: "1:882535016432:web:6eca2645a47a827e779f35",
+            measurementId: "G-M26R027F70"
+        };
+        firebase.initializeApp(firebaseConfig);
+    </script>
+    <script src="chat.js"></script>
 </body>
 </html>
