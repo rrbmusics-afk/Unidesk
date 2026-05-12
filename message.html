@@ -8,50 +8,20 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700&display=swap');
-        
-        :root { 
-            --accent: #2D7FF9; --bg: #050608; --surface: #0F1116; --border: rgba(255,255,255,0.08); 
-        }
-
-        body { 
-            background: var(--bg); color: #fff; font-family: 'Space Grotesk', sans-serif; 
-            height: 100dvh; overflow: hidden; margin: 0;
-        }
-
-        /* Unique Doodle Background */
-        #chat-window {
-            background-color: var(--bg);
-            background-image: url("https://www.transparenttextures.com/patterns/carbon-fibre.png");
-            background-blend-mode: overlay;
-        }
-
-        /* Knocking Animation */
-        .knocking { animation: knock 1.2s ease-in-out infinite; }
-        @keyframes knock {
-            0%, 100% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(0.96); opacity: 0.6; }
-        }
-
-        /* Static Keyboard Optimization */
-        .input-dock { padding-bottom: env(safe-area-inset-bottom); background: var(--surface); z-index: 100; }
-
-        .context-menu {
-            position: absolute; background: #1c1e26; border: 1px solid var(--border);
-            border-radius: 14px; display: none; z-index: 2000; width: 200px;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.6); overflow: hidden;
-        }
-        .context-menu button {
-            width: 100%; padding: 14px 18px; text-align: left; font-size: 13px;
-            border-bottom: 1px solid var(--border); transition: background 0.2s;
-        }
-        .context-menu button:active { background: rgba(255,255,255,0.05); }
-
-        .pfp-view { width: 100%; aspect-ratio: 1/1; border-radius: 50%; object-fit: cover; }
+        :root { --accent: #2D7FF9; --bg: #050608; --surface: #0F1116; --border: rgba(255,255,255,0.08); }
+        body { background: var(--bg); color: #fff; font-family: 'Space Grotesk', sans-serif; height: 100dvh; overflow: hidden; margin: 0; }
+        #chat-window { background-color: var(--bg); background-image: url("https://www.transparenttextures.com/patterns/carbon-fibre.png"); background-blend-mode: overlay; }
+        .input-dock { padding-bottom: env(safe-area-inset-bottom); background: var(--surface); z-index: 100; border-top: 1px solid var(--border); }
+        .message-bubble { max-width: 80%; padding: 12px 16px; border-radius: 18px; position: relative; font-size: 14px; line-height: 1.5; }
+        .sent { align-self: flex-end; background: var(--accent); border-bottom-right-radius: 4px; }
+        .received { align-self: flex-start; background: #1c1e26; border-bottom-left-radius: 4px; }
+        .context-menu { position: absolute; background: #1c1e26; border: 1px solid var(--border); border-radius: 14px; display: none; z-index: 2000; width: 200px; box-shadow: 0 15px 40px rgba(0,0,0,0.6); overflow: hidden; }
+        .context-menu button { width: 100%; padding: 14px 18px; text-align: left; font-size: 13px; border-bottom: 1px solid var(--border); }
     </style>
 </head>
 <body>
 
-    <!-- 1. HEADER & APPROVAL SYSTEM -->
+    <!-- 1. PREMIUM HEADER -->
     <div class="fixed top-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-2xl border-b border-white/5">
         <header onclick="toggleGroupInfo()" class="h-16 flex items-center px-5 gap-4 active:bg-white/5">
             <img id="header-pfp" src="https://ui-avatars.com/api/?name=Lounge&background=2D7FF9&color=fff" class="w-10 h-10 rounded-full object-cover">
@@ -61,103 +31,41 @@
             </div>
             <i class="fa-solid fa-ellipsis-vertical opacity-30"></i>
         </header>
-        
-        <!-- Access Code & Request Bar -->
-        <div class="bg-blue-600/10 h-11 flex items-center justify-between px-5 border-t border-white/5">
+        <div id="admin-header-bar" class="bg-blue-600/10 h-11 flex items-center justify-between px-5 border-t border-white/5">
             <div class="flex items-center gap-2">
-                <span class="text-[9px] text-gray-500 font-bold uppercase">Key:</span>
+                <span class="text-[9px] text-gray-500 font-bold uppercase">Code:</span>
                 <span id="header-code" class="text-[10px] text-blue-500 font-black tracking-widest">---</span>
             </div>
-            <button id="admin-notif" onclick="showApprovalPopup()" class="hidden bg-blue-600 text-white text-[9px] px-3 py-1.5 rounded-full font-black animate-pulse">
-                PENDING REQUESTS
-            </button>
+            <button id="admin-notif" onclick="showApprovalPopup()" class="hidden bg-blue-600 text-white text-[9px] px-3 py-1.5 rounded-full font-black animate-pulse">PENDING REQUESTS</button>
         </div>
     </div>
 
     <!-- 2. CHAT SURFACE -->
     <main id="chat-window" class="absolute top-[108px] bottom-[80px] left-0 right-0 overflow-y-auto p-5 flex flex-col gap-4"></main>
 
-    <!-- 3. INPUT SYSTEM (Voice, Media, Sending) -->
-    <footer class="fixed bottom-0 left-0 right-0 input-dock border-t border-white/5">
+    <!-- 3. INPUT SYSTEM -->
+    <footer class="fixed bottom-0 left-0 right-0 input-dock">
         <div class="flex items-center gap-3 p-3">
             <div class="flex-1 bg-white/5 rounded-2xl flex items-center px-4 border border-white/5">
                 <button onclick="document.getElementById('attach-file').click()" class="text-gray-400 p-1">
                     <i class="fa-solid fa-paperclip"></i>
                 </button>
-                <input type="file" id="attach-file" multiple class="hidden" accept=".pdf,.doc,.docx,.zip,.txt">
-                <input type="text" id="chat-input" class="flex-1 bg-transparent py-3 px-3 text-sm outline-none" placeholder="Type a message...">
+                <input type="file" id="attach-file" multiple class="hidden">
+                <input type="text" id="chat-input" class="flex-1 bg-transparent py-3 px-3 text-sm outline-none" placeholder="Message...">
             </div>
-            
             <button id="action-btn" class="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center shadow-lg transition-transform active:scale-90">
                 <i id="action-icon" class="fa-solid fa-microphone text-sm"></i>
             </button>
         </div>
     </footer>
 
-    <!-- 4. MODALS & POPUPS -->
-    <!-- Group Info Sidebar -->
-    <div id="group-info-modal" class="fixed inset-0 bg-black/95 z-[100] hidden overflow-y-auto translate-x-full transition-transform duration-300">
-        <div class="p-6">
-            <div class="flex justify-between items-center mb-10">
-                <button onclick="toggleGroupInfo()" class="text-xs font-bold tracking-widest text-gray-500 uppercase">Back</button>
-                <h2 class="text-xs font-black uppercase tracking-[0.2em]">Group Detail</h2>
-                <div class="w-8"></div>
-            </div>
-
-            <div class="flex flex-col items-center">
-                <div class="relative mb-6 group">
-                    <img id="info-pfp" onclick="showLargePfp()" src="" class="w-44 h-44 rounded-full border-4 border-white/10 object-cover shadow-2xl">
-                    <button id="pfp-change-btn" onclick="document.getElementById('pfp-input').click()" class="hidden absolute bottom-2 right-2 bg-blue-600 w-12 h-12 rounded-full border-4 border-black flex items-center justify-center">
-                        <i class="fa-solid fa-camera text-xs"></i>
-                    </button>
-                    <input type="file" id="pfp-input" class="hidden" accept="image/*" onchange="handlePfpUpload(this)">
-                </div>
-                
-                <h2 id="info-group-name" class="text-2xl font-bold mb-2">---</h2>
-                <p id="info-group-code" class="text-xs text-blue-500 font-black tracking-widest uppercase mb-10">Code: ---</p>
-
-                <div class="w-full space-y-2 mb-10">
-                    <button id="rename-opt" onclick="triggerRename()" class="hidden w-full p-4 bg-white/5 rounded-2xl text-left text-sm font-bold flex justify-between items-center">
-                        Rename Group <i class="fa-solid fa-pen text-[10px] opacity-30"></i>
-                    </button>
-                    <button id="delete-opt" onclick="confirmDeleteGroup()" class="hidden w-full p-4 bg-red-900/20 text-red-500 rounded-2xl text-left text-sm font-bold">
-                        Delete Group for Everyone
-                    </button>
-                    <button onclick="confirmLeaveGroup()" class="w-full p-4 bg-white/5 rounded-2xl text-left text-sm font-bold">
-                        Leave Group
-                    </button>
-                </div>
-
-                <div class="w-full">
-                    <p class="text-[10px] font-black uppercase text-gray-500 mb-6 tracking-widest px-1">Participants</p>
-                    <div id="participant-list" class="space-y-5"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Approval Request Modal -->
-    <div id="approval-modal" class="fixed inset-0 bg-black/90 z-[200] hidden p-6 flex items-center justify-center">
-        <div class="bg-[#111318] w-full max-w-sm rounded-3xl border border-white/10 overflow-hidden">
-            <div class="p-6 border-b border-white/5">
-                <h3 class="text-sm font-black uppercase tracking-widest">Entry Requests</h3>
-            </div>
-            <div id="request-list" class="max-h-80 overflow-y-auto p-4 flex flex-col gap-3"></div>
-            <button onclick="document.getElementById('approval-modal').classList.add('hidden')" class="w-full p-4 text-[10px] font-bold uppercase opacity-40">Dismiss</button>
-        </div>
-    </div>
-
-    <!-- Long Press Menu -->
     <div id="context-menu" class="context-menu">
-        <button onclick="editMsg()">Edit Message</button>
-        <button onclick="deleteForMe()">Delete for me</button>
         <button onclick="deleteForEveryone()" class="text-red-500 font-bold">Delete for everyone</button>
-        <button onclick="viewSeenBy()">Seen by...</button>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, doc, setDoc, updateDoc, onSnapshot, collection, addDoc, query, orderBy, deleteDoc, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, doc, onSnapshot, collection, addDoc, query, orderBy, serverTimestamp, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
         const firebaseConfig = {
@@ -173,117 +81,99 @@
         const db = getFirestore(app);
         const storage = getStorage(app);
 
-        // Core State
-        let currentRoom = localStorage.getItem('active_room') || 'DEFAULT_LOUNGE';
-        let myId = localStorage.getItem('user_id') || 'USER_' + Math.floor(Math.random()*1000);
-        let myName = localStorage.getItem('user_name') || 'Member';
-        let myRole = 'member'; // 'admin' or 'member'
-        let selectedMessageId = null;
+        let currentRoom = "LOUNGE_001"; 
+        let myId = "USER_" + Math.floor(Math.random() * 1000);
+        let myName = "Dev User";
 
-        // E2EE Mock Implementation (SubtleCrypto for real high-end encryption)
         const encrypt = (text) => btoa(text);
         const decrypt = (text) => atob(text);
 
-        // 1. Initialize System
-        function init() {
-            onSnapshot(doc(db, "rooms", currentRoom), (snapshot) => {
-                const data = snapshot.data();
-                if (!data) return;
-
-                // Admin/Member Logic
-                myRole = data.adminId === myId ? 'admin' : 'member';
-                updateUIForRole(data);
-                syncGroupInfo(data);
+        // --- 12. MESSAGE SYNC & RENDERING ---
+        function syncMessages() {
+            const q = query(collection(db, `rooms/${currentRoom}/messages`), orderBy("timestamp", "asc"));
+            onSnapshot(q, (snapshot) => {
+                const container = document.getElementById('chat-window');
+                container.innerHTML = '';
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    renderMessage(data, doc.id);
+                });
+                container.scrollTop = container.scrollHeight;
             });
-
-            syncMessages();
-            syncRequests();
         }
 
-        function updateUIForRole(data) {
-            const isAdmin = myRole === 'admin';
-            document.getElementById('pfp-change-btn').classList.toggle('hidden', !isAdmin);
-            document.getElementById('rename-opt').classList.toggle('hidden', !isAdmin);
-            document.getElementById('delete-opt').classList.toggle('hidden', !isAdmin);
-            document.getElementById('header-code').innerText = data.code;
+        function renderMessage(data, id) {
+            const container = document.getElementById('chat-window');
+            const isMe = data.senderId === myId;
+            const content = decrypt(data.content);
+            const div = document.createElement('div');
+            div.className = `message-bubble ${isMe ? 'sent' : 'received'}`;
+            
+            if (data.type === 'image') {
+                div.innerHTML = `<img src="${content}" class="w-48 h-48 object-cover rounded-lg" onclick="window.open('${content}')">`;
+            } else if (data.type === 'voice') {
+                div.innerHTML = `<audio controls class="h-8 w-40"><source src="${content}" type="audio/mpeg"></audio>`;
+            } else if (data.type === 'doc') {
+                div.innerHTML = `<a href="${content}" target="_blank" class="flex items-center gap-2 text-[10px] font-bold underline"><i class="fa-solid fa-file"></i> DOWNLOAD DOCUMENT</a>`;
+            } else {
+                div.innerText = content;
+            }
+            
+            div.oncontextmenu = (e) => {
+                e.preventDefault();
+                showMenu(e, id);
+            };
+            container.appendChild(div);
         }
 
-        // 12. Voice Recording Logic
+        // --- 12. MEDIA & VOICE LOGIC ---
         let mediaRecorder;
         let audioChunks = [];
         const actionBtn = document.getElementById('action-btn');
-        const actionIcon = document.getElementById('action-icon');
 
-        document.getElementById('chat-input').oninput = (e) => {
-            const hasText = e.target.value.trim().length > 0;
-            actionIcon.className = hasText ? "fa-solid fa-paper-plane text-sm" : "fa-solid fa-microphone text-sm";
+        async function sendPayload(content, type = 'text') {
+            await addDoc(collection(db, `rooms/${currentRoom}/messages`), {
+                senderId: myId, content: encrypt(content), type: type, timestamp: serverTimestamp()
+            });
+        }
+
+        document.getElementById('attach-file').onchange = async (e) => {
+            const file = e.target.files[0];
+            const type = file.type.startsWith('image') ? 'image' : 'doc';
+            const fileRef = sRef(storage, `rooms/${currentRoom}/${Date.now()}`);
+            const upload = await uploadBytes(fileRef, file);
+            const url = await getDownloadURL(upload.ref);
+            await sendPayload(url, type);
         };
 
-        actionBtn.onmousedown = actionBtn.ontouchstart = async () => {
-            if (document.getElementById('chat-input').value.trim()) return;
+        actionBtn.onmousedown = async () => {
+            if (document.getElementById('chat-input').value) return;
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             mediaRecorder = new MediaRecorder(stream);
             audioChunks = [];
             mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-            mediaRecorder.start();
-            actionBtn.classList.add('bg-red-500', 'scale-110');
-        };
-
-        actionBtn.onmouseup = actionBtn.ontouchend = () => {
-            if (!mediaRecorder || mediaRecorder.state !== "recording") {
-                if (document.getElementById('chat-input').value.trim()) sendTextMessage();
-                return;
-            }
-            mediaRecorder.stop();
             mediaRecorder.onstop = async () => {
-                const audioBlob = new Blob(audioChunks, { type: 'audio/mp3' });
-                await uploadAndSendMedia(audioBlob, 'voice');
+                const blob = new Blob(audioChunks, { type: 'audio/mp3' });
+                const fileRef = sRef(storage, `rooms/${currentRoom}/voice/${Date.now()}.mp3`);
+                const upload = await uploadBytes(fileRef, blob);
+                const url = await getDownloadURL(upload.ref);
+                await sendPayload(url, 'voice');
             };
-            actionBtn.classList.remove('bg-red-500', 'scale-110');
+            mediaRecorder.start();
+            actionBtn.classList.add('bg-red-500');
         };
 
-        async function uploadAndSendMedia(file, type) {
-            const fileRef = sRef(storage, `rooms/${currentRoom}/${Date.now()}`);
-            const upload = await uploadBytes(fileRef, file);
-            const url = await getDownloadURL(upload.ref);
-            
-            await addDoc(collection(db, `rooms/${currentRoom}/messages`), {
-                senderId: myId,
-                senderName: myName,
-                type: type,
-                content: encrypt(url),
-                timestamp: Date.now(),
-                seenBy: [myId]
-            });
-        }
-
-        // 7. Long Press Context Menu
-        let pressTimer;
-        function setupMessageEvents(el, msgId) {
-            el.onmousedown = el.ontouchstart = (e) => {
-                pressTimer = setTimeout(() => {
-                    selectedMessageId = msgId;
-                    const menu = document.getElementById('context-menu');
-                    menu.style.display = 'block';
-                    menu.style.top = `${e.clientY || e.touches[0].clientY}px`;
-                    menu.style.left = `${e.clientX || e.touches[0].clientX}px`;
-                }, 600);
-            };
-            el.onmouseup = el.ontouchend = () => clearTimeout(pressTimer);
-        }
-
-        window.onclick = () => document.getElementById('context-menu').style.display = 'none';
-
-        // Interface Management
-        window.toggleGroupInfo = () => {
-            const modal = document.getElementById('group-info-modal');
-            modal.classList.toggle('hidden');
-            setTimeout(() => modal.classList.toggle('translate-x-full'), 10);
+        actionBtn.onmouseup = () => {
+            if (mediaRecorder && mediaRecorder.state === "recording") {
+                mediaRecorder.stop();
+                actionBtn.classList.remove('bg-red-500');
+            } else if (document.getElementById('chat-input').value) {
+                sendPayload(document.getElementById('chat-input').value);
+                document.getElementById('chat-input').value = "";
+            }
         };
 
-        // Initialize Call
-        init();
-
+        syncMessages();
     </script>
 </body>
 </html>
