@@ -3,264 +3,243 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Aethercore | Secure Gateway</title>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <title>Aethercore | Enterprise Secure Node</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
     <style>
         :root {
-            --p-blue: #2D7FF9;
-            --p-dark: #07090C;
-            --p-card: rgba(18, 22, 28, 0.9);
-            --p-border: rgba(255, 255, 255, 0.08);
-            --p-text-dim: #8E9196;
-            --accent-gradient: linear-gradient(135deg, #2D7FF9 0%, #7B61FF 100%);
+            --accent: #2D7FF9;
+            --accent-glow: rgba(45, 127, 249, 0.35);
+            --bg: #040508;
+            --surface: #0D1117;
+            --border: rgba(255, 255, 255, 0.05);
+            --text-main: #FFFFFF;
+            --text-dim: #94A3B8;
         }
 
         * { 
             box-sizing: border-box; 
-            -webkit-tap-highlight-color: transparent; 
+            -webkit-font-smoothing: antialiased;
             font-family: 'Plus Jakarta Sans', sans-serif;
+            margin: 0; padding: 0;
         }
 
-        body, html { 
-            margin: 0; padding: 0; height: 100%; width: 100%; 
-            background-color: var(--p-dark); 
-            background-image: 
-                radial-gradient(circle at 0% 0%, rgba(45, 127, 249, 0.15) 0%, transparent 35%),
-                radial-gradient(circle at 100% 100%, rgba(123, 97, 255, 0.1) 0%, transparent 35%);
-            color: #FFFFFF; overflow: hidden;
-            display: flex; align-items: center; justify-content: center;
+        body { 
+            background: var(--bg);
+            color: var(--text-main);
+            height: 100dvh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        /* Animated Mesh Background */
+        .bg-mesh {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: 
+                radial-gradient(circle at 10% 10%, rgba(45, 127, 249, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 90% 90%, rgba(123, 97, 255, 0.06) 0%, transparent 40%);
+            z-index: -1;
         }
 
         .hidden { display: none !important; }
 
-        /* --- AUTH CARD --- */
-        .auth-container {
+        /* Main Core Container */
+        .core-gate {
             width: 100%;
-            max-width: 420px;
-            padding: 20px;
-            perspective: 1000px;
+            max-width: 440px;
+            padding: 24px;
+            z-index: 10;
         }
 
-        .glass-card {
-            background: var(--p-card);
-            backdrop-filter: blur(40px);
-            -webkit-backdrop-filter: blur(40px);
-            border: 1px solid var(--p-border);
-            border-radius: 40px;
-            padding: 40px 30px;
-            box-shadow: 0 40px 100px rgba(0,0,0,0.8);
-            text-align: center;
-            animation: cardSlideIn 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
-        }
-
-        @keyframes cardSlideIn {
-            from { opacity: 0; transform: translateY(30px) rotateX(-5deg); }
-            to { opacity: 1; transform: translateY(0) rotateX(0); }
-        }
-
-        h1 { font-weight: 800; font-size: 28px; margin: 0 0 10px 0; letter-spacing: -0.5px; }
-        .subtitle { color: var(--p-text-dim); font-size: 14px; margin-bottom: 30px; }
-
-        /* --- TABS --- */
-        .tab-wrapper {
-            display: flex;
-            background: rgba(255,255,255,0.03);
-            padding: 6px;
-            border-radius: 20px;
-            border: 1px solid var(--p-border);
-            margin-bottom: 35px;
-        }
-
-        .tab-btn {
-            flex: 1;
-            padding: 14px;
-            border: none;
-            background: transparent;
-            color: var(--p-text-dim);
-            font-weight: 700;
-            font-size: 13px;
-            cursor: pointer;
-            border-radius: 15px;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            letter-spacing: 0.5px;
-        }
-
-        .tab-btn.active {
-            background: var(--accent-gradient);
-            color: #fff;
-            box-shadow: 0 10px 20px rgba(45, 127, 249, 0.25);
-        }
-
-        /* --- PROFILE UPLOAD --- */
-        .pfp-stage {
+        .premium-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 48px;
+            padding: 50px 40px;
+            box-shadow: 0 50px 100px -20px rgba(0,0,0,0.5);
             position: relative;
-            width: 120px;
-            height: 120px;
-            margin: 0 auto 30px auto;
+            overflow: hidden;
         }
 
-        #pfp-preview {
-            width: 100%;
-            height: 100%;
-            border-radius: 42px;
-            object-fit: cover;
-            border: 2px solid transparent;
-            background: linear-gradient(var(--p-card), var(--p-card)) padding-box, var(--accent-gradient) border-box;
-            transition: transform 0.3s ease;
+        /* Subtle Inner Glow */
+        .premium-card::after {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
         }
 
-        .cam-btn {
-            position: absolute;
-            bottom: -5px;
-            right: -5px;
-            background: var(--p-blue);
-            width: 38px;
-            height: 38px;
-            border-radius: 14px;
-            display: flex;
-            align-items: center; justify-content: center;
-            border: 4px solid var(--p-dark);
-            color: white;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.4);
-        }
-
-        /* --- INPUTS --- */
-        .input-group { margin-bottom: 16px; position: relative; }
-        
-        .u-input {
-            width: 100%;
-            background: rgba(255,255,255,0.03);
-            border: 1px solid var(--p-border);
-            padding: 18px 20px;
+        .logo-mark {
+            width: 60px; height: 60px;
+            background: var(--accent);
             border-radius: 20px;
-            color: white;
-            font-size: 16px;
-            font-weight: 500;
-            transition: 0.3s;
-            text-align: center;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 24px;
+            box-shadow: 0 0 30px var(--accent-glow);
+            font-size: 24px;
         }
 
-        .u-input:focus {
-            background: rgba(255,255,255,0.06);
-            border-color: var(--p-blue);
-            box-shadow: 0 0 0 4px rgba(45, 127, 249, 0.15);
+        h1 { font-weight: 800; font-size: 32px; letter-spacing: -1px; margin-bottom: 8px; text-align: center; }
+        .tagline { color: var(--text-dim); font-size: 14px; text-align: center; margin-bottom: 40px; }
+
+        /* Modern Tab Switcher */
+        .nav-pill {
+            display: flex; background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border);
+            border-radius: 24px; padding: 6px; margin-bottom: 32px;
         }
 
-        /* --- BUTTON --- */
-        .btn-primary {
-            width: 100%;
-            padding: 20px;
-            margin-top: 15px;
-            border-radius: 22px;
-            border: none;
-            background: #25292E;
-            color: rgba(255,255,255,0.2);
-            font-weight: 800;
-            font-size: 16px;
-            cursor: not-allowed;
-            transition: all 0.4s;
-            display: flex; align-items: center; justify-content: center; gap: 10px;
+        .pill-btn {
+            flex: 1; border: none; background: transparent; color: var(--text-dim);
+            padding: 14px; border-radius: 18px; font-weight: 700; font-size: 13px;
+            cursor: pointer; transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+            text-transform: uppercase; letter-spacing: 1px;
         }
 
-        .btn-primary.ready {
-            background: var(--accent-gradient);
-            color: white;
-            cursor: pointer;
-            box-shadow: 0 15px 30px rgba(45, 127, 249, 0.3);
+        .pill-btn.active {
+            background: #FFFFFF; color: #000;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
         }
 
-        .btn-primary.ready:active { transform: scale(0.97); }
+        /* Input Experience */
+        .field-wrap { margin-bottom: 18px; position: relative; }
+        
+        .prime-input {
+            width: 100%; background: rgba(255,255,255,0.02);
+            border: 1px solid var(--border);
+            padding: 20px 24px; border-radius: 24px;
+            color: #fff; font-size: 16px; font-weight: 500;
+            transition: 0.3s; text-align: left;
+        }
 
-        /* --- KNOCKING OVERLAY --- */
-        #knocking-screen {
-            position: fixed; inset: 0; 
-            background: var(--p-dark);
-            z-index: 2000;
+        .prime-input:focus {
+            border-color: var(--accent);
+            background: rgba(255,255,255,0.05);
+            outline: none;
+            box-shadow: 0 0 0 4px var(--accent-glow);
+        }
+
+        /* Profile Uploader */
+        .pfp-conductor {
+            width: 130px; height: 130px; margin: 0 auto 30px;
+            position: relative; cursor: pointer;
+        }
+
+        .pfp-image {
+            width: 100%; height: 100%; border-radius: 50px;
+            object-fit: cover; border: 2px solid var(--border);
+            transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .pfp-conductor:hover .pfp-image { transform: scale(1.05) rotate(3deg); border-color: var(--accent); }
+
+        .pfp-badge {
+            position: absolute; bottom: 0; right: 0;
+            background: var(--accent); width: 40px; height: 40px;
+            border-radius: 14px; border: 4px solid var(--surface);
+            display: flex; align-items: center; justify-content: center; font-size: 14px;
+        }
+
+        /* Action Button */
+        .btn-launch {
+            width: 100%; padding: 22px; border-radius: 24px;
+            border: none; background: #1a1f26; color: rgba(255,255,255,0.3);
+            font-weight: 800; font-size: 16px; cursor: not-allowed;
+            transition: 0.4s; margin-top: 20px;
+            display: flex; align-items: center; justify-content: center; gap: 12px;
+        }
+
+        .btn-launch.active {
+            background: var(--accent); color: white;
+            cursor: pointer; box-shadow: 0 20px 40px var(--accent-glow);
+        }
+
+        .btn-launch.active:hover { transform: translateY(-2px); filter: brightness(1.1); }
+
+        /* Knocking Architecture */
+        #knock-view {
+            position: fixed; inset: 0; background: var(--bg); z-index: 100;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
         }
 
-        .radar {
-            width: 150px; height: 150px;
-            border: 2px solid var(--p-blue);
-            border-radius: 50%;
-            position: relative;
+        .sonar {
+            position: relative; width: 160px; height: 160px;
             display: flex; align-items: center; justify-content: center;
         }
 
-        .radar::before {
-            content: ''; position: absolute;
-            width: 100%; height: 100%;
-            border: 2px solid var(--p-blue);
-            border-radius: 50%;
-            animation: pulseRadar 2s linear infinite;
+        .sonar-wave {
+            position: absolute; width: 100%; height: 100%;
+            border: 1px solid var(--accent); border-radius: 50%;
+            animation: sonar 3s infinite; opacity: 0;
+        }
+        .sonar-wave:nth-child(2) { animation-delay: 1s; }
+        .sonar-wave:nth-child(3) { animation-delay: 2s; }
+
+        @keyframes sonar {
+            0% { transform: scale(0.5); opacity: 0; }
+            50% { opacity: 0.5; }
+            100% { transform: scale(2); opacity: 0; }
         }
 
-        @keyframes pulseRadar {
-            0% { transform: scale(1); opacity: 1; }
-            100% { transform: scale(2.5); opacity: 0; }
-        }
-
-        .radar i { font-size: 40px; color: var(--p-blue); }
-
-        .loading-text { margin-top: 40px; text-align: center; }
-        .loading-text h2 { margin: 0; font-weight: 800; font-size: 24px; letter-spacing: 1px; }
-        .loading-text p { color: var(--p-text-dim); margin: 10px 0; font-size: 15px; }
-
+        .lock-icon { font-size: 40px; color: var(--accent); z-index: 2; text-shadow: 0 0 20px var(--accent-glow); }
     </style>
 </head>
 <body>
 
-    <div class="auth-container" id="auth-ui">
-        <div class="glass-card">
+    <div class="bg-mesh"></div>
+
+    <div class="core-gate" id="auth-screen">
+        <div class="premium-card">
+            <div class="logo-mark"><i class="fas fa-shield-halved"></i></div>
             <h1>Aethercore</h1>
-            <p class="subtitle">Secure End-to-End Encryption Lounge</p>
+            <p class="tagline">Military-grade ephemeral communication.</p>
 
-            <div class="tab-wrapper">
-                <button id="t-create" class="tab-btn active" onclick="setMode('create')">CREATE</button>
-                <button id="t-join" class="tab-btn" onclick="setMode('join')">JOIN</button>
+            <div class="nav-pill">
+                <button class="pill-btn active" id="tab-c" onclick="toggleMode('create')">Create Node</button>
+                <button class="pill-btn" id="tab-j" onclick="toggleMode('join')">Join Node</button>
             </div>
 
-            <div id="create-view">
-                <div class="pfp-stage" onclick="document.getElementById('f-input').click()">
-                    <img id="pfp-preview" src="https://cdn-icons-png.flaticon.com/512/9131/9131529.png">
-                    <div class="cam-btn"><i class="fas fa-camera"></i></div>
+            <div id="pfp-area">
+                <div class="pfp-conductor" onclick="document.getElementById('hidden-file').click()">
+                    <img id="pfp-view" class="pfp-image" src="https://ui-avatars.com/api/?background=1a1f26&color=fff&name=A">
+                    <div class="pfp-badge"><i class="fas fa-plus"></i></div>
                 </div>
-                <input type="file" id="f-input" class="hidden" accept="image/*" onchange="previewFile(this)">
+                <input type="file" id="hidden-file" class="hidden" accept="image/*" onchange="handlePFP(this)">
             </div>
 
-            <div class="input-group">
-                <input type="text" id="in-name" class="u-input" placeholder="Display Name" oninput="validate()">
+            <div class="field-wrap">
+                <input type="text" id="user-name" class="prime-input" placeholder="Identity Name" oninput="checkForm()">
+            </div>
+            
+            <div class="field-wrap" id="lounge-wrap">
+                <input type="text" id="lounge-name" class="prime-input" placeholder="Lounge Identifier" oninput="checkForm()">
             </div>
 
-            <div id="lounge-field" class="input-group">
-                <input type="text" id="in-lounge" class="u-input" placeholder="Lounge Name" oninput="validate()">
+            <div class="field-wrap hidden" id="code-wrap">
+                <input type="text" id="lounge-code" class="prime-input" placeholder="6-Digit Access Key" maxlength="6" oninput="checkForm()">
             </div>
 
-            <div id="code-field" class="input-group hidden">
-                <input type="text" id="in-code" class="u-input" placeholder="6-Digit Invite Code" maxlength="6" oninput="validate()">
-            </div>
-
-            <button id="btn-main" class="btn-primary" onclick="proceed()">
-                <span>INITIALIZE SESSION</span>
-                <i class="fas fa-arrow-right"></i>
+            <button id="launch-btn" class="btn-launch" onclick="initiate()">
+                <span>INITIALIZE LINK</span>
+                <i class="fas fa-arrow-right-long"></i>
             </button>
         </div>
     </div>
 
-    <div id="knocking-screen" class="hidden">
-        <div class="radar">
-            <i class="fas fa-fingerprint"></i>
+    <div id="knock-view" class="hidden">
+        <div class="sonar">
+            <div class="sonar-wave"></div>
+            <div class="sonar-wave"></div>
+            <div class="sonar-wave"></div>
+            <i class="fas fa-key lock-icon"></i>
         </div>
-        <div class="loading-text">
-            <h2>KNOCKING...</h2>
-            <p>Waiting for host to grant access</p>
-            <div style="margin-top:20px; font-size: 12px; color: var(--p-blue); font-weight: 800;">ENCRYPTING REQUEST...</div>
-        </div>
+        <h2 style="margin-top: 50px; font-weight: 800; letter-spacing: 2px;">REQUESTING ENTRY</h2>
+        <p style="color: var(--text-dim); margin-top: 10px;">Awaiting node admin authorization...</p>
     </div>
 
     <script type="module">
+        // Firebase Logic Integration (Same robust structure as previous, optimized for 2-page flow)
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
@@ -277,79 +256,74 @@
         const db = getFirestore(app);
         const storage = getStorage(app);
 
-        let currentMode = 'create';
-        const sessionUID = 'AC-' + Math.random().toString(36).substr(2, 7).toUpperCase();
+        let mode = 'create';
+        const uid = 'X-' + Math.random().toString(36).substr(2, 9).toUpperCase();
 
-        window.setMode = (m) => {
-            currentMode = m;
-            document.getElementById('t-create').classList.toggle('active', m === 'create');
-            document.getElementById('t-join').classList.toggle('active', m === 'join');
+        window.toggleMode = (m) => {
+            mode = m;
+            document.getElementById('tab-c').classList.toggle('active', m==='create');
+            document.getElementById('tab-j').classList.toggle('active', m==='join');
+            document.getElementById('pfp-area').classList.toggle('hidden', m==='join');
+            document.getElementById('lounge-wrap').classList.toggle('hidden', m==='join');
+            document.getElementById('code-wrap').classList.toggle('hidden', m==='create');
+            checkForm();
+        };
+
+        window.handlePFP = (el) => {
+            if(el.files[0]) document.getElementById('pfp-view').src = URL.createObjectURL(el.files[0]);
+        };
+
+        window.checkForm = () => {
+            const u = document.getElementById('user-name').value.trim();
+            const l = document.getElementById('lounge-name').value.trim();
+            const c = document.getElementById('lounge-code').value.trim();
+            const btn = document.getElementById('launch-btn');
             
-            document.getElementById('create-view').classList.toggle('hidden', m === 'join');
-            document.getElementById('lounge-field').classList.toggle('hidden', m === 'join');
-            document.getElementById('code-field').classList.toggle('hidden', m === 'create');
-            window.validate();
+            const isReady = (mode === 'create') ? (u && l) : (u && c.length === 6);
+            btn.classList.toggle('active', isReady);
         };
 
-        window.previewFile = (el) => {
-            if(el.files[0]) {
-                document.getElementById('pfp-preview').src = URL.createObjectURL(el.files[0]);
-            }
-        };
+        window.initiate = async () => {
+            const name = document.getElementById('user-name').value.trim();
+            const btn = document.getElementById('launch-btn');
+            btn.innerHTML = `<i class="fas fa-sync fa-spin"></i> GENERATING NODE...`;
 
-        window.validate = () => {
-            const name = document.getElementById('in-name').value.trim();
-            const lounge = document.getElementById('in-lounge').value.trim();
-            const code = document.getElementById('in-code').value.trim();
-            const btn = document.getElementById('btn-main');
-
-            const isReady = (currentMode === 'create') ? (name && lounge) : (name && code.length === 6);
-            btn.classList.toggle('ready', isReady);
-        };
-
-        window.proceed = async () => {
-            const name = document.getElementById('in-name').value.trim();
-            const btn = document.getElementById('btn-main');
-            btn.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i> AUTHENTICATING...`;
-
-            if(currentMode === 'create') {
-                const roomCode = Math.floor(100000 + Math.random() * 900000).toString();
-                let pfpUrl = "https://cdn-icons-png.flaticon.com/512/9131/9131529.png";
+            if(mode === 'create') {
+                const code = Math.floor(100000 + Math.random() * 900000).toString();
+                let pfp = "https://ui-avatars.com/api/?background=2D7FF9&color=fff&name=" + name;
                 
-                const file = document.getElementById('f-input').files[0];
+                const file = document.getElementById('hidden-file').files[0];
                 if(file) {
-                    const sRef = ref(storage, `rooms/${roomCode}/pfp.jpg`);
+                    const sRef = ref(storage, `nodes/${code}/avatar.jpg`);
                     await uploadBytes(sRef, file);
-                    pfpUrl = await getDownloadURL(sRef);
+                    pfp = await getDownloadURL(sRef);
                 }
 
-                await setDoc(doc(db, "rooms", roomCode), {
-                    name: document.getElementById('in-lounge').value.trim(),
-                    code: roomCode,
-                    avatar: pfpUrl,
-                    admin: sessionUID
+                await setDoc(doc(db, "rooms", code), {
+                    name: document.getElementById('lounge-name').value.trim(),
+                    code, avatar: pfp, admin: uid
                 });
 
-                location.href = `page.html?code=${roomCode}&uid=${sessionUID}&name=${encodeURIComponent(name)}`;
+                location.href = `page.html?code=${code}&uid=${uid}&name=${encodeURIComponent(name)}`;
             } else {
-                const roomCode = document.getElementById('in-code').value.trim();
-                const roomSnap = await getDoc(doc(db, "rooms", roomCode));
+                const code = document.getElementById('lounge-code').value.trim();
+                const snap = await getDoc(doc(db, "rooms", code));
                 
-                if(!roomSnap.exists()) {
-                    alert("⚠️ Access Denied: Invalid Lounge Code");
-                    btn.innerHTML = `<span>INITIALIZE SESSION</span><i class="fas fa-arrow-right"></i>`;
+                if(!snap.exists()) {
+                    alert("Node not found on Aethercore grid.");
+                    btn.innerHTML = `<span>INITIALIZE LINK</span><i class="fas fa-arrow-right-long"></i>`;
                     return;
                 }
 
-                document.getElementById('auth-ui').classList.add('hidden');
-                document.getElementById('knocking-screen').classList.remove('hidden');
+                document.getElementById('auth-screen').classList.add('hidden');
+                document.getElementById('knock-view').classList.remove('hidden');
 
-                const reqRef = doc(db, "rooms", roomCode, "requests", sessionUID);
-                await setDoc(reqRef, { name, uid: sessionUID });
+                const reqRef = doc(db, "rooms", code, "requests", uid);
+                await setDoc(reqRef, { name, uid });
 
-                onSnapshot(reqRef, (snap) => {
-                    if(!snap.exists()) {
-                        location.href = `page.html?code=${roomCode}&uid=${sessionUID}&name=${encodeURIComponent(name)}`;
+                onSnapshot(reqRef, (s) => {
+                    if(!s.exists()) {
+                        location.href = `page.html?code=${code}&uid=${uid}&name=${encodeURIComponent(name)}`;
                     }
                 });
             }
