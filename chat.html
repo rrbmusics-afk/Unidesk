@@ -59,8 +59,8 @@
 
     <div class="glass-card">
         <div class="tab-switcher">
-            <button class="tab-btn active" onclick="setMode('create', this)">CREATE</button>
-            <button class="tab-btn" onclick="setMode('join', this)">JOIN</button>
+            <button class="tab-btn active" id="btn-create" onclick="setMode('create', this)">CREATE</button>
+            <button class="tab-btn" id="btn-join" onclick="setMode('join', this)">JOIN</button>
         </div>
 
         <div id="pfp-ui" class="avatar-zone" onclick="document.getElementById('file-up').click()">
@@ -78,17 +78,31 @@
             <input type="text" id="code" class="hidden" placeholder="6-DIGIT CODE" maxlength="6" oninput="v()">
         </div>
 
-        <button id="go-btn" class="action-btn" disabled onclick="handleProceed()">
+        <button id="go-btn" class="action-btn" disabled>
             <span id="btn-txt">INITIALIZE</span>
             <i class="fas fa-bolt-lightning"></i>
         </button>
     </div>
 
-    <script>
+    <script type="module">
+        // Firebase Integration
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDbfmd0zmv_mFV0CG2OrhKPPeU3zPYGOBg",
+            databaseURL: "https://unidesk-a70ac-default-rtdb.firebaseio.com",
+            projectId: "unidesk-a70ac",
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
         let mode = 'create';
         let imgData = "";
 
-        function setMode(m, el) {
+        // Attach functions to window so HTML onclick can find them
+        window.setMode = (m, el) => {
             mode = m;
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             el.classList.add('active');
@@ -97,9 +111,9 @@
             document.getElementById('code').classList.toggle('hidden', m==='create');
             document.getElementById('btn-txt').innerText = m === 'create' ? 'INITIALIZE' : 'CONNECT';
             v();
-        }
+        };
 
-        function loadImg(i) {
+        window.loadImg = (i) => {
             if (i.files && i.files[0]) {
                 const r = new FileReader();
                 r.onload = (e) => {
@@ -111,31 +125,46 @@
                 };
                 r.readAsDataURL(i.files[0]);
             }
-        }
+        };
 
-        function v() {
+        window.v = () => {
             const u = document.getElementById('user').value.trim();
             const l = document.getElementById('lounge').value.trim();
             const c = document.getElementById('code').value.trim();
             const isOk = (mode === 'create') ? (u && l) : (u && c.length === 6);
             const b = document.getElementById('go-btn');
             b.disabled = !isOk; b.classList.toggle('unlocked', isOk);
-        }
+        };
 
-        function handleProceed() {
-    const name = document.getElementById('user').value.trim();
-    const lTitle = document.getElementById('lounge').value.trim();
-    // Use entered code if joining, or generate a random one if creating
-    const lCode = mode === 'join' ? document.getElementById('code').value.trim() : Math.floor(100000 + Math.random() * 900000).toString();
+        document.getElementById('go-btn').onclick = async () => {
+            const name = document.getElementById('user').value.trim();
+            const lTitle = document.getElementById('lounge').value.trim();
+            const lCode = mode === 'join' ? document.getElementById('code').value.trim() : Math.floor(100000 + Math.random() * 900000).toString();
 
-    localStorage.setItem('user_pfp', imgData);
-    localStorage.setItem('user_name', name);
-    localStorage.setItem('lounge_title', mode === 'create' ? lTitle : "Student Lounge");
-    localStorage.setItem('lounge_code', lCode);
+            // Save to LocalStorage for the message.html page
+            localStorage.setItem('user_pfp', imgData);
+            localStorage.setItem('user_name', name);
+            localStorage.setItem('lounge_title', mode === 'create' ? lTitle : "Student Lounge");
+            localStorage.setItem('lounge_code', lCode);
+            localStorage.setItem('user_role', mode === 'create' ? 'admin' : 'joiner');
 
-    location.href = 'message.html';
-}
-
+            if (mode === 'join') {
+                // Submit the "Knock" request to Firebase
+                try {
+                    await set(ref(db, `rooms/${lCode}/requests/${name}`), {
+                        name: name,
+                        pfp: imgData || "",
+                        status: 'pending'
+                    });
+                    location.href = 'message.html';
+                } catch (e) {
+                    alert("Error connecting to lounge.");
+                }
+            } else {
+                // Admin just goes in
+                location.href = 'message.html';
+            }
+        };
     </script>
 </body>
 </html>
