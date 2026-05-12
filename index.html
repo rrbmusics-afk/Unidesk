@@ -100,7 +100,7 @@
 
     <input type="file" id="fileInput" class="hidden" accept="image/*,application/pdf,text/plain" onchange="processFile(this.files[0])">
 
-    <    <script type="module">
+    <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, doc, setDoc, updateDoc, onSnapshot, getDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
@@ -145,23 +145,29 @@
         const startRec = async () => {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                // Changed to audio/webm for better browser compatibility
-                mediaRecorder = new MediaRecorder(stream);
+                const mimeType = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/ogg';
+                mediaRecorder = new MediaRecorder(stream, { mimeType });
                 audioChunks = [];
-                mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
+                
+                mediaRecorder.ondataavailable = e => {
+                    if (e.data.size > 0) audioChunks.push(e.data);
+                };
+
                 mediaRecorder.onstop = () => {
-                    const blob = new Blob(audioChunks, { type: 'audio/webm' });
+                    const blob = new Blob(audioChunks, { type: mimeType });
                     const reader = new FileReader();
-                    reader.onloadend = () => uploadMedia(reader.result, 'audio');
+                    reader.onloadend = () => {
+                        if (reader.result.length > 500) uploadMedia(reader.result, 'audio');
+                    };
                     reader.readAsDataURL(blob);
                     stream.getTracks().forEach(t => t.stop());
                 };
+
                 mediaRecorder.start();
                 document.getElementById('recIndicator').classList.remove('hidden');
                 chatInput.style.opacity = "0";
             } catch(e) { 
-                console.error(e);
-                alert("Mic error: Ensure you are using HTTPS and have granted permissions."); 
+                alert("Mic error: Reset site permissions in your browser settings."); 
             }
         };
 
@@ -277,6 +283,5 @@
             box.scrollTop = box.scrollHeight;
         }
     </script>
-
 </body>
 </html>
