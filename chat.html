@@ -123,12 +123,19 @@
         }
 
         function handleProceed() {
-            localStorage.setItem('user_pfp', imgData);
-            localStorage.setItem('user_name', document.getElementById('user').value);
-            // Defaulting to "Student Hub" if joining
-            localStorage.setItem('lounge_title', mode === 'create' ? document.getElementById('lounge').value : "Student Hub");
-            location.href = 'message.html';
-        }
+    const name = document.getElementById('user').value.trim();
+    const lTitle = document.getElementById('lounge').value.trim();
+    // Use entered code if joining, or generate a random one if creating
+    const lCode = mode === 'join' ? document.getElementById('code').value.trim() : Math.floor(100000 + Math.random() * 900000).toString();
+
+    localStorage.setItem('user_pfp', imgData);
+    localStorage.setItem('user_name', name);
+    localStorage.setItem('lounge_title', mode === 'create' ? lTitle : "Student Lounge");
+    localStorage.setItem('lounge_code', lCode);
+
+    location.href = 'message.html';
+}
+
     </script>
 </body>
 </html>
