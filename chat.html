@@ -3,112 +3,166 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Unidesk | Aethercore</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <title>Unidesk Aethercore Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
     <style>
         :root {
-            --u-blue: #2D7FF9; --u-obsidian: #0B0E11; --u-border: rgba(255, 255, 255, 0.08);
-            --wa-bg: #0B141A; --wa-panel: #202C33; --wa-bubble-me: #005C4B; --wa-bubble-them: #202C33;
+            --u-blue: #2D7FF9; --u-bg: #0B0E11; --u-border: rgba(255,255,255,0.08);
+            --wa-bg: #0B141A; --wa-panel: #202C33; --wa-input: #2A3942;
+            --wa-me: #005C4B; --wa-them: #202C33; --wa-text: #E9EDEF;
         }
 
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
-        body, html { margin: 0; padding: 0; height: 100%; width: 100%; font-family: 'Inter', sans-serif; background: var(--u-obsidian); color: white; overflow: hidden; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body, html { 
+            margin: 0; padding: 0; height: 100dvh; width: 100%; 
+            font-family: 'Inter', sans-serif; background: var(--u-bg); color: white; overflow: hidden; 
+        }
+
         .hidden { display: none !important; }
 
         /* --- AUTH SCREEN --- */
-        #view-auth { height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; background: radial-gradient(circle at top, #1a1f24 0%, #0b0e11 100%); }
-        .glass-card { background: rgba(25, 29, 33, 0.95); width: 100%; max-width: 380px; padding: 35px; border-radius: 40px; border: 1px solid var(--u-border); backdrop-filter: blur(20px); display: flex; flex-direction: column; align-items: center; position: relative; }
+        #view-auth { height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 25px; background: radial-gradient(circle at top, #1c2126 0%, #0b0e11 100%); }
+        .glass-card { background: rgba(25, 29, 33, 0.95); width: 100%; max-width: 400px; padding: 35px; border-radius: 40px; border: 1px solid var(--u-border); box-shadow: 0 40px 100px rgba(0,0,0,0.6); backdrop-filter: blur(20px); text-align: center; }
         
-        .toggle-box { display: flex; width: 100%; background: rgba(255,255,255,0.05); border-radius: 15px; padding: 4px; margin-bottom: 25px; border: 1px solid var(--u-border); }
-        .tgl-btn { flex: 1; padding: 12px; border: none; background: transparent; color: #8E8E93; font-weight: 700; font-size: 13px; cursor: pointer; border-radius: 12px; }
-        .tgl-btn.active { background: var(--u-blue); color: white; }
+        .tab-nav { display: flex; background: rgba(255,255,255,0.05); border-radius: 14px; padding: 4px; margin-bottom: 25px; border: 1px solid var(--u-border); }
+        .tab-btn { flex: 1; padding: 12px; border: none; background: transparent; color: #8E8E93; font-weight: 700; font-size: 13px; border-radius: 11px; transition: 0.3s; }
+        .tab-btn.active { background: var(--u-blue); color: white; box-shadow: 0 4px 15px rgba(45,127,249,0.3); }
 
-        .pfp-stage { width: 100px; height: 100px; margin-bottom: 20px; position: relative; }
-        #pfp-preview { width: 100%; height: 100%; border-radius: 35px; object-fit: cover; border: 3px solid var(--u-blue); }
+        .u-input { width: 100%; background: rgba(255,255,255,0.03); border: 1px solid var(--u-border); padding: 18px; border-radius: 18px; color: white; font-size: 16px; margin-bottom: 12px; text-align: center; }
+        .btn-exec { width: 100%; padding: 20px; border-radius: 20px; background: #fff; color: #000; font-weight: 800; border: none; cursor: pointer; transition: 0.2s; }
+        .btn-exec:disabled { opacity: 0.3; cursor: not-allowed; filter: grayscale(1); }
 
-        .u-input { width: 100%; background: rgba(255,255,255,0.03); border: 1px solid var(--u-border); padding: 16px; border-radius: 15px; color: white; font-size: 16px; margin-bottom: 12px; text-align: center; }
-        .btn-exec { width: 100%; padding: 18px; border-radius: 18px; background: #fff; color: #000; font-weight: 800; border: none; cursor: pointer; }
+        /* --- CHAT INTERFACE --- */
+        #view-chat { height: 100dvh; display: flex; flex-direction: column; background: var(--wa-bg); position: relative; }
+        .doodle { position: absolute; inset: 0; opacity: 0.05; pointer-events: none; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); filter: invert(1); z-index: 1; }
 
-        /* --- KNOCKING VIEW --- */
-        #view-knock { height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; background: var(--u-obsidian); }
-        .pulse-icon { font-size: 50px; color: var(--u-blue); animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.2); opacity: 0.5; } 100% { transform: scale(1); opacity: 1; } }
+        header { background: var(--wa-panel); padding: 10px 16px; display: flex; align-items: center; z-index: 10; gap: 12px; height: 72px; cursor: pointer; }
+        .h-pfp { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; }
+        .h-info { flex: 1; }
+        .h-info h2 { margin: 0; font-size: 17px; font-weight: 600; }
+        .lounge-id-sub { font-size: 11px; color: var(--u-blue); font-weight: 800; margin-top: 2px; }
 
-        /* --- CHAT VIEW --- */
-        #view-chat { height: 100dvh; display: flex; flex-direction: column; background: var(--wa-bg); }
-        header { background: var(--wa-panel); padding: 10px 16px; display: flex; align-items: center; height: 72px; gap: 12px; z-index: 10; }
-        .h-img { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; }
-        .h-meta { flex: 1; }
-        .h-meta h2 { margin: 0; font-size: 17px; }
-        .h-id { font-size: 11px; color: var(--u-blue); font-weight: 800; }
+        /* Request Notification Bar */
+        #approval-bar { background: var(--u-blue); color: white; padding: 12px 16px; font-size: 14px; font-weight: 700; display: flex; justify-content: space-between; align-items: center; z-index: 11; display: none; }
 
-        #chat-flow { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 6px; }
-        .bubble { max-width: 80%; padding: 10px; border-radius: 12px; font-size: 15px; color: white; position: relative; }
-        .bubble-me { align-self: flex-end; background: var(--wa-bubble-me); border-top-right-radius: 0; }
-        .bubble-them { align-self: flex-start; background: var(--wa-bubble-them); border-top-left-radius: 0; }
+        #chat-flow { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 4px; z-index: 2; -webkit-overflow-scrolling: touch; }
+        .bubble { max-width: 85%; padding: 8px 12px; border-radius: 10px; font-size: 15px; position: relative; color: white; word-wrap: break-word; }
+        .bubble-me { align-self: flex-end; background: var(--wa-me); border-top-right-radius: 0; }
+        .bubble-them { align-self: flex-start; background: var(--wa-them); border-top-left-radius: 0; }
+        .media-img { width: 100%; border-radius: 8px; margin-top: 5px; }
 
-        /* --- ADMIN REQUEST POPUP --- */
-        #admin-requests { position: fixed; top: 80px; left: 10px; right: 10px; z-index: 100; display: flex; flex-direction: column; gap: 10px; }
-        .req-card { background: rgba(45, 127, 249, 0.95); padding: 15px; border-radius: 20px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 10px 30px rgba(0,0,0,0.5); animation: slideIn 0.3s ease; }
-        @keyframes slideIn { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        .req-btn { background: white; color: black; border: none; padding: 8px 15px; border-radius: 10px; font-weight: 800; font-size: 12px; }
+        footer { background: var(--wa-panel); padding: 8px 12px; display: flex; align-items: center; gap: 8px; z-index: 10; padding-bottom: calc(10px + env(safe-area-inset-bottom)); }
+        .input-wrap { flex: 1; background: var(--wa-input); border-radius: 25px; padding: 0 15px; display: flex; align-items: center; gap: 10px; height: 48px; }
+        .input-wrap input { background: transparent; border: none; color: white; flex: 1; font-size: 16px; outline: none; }
+        .action-circle { width: 48px; height: 48px; border-radius: 50%; background: #00a884; border: none; color: white; display: flex; align-items: center; justify-content: center; font-size: 20px; transition: 0.2s; }
+        
+        /* --- POPUPS --- */
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
+        .info-card { background: var(--wa-panel); width: 100%; max-width: 400px; border-radius: 30px; padding: 25px; }
+        .pfp-large { width: 200px; height: 200px; border-radius: 20px; object-fit: cover; margin-bottom: 20px; }
 
-        footer { background: var(--wa-panel); padding: 10px; display: flex; gap: 10px; align-items: center; padding-bottom: calc(10px + env(safe-area-inset-bottom)); }
-        .pill { flex: 1; background: #2A3942; border-radius: 25px; padding: 0 15px; height: 45px; display: flex; align-items: center; }
-        .pill input { background: transparent; border: none; color: white; width: 100%; font-size: 16px; }
-        .send-btn { width: 45px; height: 45px; border-radius: 50%; background: #00a884; border: none; color: white; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+        /* Knocking Animation */
+        #view-knock { height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--u-bg); }
+        .door-pulse { font-size: 60px; color: var(--u-blue); animation: knock 1.2s infinite; }
+        @keyframes knock { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.15); opacity: 0.7; } }
     </style>
 </head>
 <body>
 
-    <div id="app">
+    <div id="root">
         <section id="view-auth">
             <div class="glass-card">
-                <div class="toggle-box">
-                    <button id="t-create" class="tgl-btn active" onclick="ui.setMode('create')">CREATE</button>
-                    <button id="t-join" class="tgl-btn" onclick="ui.setMode('join')">JOIN</button>
+                <div class="tab-nav">
+                    <button id="tab-create" class="tab-btn active" onclick="ui.setMode('create')">CREATE</button>
+                    <button id="tab-join" class="tab-btn" onclick="ui.setMode('join')">JOIN</button>
                 </div>
-                <div class="pfp-stage" id="pfp-area">
-                    <img id="pfp-preview" src="https://cdn-icons-png.flaticon.com/512/9131/9131529.png">
-                    <input type="file" id="pfp-input" class="hidden" onchange="ui.onFile(this)">
-                    <label for="pfp-input" style="position:absolute; inset:0; cursor:pointer;"></label>
+                
+                <div id="create-pfp-box">
+                    <img id="auth-pfp" src="https://cdn-icons-png.flaticon.com/512/9131/9131529.png" style="width:100px;height:100px;border-radius:30px;margin-bottom:20px;object-fit:cover;">
+                    <input type="file" id="pfp-file" class="hidden" accept="image/*" onchange="ui.previewPFP(this)">
+                    <label for="pfp-file" style="display:block;color:var(--u-blue);font-weight:700;margin-bottom:20px;font-size:12px;cursor:pointer;">UPLOAD GROUP PHOTO</label>
                 </div>
-                <input type="text" id="in-user" class="u-input" placeholder="Your Name">
-                <input type="text" id="in-lounge" class="u-input" placeholder="Lounge Name">
-                <input type="text" id="in-code" class="u-input hidden" placeholder="6-Digit Code">
-                <button class="btn-exec" onclick="logic.start()">INITIALIZE</button>
+
+                <input type="text" id="in-name" class="u-input" placeholder="Your Display Name" oninput="ui.validate()">
+                <input type="text" id="in-lounge" class="u-input" placeholder="Lounge Name" oninput="ui.validate()">
+                <input type="text" id="in-code" class="u-input hidden" placeholder="Enter 6-Digit Code" oninput="ui.validate()">
+                
+                <button id="btn-submit" class="btn-exec" disabled onclick="core.init()">INITIALIZE</button>
             </div>
         </section>
 
         <section id="view-knock" class="hidden">
-            <div class="pulse-icon"><i class="fas fa-door-open"></i></div>
-            <h2 style="margin-top:20px;">Knocking...</h2>
-            <p style="color:#8E8E93;">Waiting for Admin to let you in</p>
+            <div class="door-pulse"><i class="fas fa-door-open"></i></div>
+            <h1 style="font-weight:800;margin-top:30px;">KNOCKING...</h1>
+            <p style="color:#8E8E93;padding:0 40px;text-align:center;">The Admin has been notified. Please wait for entry approval.</p>
         </section>
 
         <section id="view-chat" class="hidden">
-            <div id="admin-requests"></div> <header>
-                <img id="h-img" class="h-img">
-                <div class="h-meta">
+            <div class="doodle"></div>
+            
+            <header onclick="ui.showInfo()">
+                <img id="h-img" class="h-pfp">
+                <div class="h-info">
                     <h2 id="h-name">Lounge</h2>
-                    <span id="h-id" class="h-id">ID: #000000</span>
+                    <div id="h-id" class="lounge-id-sub">ID: #000000</div>
                 </div>
-                <i class="fas fa-ellipsis-v"></i>
+                <i class="fas fa-ellipsis-v" style="color:#aebac1"></i>
             </header>
+
+            <div id="approval-bar" onclick="ui.showApprovals()">
+                <span>PENDING REQUESTS</span>
+                <i class="fas fa-chevron-right"></i>
+            </div>
+
             <div id="chat-flow"></div>
+
             <footer>
-                <div class="pill"><input type="text" id="msg-input" placeholder="Message"></div>
-                <button class="send-btn" onclick="logic.send()"><i class="fas fa-paper-plane"></i></button>
+                <i class="fas fa-paperclip" style="color:#aebac1;font-size:22px;" onclick="ui.triggerDocs()"></i>
+                <input type="file" id="doc-input" class="hidden" multiple onchange="core.sendDocs(this)">
+                <div class="input-wrap">
+                    <input type="text" id="msg-input" placeholder="Message" oninput="ui.toggleActionBtn()">
+                </div>
+                <button id="action-btn" class="action-circle" onmousedown="core.startVoice()" onmouseup="core.stopVoice()" ontouchstart="core.startVoice()" ontouchend="core.stopVoice()">
+                    <i id="action-icon" class="fas fa-microphone"></i>
+                </button>
             </footer>
         </section>
+
+        <div id="modal-info" class="modal hidden">
+            <div class="info-card">
+                <div style="display:flex;justify-content:space-between;margin-bottom:20px;">
+                    <h3 style="margin:0">Group Info</h3>
+                    <i class="fas fa-times" onclick="ui.hideModals()"></i>
+                </div>
+                <center>
+                    <img id="info-pfp" class="pfp-large" onclick="ui.viewFullPFP()">
+                    <input type="file" id="admin-pfp-change" class="hidden" onchange="core.updateGroupPFP(this)">
+                    <h2 id="info-name">Lounge Name</h2>
+                    <p id="info-id" style="color:var(--u-blue);font-weight:800;"></p>
+                    <div id="admin-tools" class="hidden">
+                        <button class="u-input" onclick="core.renameGroup()">RENAME GROUP</button>
+                        <button class="u-input" style="color:#ff4b4b" onclick="core.deleteGroup()">DELETE GROUP</button>
+                    </div>
+                    <button class="u-input" onclick="core.leaveGroup()">LEAVE GROUP</button>
+                </center>
+            </div>
+        </div>
+
+        <div id="modal-req" class="modal hidden">
+            <div class="info-card">
+                <h3>Approval Requests</h3>
+                <div id="req-list" style="max-height:300px;overflow-y:auto;"></div>
+                <button class="btn-exec" style="margin-top:20px;" onclick="ui.hideModals()">CLOSE</button>
+            </div>
+        </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, addDoc, query, orderBy, serverTimestamp, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-        
+        import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, addDoc, query, orderBy, serverTimestamp, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+
         const firebaseConfig = {
             apiKey: "AIzaSyDbfmd0zmv_mFV0CG2OrhKPPeU3zPYGOBg",
             authDomain: "unidesk-a70ac.firebaseapp.com",
@@ -117,107 +171,159 @@
             appId: "1:882535016432:web:6eca2645a47a827e779f35"
         };
 
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const state = { mode: 'create', uid: 'u'+Date.now(), room: null, name: '' };
+        const fApp = initializeApp(firebaseConfig);
+        const db = getFirestore(fApp);
+        const storage = getStorage(fApp);
+
+        const state = { mode: 'create', uid: 'U'+Math.random().toString(36).substr(2,9), room: null, name: '', recorder: null, audioChunks: [] };
 
         window.ui = {
             setMode: (m) => {
                 state.mode = m;
-                document.getElementById('t-create').classList.toggle('active', m==='create');
-                document.getElementById('t-join').classList.toggle('active', m==='join');
-                document.getElementById('pfp-area').classList.toggle('hidden', m==='join');
+                document.getElementById('tab-create').classList.toggle('active', m==='create');
+                document.getElementById('tab-join').classList.toggle('active', m==='join');
+                document.getElementById('create-pfp-box').classList.toggle('hidden', m==='join');
                 document.getElementById('in-lounge').classList.toggle('hidden', m==='join');
                 document.getElementById('in-code').classList.toggle('hidden', m==='create');
+                ui.validate();
             },
-            onFile: (el) => {
-                if(el.files[0]) document.getElementById('pfp-preview').src = URL.createObjectURL(el.files[0]);
-            }
+            validate: () => {
+                const name = document.getElementById('in-user').value.trim();
+                const lounge = document.getElementById('in-lounge').value.trim();
+                const code = document.getElementById('in-code').value.trim();
+                const btn = document.getElementById('btn-submit');
+                
+                if(state.mode === 'create') btn.disabled = !(name && lounge);
+                else btn.disabled = !(name && code.length === 6);
+            },
+            previewPFP: (el) => {
+                if(el.files[0]) document.getElementById('auth-pfp').src = URL.createObjectURL(el.files[0]);
+            },
+            toggleActionBtn: () => {
+                const val = document.getElementById('msg-input').value.trim();
+                const icon = document.getElementById('action-icon');
+                icon.className = val ? "fas fa-paper-plane" : "fas fa-microphone";
+                document.getElementById('action-btn').onclick = val ? core.sendText : null;
+            },
+            showInfo: () => document.getElementById('modal-info').classList.remove('hidden'),
+            showApprovals: () => document.getElementById('modal-req').classList.remove('hidden'),
+            hideModals: () => {
+                document.querySelectorAll('.modal').forEach(m => m.classList.add('hidden'));
+            },
+            triggerDocs: () => document.getElementById('doc-input').click()
         };
 
-        window.logic = {
-            start: async () => {
-                state.name = document.getElementById('in-user').value.trim();
-                if(!state.name) return alert("Name required");
-
+        window.core = {
+            init: async () => {
+                state.name = document.getElementById('in-name').value;
                 if(state.mode === 'create') {
-                    const lName = document.getElementById('in-lounge').value.trim();
                     const code = Math.floor(100000 + Math.random()*900000).toString();
-                    const room = { name: lName, code: code, avatar: document.getElementById('pfp-preview').src, admin: state.uid };
-                    await setDoc(doc(db, "lounges", code), room);
-                    logic.joinChat(room);
-                } else {
-                    const code = document.getElementById('in-code').value.trim();
-                    const roomSnap = await getDoc(doc(db, "lounges", code));
-                    if(!roomSnap.exists()) return alert("Lounge not found");
+                    let pfp = document.getElementById('auth-pfp').src;
                     
-                    // KNOCK LOGIC
+                    const file = document.getElementById('pfp-file').files[0];
+                    if(file) {
+                        const sRef = ref(storage, `rooms/${code}/pfp.jpg`);
+                        await uploadBytes(sRef, file);
+                        pfp = await getDownloadURL(sRef);
+                    }
+
+                    const room = { name: document.getElementById('in-lounge').value, code, avatar: pfp, admin: state.uid };
+                    await setDoc(doc(db, "rooms", code), room);
+                    core.launch(room);
+                } else {
+                    const code = document.getElementById('in-code').value;
+                    const snap = await getDoc(doc(db, "rooms", code));
+                    if(!snap.exists()) return alert("Room 404");
+                    
                     document.getElementById('view-auth').classList.add('hidden');
                     document.getElementById('view-knock').classList.remove('hidden');
-                    
-                    const reqRef = doc(db, "lounges", code, "requests", state.uid);
-                    await setDoc(reqRef, { name: state.name, ts: serverTimestamp() });
 
-                    // Wait for Approval
+                    const reqRef = doc(db, "rooms", code, "requests", state.uid);
+                    await setDoc(reqRef, { name: state.name, uid: state.uid });
+
                     onSnapshot(reqRef, (s) => {
-                        if(!s.exists()) { // Admin deleted it (accepted or rejected)
-                            // Double check if we are in members now
-                            logic.joinChat(roomSnap.data());
+                        if(!s.exists()) {
+                            getDoc(doc(db, "rooms", code)).then(rs => core.launch(rs.data()));
                         }
                     });
                 }
             },
-            joinChat: (room) => {
+            launch: (room) => {
                 state.room = room;
                 document.getElementById('view-auth').classList.add('hidden');
                 document.getElementById('view-knock').classList.add('hidden');
                 document.getElementById('view-chat').classList.remove('hidden');
-                
+
                 document.getElementById('h-img').src = room.avatar;
                 document.getElementById('h-name').innerText = room.name;
                 document.getElementById('h-id').innerText = `ID: #${room.code}`;
+                
+                // Group Info Sync
+                document.getElementById('info-pfp').src = room.avatar;
+                document.getElementById('info-name').innerText = room.name;
+                document.getElementById('info-id').innerText = `ID: #${room.code}`;
+                if(state.uid === room.admin) document.getElementById('admin-tools').classList.remove('hidden');
 
-                // Listen for Messages
-                onSnapshot(query(collection(db, "lounges", room.code, "messages"), orderBy("ts", "asc")), s => {
+                // Approval Listener
+                if(state.uid === room.admin) {
+                    onSnapshot(collection(db, "rooms", room.code, "requests"), s => {
+                        document.getElementById('approval-bar').style.display = s.empty ? 'none' : 'flex';
+                        const list = document.getElementById('req-list');
+                        list.innerHTML = "";
+                        s.forEach(d => {
+                            const r = d.data();
+                            list.innerHTML += `<div style="display:flex;justify-content:space-between;padding:10px;border-bottom:1px solid var(--u-border);">
+                                <span>${r.name}</span>
+                                <button onclick="core.approve('${d.id}')" style="background:var(--u-blue);border:none;color:white;border-radius:5px;padding:5px 10px;">APPROVE</button>
+                            </div>`;
+                        });
+                    });
+                }
+
+                // Msg Listener
+                onSnapshot(query(collection(db, "rooms", room.code, "messages"), orderBy("ts", "asc")), s => {
                     const flow = document.getElementById('chat-flow');
                     flow.innerHTML = "";
                     s.forEach(d => {
                         const m = d.data();
                         const isMe = m.uid === state.uid;
-                        flow.innerHTML += `<div class="bubble ${isMe?'bubble-me':'bubble-them'}">
-                            <span style="font-size:10px; font-weight:800; display:block; color:#35cd96">${isMe?'You':m.sender}</span>
-                            ${m.text}</div>`;
+                        const div = document.createElement('div');
+                        div.className = `bubble ${isMe?'bubble-me':'bubble-them'}`;
+                        div.innerHTML = `<span style="font-size:10px;font-weight:800;color:#35cd96;">${isMe?'You':m.sender}</span>${m.text}`;
+                        flow.appendChild(div);
                     });
                     flow.scrollTop = flow.scrollHeight;
                 });
-
-                // ADMIN ONLY: Listen for Knocks
-                if(state.uid === room.admin) {
-                    onSnapshot(collection(db, "lounges", room.code, "requests"), s => {
-                        const box = document.getElementById('admin-requests');
-                        box.innerHTML = "";
-                        s.forEach(d => {
-                            const r = d.data();
-                            box.innerHTML += `<div class="req-card" id="req-${d.id}">
-                                <span><b>${r.name}</b> is knocking...</span>
-                                <button class="req-btn" onclick="logic.accept('${d.id}')">ACCEPT</button>
-                            </div>`;
-                        });
-                    });
-                }
             },
-            accept: async (targetUid) => {
-                await deleteDoc(doc(db, "lounges", state.room.code, "requests", targetUid));
+            approve: async (uid) => {
+                await deleteDoc(doc(db, "rooms", state.room.code, "requests", uid));
             },
-            send: async () => {
+            sendText: async () => {
                 const inp = document.getElementById('msg-input');
                 if(!inp.value.trim()) return;
-                await addDoc(collection(db, "lounges", state.room.code, "messages"), {
-                    text: inp.value, uid: state.uid, sender: state.name, ts: serverTimestamp()
+                await addDoc(collection(db, "rooms", state.room.code, "messages"), {
+                    text: inp.value, uid: state.uid, sender: state.name, ts: serverTimestamp(), type: 'text'
                 });
                 inp.value = "";
-            }
-        };
-    </script>
-</body>
-</html>
+                ui.toggleActionBtn();
+            },
+            startVoice: async () => {
+                if(document.getElementById('msg-input').value) return;
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                state.recorder = new MediaRecorder(stream);
+                state.audioChunks = [];
+                state.recorder.ondataavailable = e => state.audioChunks.push(e.data);
+                state.recorder.start();
+                document.getElementById('action-btn').style.transform = "scale(1.5)";
+            },
+            stopVoice: () => {
+                if(!state.recorder) return;
+                state.recorder.stop();
+                document.getElementById('action-btn').style.transform = "scale(1)";
+                state.recorder.onstop = async () => {
+                    const blob = new Blob(state.audioChunks, { type: 'audio/webm' });
+                    const sRef = ref(storage, `rooms/${state.room.code}/audio/${Date.now()}.webm`);
+                    await uploadBytes(sRef, blob);
+                    const url = await getDownloadURL(sRef);
+                    await addDoc(collection(db, "rooms", state.room.code, "messages"), {
+                        text: `<audio controls s
