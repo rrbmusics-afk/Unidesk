@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Aether Enterprise Hub</title>
+    <title>Aether Pro Messenger | Enterprise Edition</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root {
@@ -13,164 +13,163 @@
             --wa-green: #00a884;
             --wa-bubble-me: #005c4b;
             --wa-bubble-them: #202c33;
-            --wa-text: #e9edef;
         }
 
         body, html { 
             height: 100%; margin: 0; padding: 0; overflow: hidden;
-            background-color: var(--wa-bg); color: var(--wa-text);
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--wa-bg); color: #e9edef;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
         }
 
-        /* 5) Unique Corporate Doodle Background */
-        .chat-bg {
+        /* 5) Unique Corporate Doodle Background (WhatsApp Style) */
+        .chat-wallpaper {
             background-color: #0b141a;
-            background-image: url("https://www.transparenttextures.com/patterns/circuit-board.png");
-            background-blend-mode: overlay;
-            opacity: 0.8;
+            background-image: url("https://www.transparenttextures.com/patterns/carbon-fibre.png");
+            background-blend-mode: soft-light;
+            opacity: 0.9;
         }
 
-        /* 9) Static Keyboard Logic: Ensuring fixed layout */
-        .app-container { display: flex; flex-direction: column; height: 100vh; position: relative; }
-        .main-view { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
+        /* 9) Static Keyboard Strategy */
+        .app-wrapper { display: flex; flex-direction: column; height: 100vh; position: relative; }
+        .scroll-area { flex: 1; overflow-y: auto; scroll-behavior: smooth; }
 
-        /* Professional Alignment */
-        .header { height: 64px; background: var(--wa-nav); display: flex; align-items: center; padding: 0 16px; gap: 12px; z-index: 100; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
-        .pfp-img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; cursor: pointer; }
+        /* Professional WhatsApp Alignment */
+        .header-main { height: 64px; background: var(--wa-nav); display: flex; align-items: center; padding: 0 16px; gap: 14px; z-index: 100; }
+        .pfp-circle { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; cursor: pointer; background: #374151; }
         
-        .bubble { 
-            max-width: 75%; padding: 8px 12px; border-radius: 8px; font-size: 15px; 
-            margin-bottom: 4px; box-shadow: 0 1px 0.5px rgba(0,0,0,0.13); position: relative;
-            line-height: 1.4;
+        .msg-bubble { 
+            max-width: 80%; padding: 8px 12px; border-radius: 8px; font-size: 15px; 
+            margin-bottom: 2px; position: relative; box-shadow: 0 1px 1px rgba(0,0,0,0.2);
         }
-        .me { align-self: flex-end; background: var(--wa-bubble-me); border-top-right-radius: 0; }
-        .them { align-self: flex-start; background: var(--wa-bubble-them); border-top-left-radius: 0; }
+        .msg-me { align-self: flex-end; background: var(--wa-bubble-me); border-top-right-radius: 0; margin-right: 8px; }
+        .msg-them { align-self: flex-start; background: var(--wa-bubble-them); border-top-left-radius: 0; margin-left: 8px; }
 
-        /* 1) Tab & Button State */
-        .tab-btn { flex: 1; padding: 14px; font-weight: 600; text-transform: uppercase; font-size: 13px; transition: 0.3s; border-bottom: 3px solid transparent; }
-        .tab-active { border-bottom: 3px solid var(--wa-green); color: var(--wa-green); }
-        .btn-action { width: 100%; padding: 14px; border-radius: 8px; font-weight: bold; transition: 0.3s; }
-        .btn-locked { background: #2a3942 !important; color: #667781 !important; cursor: not-allowed; }
-
-        /* Layer Management */
-        .layer { position: fixed; inset: 0; background: var(--wa-bg); display: none; z-index: 50; flex-direction: column; }
-        .layer-show { display: flex; }
+        /* 1) Dynamic Key Switch Logic */
+        .tab-inactive { color: #8696a0; border-bottom: 3px solid transparent; }
+        .tab-active { color: var(--wa-green); border-bottom: 3px solid var(--wa-green); }
+        .btn-primary { width: 100%; padding: 14px; border-radius: 8px; font-weight: 700; transition: 0.2s; }
+        .btn-locked { background: #2a3942 !important; color: #667781 !important; cursor: not-allowed; opacity: 0.6; }
 
         /* 10) Context Menu */
-        #context-menu { 
+        #ctx-menu { 
             display: none; position: fixed; background: #233138; border-radius: 12px; 
-            z-index: 1000; min-width: 200px; box-shadow: 0 12px 24px rgba(0,0,0,0.5); overflow: hidden;
+            z-index: 5000; min-width: 190px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); padding: 4px 0;
         }
-        .menu-item { padding: 14px 20px; font-size: 14px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .menu-item:hover { background: #1c282f; }
+        .ctx-item { padding: 12px 20px; font-size: 14px; cursor: pointer; }
+        .ctx-item:hover { background: #182229; }
+        .ctx-danger { color: #ff5e5e; border-top: 1px solid #313d45; }
 
-        /* 4) Approval Notification */
-        .knock-pill { background: #e67e22; color: #fff; text-align: center; font-size: 12px; font-weight: bold; padding: 10px; cursor: pointer; }
+        .screen { position: fixed; inset: 0; background: var(--wa-bg); display: none; z-index: 10; flex-direction: column; }
+        .screen-active { display: flex; }
+
+        /* 4) Real-time Approval Notification */
+        .approval-toast { background: #e67e22; color: white; padding: 10px; text-align: center; font-weight: bold; font-size: 12px; cursor: pointer; }
     </style>
 </head>
 <body>
 
-<div class="app-container">
+<div class="app-wrapper">
     
     <!-- HOME SCREEN -->
-    <div id="home-screen" class="layer layer-show">
-        <div class="header">
-            <span class="text-xl font-bold text-white">Aether Messenger</span>
+    <div id="screen-home" class="screen screen-active">
+        <div class="header-main">
+            <span class="text-xl font-bold">Aether Enterprise</span>
         </div>
-        <div class="flex bg-[#202c33]">
-            <button id="tab-c" onclick="switchTab('create')" class="tab-btn tab-active">Create Room</button>
-            <button id="tab-j" onclick="switchTab('join')" class="tab-btn">Join Room</button>
+        <div class="flex bg-[#202c33] border-b border-white/5">
+            <button id="tab-create" onclick="setMode('create')" class="flex-1 py-4 font-bold tab-active">CREATE ROOM</button>
+            <button id="tab-join" onclick="setMode('join')" class="flex-1 py-4 font-bold tab-inactive">JOIN ROOM</button>
         </div>
         
-        <div class="p-6 space-y-4">
-            <div id="view-create" class="space-y-4">
-                <input type="text" id="admin-name" oninput="checkKeys()" placeholder="Your Name" class="w-full bg-[#2a3942] p-4 rounded-lg border-none outline-none">
-                <input type="text" id="group-name" oninput="checkKeys()" placeholder="Group Subject" class="w-full bg-[#2a3942] p-4 rounded-lg border-none outline-none">
-                <button id="create-exec" onclick="execCreate()" class="btn-action bg-emerald-600 btn-locked">INITIALIZE GROUP</button>
+        <div class="p-6 space-y-5">
+            <div id="panel-create" class="space-y-4">
+                <input type="text" id="c-admin-name" oninput="syncKeys()" placeholder="Your Admin Name" class="w-full bg-[#2a3942] p-4 rounded-xl outline-none">
+                <input type="text" id="c-group-title" oninput="syncKeys()" placeholder="Group Heading / Subject" class="w-full bg-[#2a3942] p-4 rounded-xl outline-none">
+                <button id="btn-create-exec" onclick="fireCreate()" class="btn-primary bg-emerald-600 btn-locked">CREATE CHAT ROOM</button>
             </div>
             
-            <div id="view-join" class="hidden space-y-4">
-                <input type="text" id="joiner-name" oninput="checkKeys()" placeholder="Your Name" class="w-full bg-[#2a3942] p-4 rounded-lg border-none outline-none">
-                <input type="text" id="join-code" oninput="checkKeys()" placeholder="Room Code (6 Digits)" class="w-full bg-[#2a3942] p-4 rounded-lg border-none outline-none font-mono">
-                <button id="join-exec" onclick="execJoin()" class="btn-action bg-blue-600 btn-locked">KNOCK TO JOIN</button>
+            <div id="panel-join" class="hidden space-y-4">
+                <input type="text" id="j-user-name" oninput="syncKeys()" placeholder="Enter Your Name" class="w-full bg-[#2a3942] p-4 rounded-xl outline-none">
+                <input type="text" id="j-room-code" oninput="syncKeys()" placeholder="6-Digit Room Code" class="w-full bg-[#2a3942] p-4 rounded-xl outline-none text-center font-mono tracking-widest">
+                <button id="btn-join-exec" onclick="fireJoin()" class="btn-primary bg-blue-600 btn-locked">SEND JOIN REQUEST</button>
             </div>
         </div>
     </div>
 
-    <!-- CHAT SCREEN -->
-    <div id="chat-screen" class="layer">
-        <!-- 4) Approval Top Strip -->
-        <div id="approval-strip" class="knock-pill hidden" onclick="toggleApprovalPopup(true)">
-            PENDING JOIN REQUESTS • TAP TO MANAGE
+    <!-- CHAT INTERFACE -->
+    <div id="screen-chat" class="screen">
+        <div id="admin-notif" class="approval-toast hidden" onclick="showApprovalModal()">
+            PENDING APPROVALS • CLICK TO VIEW REQUESTS
         </div>
 
-        <div class="header">
-            <img id="chat-pfp" class="pfp-img" onclick="zoomPfp()">
-            <div class="flex-1 overflow-hidden" onclick="showInfo()">
-                <div id="header-name" class="font-bold truncate">...</div>
-                <div class="text-xs text-gray-400">Click for group details</div>
+        <div class="header-main">
+            <img id="header-pfp" class="pfp-circle" onclick="whatsappZoom()">
+            <div class="flex-1" onclick="openProfile()">
+                <div id="header-group-name" class="font-bold text-[16px] truncate">...</div>
+                <div class="text-[12px] text-gray-400">Tap for group info</div>
             </div>
-            <div id="room-code-display" class="bg-black/30 px-3 py-1 rounded text-[10px] font-mono text-emerald-500">------</div>
+            <div id="header-code" class="text-[10px] bg-emerald-500/10 text-emerald-500 px-2 py-1 rounded font-mono">CODE</div>
         </div>
 
-        <div id="chat-box" class="main-view chat-bg p-4 space-y-1"></div>
+        <div id="chat-stream" class="scroll-area chat-wallpaper p-4 flex flex-col"></div>
 
-        <div class="bg-[#202c33] p-3 flex items-center gap-3">
-            <input type="text" id="msg-input" placeholder="Type a message" class="flex-1 bg-[#2a3942] p-3 rounded-full outline-none">
-            <button onclick="sendMsg()" class="bg-emerald-600 w-12 h-12 rounded-full flex items-center justify-center">
+        <!-- 9) Static Input Box -->
+        <div class="bg-[#202c33] p-3 flex items-center gap-2">
+            <div class="flex-1 bg-[#2a3942] rounded-full flex items-center px-4 py-1">
+                <input type="text" id="main-input" placeholder="Message" class="flex-1 bg-transparent py-2 outline-none text-[16px]">
+            </div>
+            <button onclick="commitMessage()" class="bg-emerald-600 w-12 h-12 rounded-full flex items-center justify-center shadow-lg">
                 <svg viewBox="0 0 24 24" width="24" height="24" fill="white"><path d="M1.101 21.757L23.8 12.028 1.101 2.3l.011 7.912 13.623 1.816-13.623 1.817-.011 7.912z"></path></svg>
             </button>
         </div>
     </div>
 
-    <!-- INFO SCREEN -->
-    <div id="info-screen" class="layer">
-        <div class="header">
-            <button onclick="hideInfo()" class="text-emerald-500 font-bold">Back</button>
+    <!-- 7) GROUP INFO / PROFILE SCREEN -->
+    <div id="screen-profile" class="screen">
+        <div class="header-main">
+            <button onclick="closeProfile()" class="text-emerald-500 font-bold">Done</button>
             <div class="flex-1 text-center font-bold">Group Info</div>
         </div>
-        <div class="p-8 flex flex-col items-center">
-            <img id="info-large-pfp" class="w-40 h-40 rounded-full mb-6 border-4 border-[#202c33] object-cover">
+        <div class="scroll-area p-6 flex flex-col items-center">
+            <img id="profile-img-large" class="w-48 h-48 rounded-full mb-6 object-cover border-4 border-white/5">
             
-            <!-- 3) Admin Only Area -->
-            <div id="admin-controls" class="w-full hidden space-y-4">
+            <!-- 3) Admin-Only Controls -->
+            <div id="admin-tools" class="w-full hidden space-y-4">
                 <div class="flex gap-2">
-                    <input type="text" id="edit-group-name" class="flex-1 bg-[#2a3942] p-3 rounded">
-                    <button onclick="renameGroup()" class="bg-emerald-600 px-4 rounded text-xs font-bold">RENAME</button>
+                    <input type="text" id="rename-input" class="flex-1 bg-[#2a3942] p-3 rounded-lg text-sm">
+                    <button onclick="doRename()" class="bg-emerald-600 px-4 rounded-lg text-xs font-bold uppercase">Update</button>
                 </div>
-                <input type="text" id="edit-pfp-url" placeholder="New PFP URL (Admin Only)" class="w-full bg-[#2a3942] p-3 rounded text-xs" onchange="updatePfp(this.value)">
-                <button onclick="deleteGroup()" class="w-full py-4 bg-red-600/10 text-red-500 font-bold rounded-xl border border-red-900/40">DELETE GROUP FOR EVERYONE</button>
+                <input type="text" id="pfp-url-input" placeholder="Paste New Profile Image URL" class="w-full bg-[#2a3942] p-3 rounded-lg text-xs" onchange="doPfpChange(this.value)">
+                <button onclick="doDeleteGroup()" class="w-full py-4 bg-red-600/10 text-red-500 font-bold rounded-xl border border-red-500/20">DELETE GROUP PERMANENTLY</button>
             </div>
 
-            <div class="w-full mt-8">
-                <p class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">Participants</p>
-                <div id="member-list" class="space-y-2"></div>
+            <div class="w-full mt-10">
+                <h3 class="text-xs font-bold text-gray-500 uppercase mb-4 tracking-tighter">Participants</h3>
+                <div id="member-list-ui" class="space-y-2"></div>
             </div>
 
-            <!-- 7) Leave Group -->
-            <button onclick="leaveGroup()" class="w-full mt-10 py-4 bg-white/5 text-red-400 font-bold rounded-xl">Leave Group</button>
+            <button onclick="doLeave()" class="w-full mt-12 py-4 bg-white/5 text-red-400 font-bold rounded-xl">Exit Group</button>
         </div>
     </div>
 
-    <!-- 4) Approval Popup Modal -->
-    <div id="approval-modal" class="fixed inset-0 bg-black/80 z-[2000] hidden flex items-center justify-center p-6">
-        <div class="bg-[#233138] w-full max-w-md rounded-2xl overflow-hidden shadow-2xl">
-            <div class="p-4 bg-emerald-700 text-center font-bold">Join Requests</div>
-            <div id="knock-roster" class="p-4 max-h-80 overflow-y-auto space-y-3"></div>
-            <button onclick="toggleApprovalPopup(false)" class="w-full p-4 text-gray-400 text-sm font-bold border-t border-white/5">CLOSE</button>
+    <!-- 4) APPROVAL MODAL -->
+    <div id="modal-approval" class="fixed inset-0 bg-black/80 z-[2000] hidden flex items-center justify-center p-6">
+        <div class="bg-[#233138] w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden">
+            <div class="p-4 bg-emerald-700 text-center font-bold">Approval Requests</div>
+            <div id="approval-list-ui" class="p-4 max-h-64 overflow-y-auto space-y-3"></div>
+            <button onclick="document.getElementById('modal-approval').classList.add('hidden')" class="w-full p-4 text-gray-400 font-bold border-t border-white/5">CLOSE</button>
         </div>
     </div>
 
-    <!-- 10) Long Press Menu -->
-    <div id="context-menu">
-        <div class="menu-item" id="ctx-edit" onclick="setEditMode()">Edit Message</div>
-        <div class="menu-item" onclick="msgDelete('me')">Delete for me</div>
-        <div class="menu-item text-red-500" id="ctx-all" onclick="msgDelete('all')">Delete for everyone</div>
+    <!-- 10) MESSAGE ACTION MENU -->
+    <div id="ctx-menu">
+        <div class="ctx-item" id="ctx-edit-btn" onclick="triggerEdit()">Edit Message</div>
+        <div class="ctx-item" onclick="msgAction('me')">Delete for me</div>
+        <div class="ctx-item ctx-danger" id="ctx-all-btn" onclick="msgAction('all')">Delete for everyone</div>
     </div>
 
-    <!-- 8) Image Zoom Overlay -->
-    <div id="pfp-zoom" class="fixed inset-0 bg-black/95 z-[3000] hidden items-center justify-center p-4" onclick="this.style.display='none'">
-        <img id="zoom-img" class="max-w-full max-h-full rounded-lg">
+    <!-- 8) PFP ZOOM -->
+    <div id="zoom-overlay" class="fixed inset-0 bg-black z-[6000] hidden items-center justify-center p-4" onclick="this.style.display='none'">
+        <img id="zoom-target" class="max-w-full max-h-[80vh] rounded-lg shadow-2xl">
     </div>
 
 </div>
@@ -182,178 +181,178 @@
     const firebaseConfig = { apiKey: "AIzaSyDbfmd0zmv_mFV0CG2OrhKPPeU3zPYGOBg", projectId: "unidesk-a70ac" };
     const db = getFirestore(initializeApp(firebaseConfig));
 
-    let userUID = localStorage.getItem('ae_uid') || "USER_"+Math.random().toString(36).substr(2,9);
-    localStorage.setItem('ae_uid', userUID);
+    let myUID = localStorage.getItem('pro_uid') || "UID_"+Math.random().toString(36).substr(2,7).toUpperCase();
+    localStorage.setItem('pro_uid', myUID);
 
     let activeRoom = null;
-    let selectedMsgId = null;
-    let isEditing = false;
-    let holdTimer;
+    let selectedMsg = null;
+    let editState = false;
+    let touchTimer;
 
-    // 1) TAB & KEY LOGIC
-    window.switchTab = (t) => {
-        document.getElementById('view-create').classList.toggle('hidden', t !== 'create');
-        document.getElementById('view-join').classList.toggle('hidden', t !== 'join');
-        document.getElementById('tab-c').className = `tab-btn ${t==='create'?'tab-active':''}`;
-        document.getElementById('tab-j').className = `tab-btn ${t==='join'?'tab-active':''}`;
-        checkKeys();
+    // 1) KEY SYNC LOGIC
+    window.setMode = (m) => {
+        document.getElementById('panel-create').classList.toggle('hidden', m !== 'create');
+        document.getElementById('panel-join').classList.toggle('hidden', m !== 'join');
+        document.getElementById('tab-create').className = `flex-1 py-4 font-bold ${m==='create'?'tab-active':'tab-inactive'}`;
+        document.getElementById('tab-join').className = `flex-1 py-4 font-bold ${m==='join'?'tab-active':'tab-inactive'}`;
+        syncKeys();
     };
 
-    window.checkKeys = () => {
-        const cName = document.getElementById('admin-name').value;
-        const gName = document.getElementById('group-name').value;
-        document.getElementById('create-exec').className = `btn-action bg-emerald-600 ${(cName && gName) ? '' : 'btn-locked'}`;
+    window.syncKeys = () => {
+        const c1 = document.getElementById('c-admin-name').value;
+        const c2 = document.getElementById('c-group-title').value;
+        document.getElementById('btn-create-exec').className = `btn-primary bg-emerald-600 ${(c1 && c2) ? '' : 'btn-locked'}`;
 
-        const jName = document.getElementById('joiner-name').value;
-        const jCode = document.getElementById('join-code').value;
-        document.getElementById('join-exec').className = `btn-action bg-blue-600 ${(jName && jCode) ? '' : 'btn-locked'}`;
+        const j1 = document.getElementById('j-user-name').value;
+        const j2 = document.getElementById('j-room-code').value;
+        document.getElementById('btn-join-exec').className = `btn-primary bg-blue-600 ${(j1 && j2) ? '' : 'btn-locked'}`;
     };
 
-    // ROOM INITIALIZATION
-    window.execCreate = async () => {
-        const name = document.getElementById('admin-name').value;
-        const gname = document.getElementById('group-name').value;
-        if(!name || !gname) return;
+    // 1) ROOM CREATION
+    window.fireCreate = async () => {
+        const name = document.getElementById('c-admin-name').value;
+        const title = document.getElementById('c-group-title').value;
+        if(!name || !title) return;
 
         const code = Math.random().toString(36).substr(2,6).toUpperCase();
-        localStorage.setItem('ae_name', name);
+        localStorage.setItem('pro_user_name', name);
 
         await setDoc(doc(db, "rooms", code), {
-            id: code, name: gname, adminID: userUID,
-            pfp: `https://ui-avatars.com/api/?name=${gname}&background=random`,
-            members: [{id: userUID, name}],
-            memberIDs: [userUID],
+            id: code, title: title, adminID: myUID,
+            pfp: `https://ui-avatars.com/api/?name=${title}&background=random&color=fff&size=512`,
+            members: [{id: myUID, name: name}],
+            memberIDs: [myUID],
             pending: [],
             messages: []
         });
-        openChat(code);
+        launchChat(code);
     };
 
     // 1) KNOCK LOGIC
-    window.execJoin = async () => {
-        const name = document.getElementById('joiner-name').value;
-        const code = document.getElementById('join-code').value.toUpperCase();
-        if(!name || !code) return;
-
+    window.fireJoin = async () => {
+        const name = document.getElementById('j-user-name').value;
+        const code = document.getElementById('j-room-code').value.toUpperCase();
         const ref = doc(db, "rooms", code);
-        const snap = await getDoc(ref);
-        if(!snap.exists()) return alert("Error: Room Code not found.");
+        const s = await getDoc(ref);
+        
+        if(!s.exists()) return alert("Room Not Found!");
+        localStorage.setItem('pro_user_name', name);
+        
+        await updateDoc(ref, { pending: arrayUnion({id: myUID, name: name}) });
+        alert("Knock Request Sent! Wait for Admin to approve.");
 
-        localStorage.setItem('ae_name', name);
-        await updateDoc(ref, { pending: arrayUnion({id: userUID, name}) });
-        alert("Knock sent. Waiting for Admin approval...");
-
-        onSnapshot(ref, (s) => {
-            if(s.exists() && s.data().memberIDs.includes(userUID)) openChat(code);
+        onSnapshot(ref, (snap) => {
+            if(snap.exists() && snap.data().memberIDs.includes(myUID)) launchChat(code);
         });
     };
 
-    // CHAT ENGINE
-    function openChat(code) {
+    // CHAT SYSTEM
+    function launchChat(code) {
         activeRoom = code;
-        document.getElementById('home-screen').classList.remove('layer-show');
-        document.getElementById('chat-screen').classList.add('layer-show');
+        document.getElementById('screen-home').classList.remove('screen-active');
+        document.getElementById('screen-chat').classList.add('screen-active');
 
         onSnapshot(doc(db, "rooms", code), (s) => {
             if(!s.exists()) {
-                alert("This group has been permanently deleted by the admin.");
+                alert("This group has been deleted by the Admin.");
                 location.reload(); return;
             }
             const data = s.data();
-            const isAdmin = data.adminID === userUID;
+            const isAdmin = data.adminID === myUID;
 
-            document.getElementById('header-name').innerText = data.name;
-            document.getElementById('room-code-display').innerText = code;
-            document.getElementById('chat-pfp').src = data.pfp;
-            document.getElementById('info-large-pfp').src = data.pfp;
-            document.getElementById('edit-group-name').value = data.name;
+            // 13) Proper Headings
+            document.getElementById('header-group-name').innerText = data.title;
+            document.getElementById('header-code').innerText = code;
+            document.getElementById('header-pfp').src = data.pfp;
+            document.getElementById('profile-img-large').src = data.pfp;
+            document.getElementById('rename-input').value = data.title;
 
-            // 3) Admin View Toggle
-            document.getElementById('admin-controls').classList.toggle('hidden', !isAdmin);
+            // 3) Admin Check
+            document.getElementById('admin-tools').classList.toggle('hidden', !isAdmin);
             
-            // 4) Knock Strip
+            // 4) Admin Notification for Knocks
             if(isAdmin && data.pending.length > 0) {
-                document.getElementById('approval-strip').classList.remove('hidden');
-                renderPending(data.pending);
+                document.getElementById('admin-notif').classList.remove('hidden');
+                drawApprovals(data.pending);
             } else {
-                document.getElementById('approval-strip').classList.add('hidden');
+                document.getElementById('admin-notif').classList.add('hidden');
             }
 
-            renderMessages(data.messages);
-            renderMembers(data.members, data.adminID);
+            drawMessages(data.messages);
+            drawMembers(data.members, data.adminID);
         });
     }
 
-    // 10) MESSAGE ACTIONS
-    window.sendMsg = async () => {
-        const input = document.getElementById('msg-input');
-        const txt = input.value.trim();
-        if(!txt) return;
+    // 10) MESSAGE ENGINE
+    window.commitMessage = async () => {
+        const input = document.getElementById('main-input');
+        const text = input.value.trim();
+        if(!text) return;
 
         const ref = doc(db, "rooms", activeRoom);
         const snap = await getDoc(ref);
         let msgs = snap.data().messages;
 
-        if(isEditing) {
-            msgs = msgs.map(m => m.id === selectedMsgId ? {...m, text: txt, edited: true} : m);
-            isEditing = false;
+        if(editState) {
+            msgs = msgs.map(m => m.id === selectedMsg.id ? {...m, text, edited: true} : m);
+            editState = false;
         } else {
             msgs.push({
-                id: userUID + Date.now(),
-                uid: userUID,
-                sender: localStorage.getItem('ae_name'),
-                text: txt,
-                hiddenFor: []
+                id: myUID + Date.now(),
+                uid: myUID,
+                sender: localStorage.getItem('pro_user_name'),
+                text: text,
+                hideList: []
             });
         }
         await updateDoc(ref, { messages: msgs });
         input.value = "";
     };
 
-    function renderMessages(list) {
-        const box = document.getElementById('chat-box');
-        box.innerHTML = list.filter(m => !m.hiddenFor.includes(userUID)).map(m => `
-            <div class="bubble ${m.uid === userUID ? 'me' : 'them'}" 
-                 onmousedown="startHold('${m.id}', '${m.uid}')" onmouseup="endHold()" 
-                 ontouchstart="startHold('${m.id}', '${m.uid}')" ontouchend="endHold()">
-                ${m.uid !== userUID ? `<div class="text-[10px] font-bold text-emerald-400 mb-0.5">${m.sender}</div>` : ''}
+    function drawMessages(list) {
+        const container = document.getElementById('chat-stream');
+        container.innerHTML = list.filter(m => !m.hideList.includes(myUID)).map(m => `
+            <div class="msg-bubble ${m.uid === myUID ? 'msg-me' : 'msg-them'}" 
+                 onmousedown="longPressStart(${JSON.stringify(m).replace(/"/g, '&quot;')})" onmouseup="longPressEnd()" 
+                 ontouchstart="longPressStart(${JSON.stringify(m).replace(/"/g, '&quot;')})" ontouchend="longPressEnd()">
+                ${m.uid !== myUID ? `<div class="text-[11px] font-bold text-emerald-400 mb-0.5">${m.sender}</div>` : ''}
                 <div>${m.text}</div>
-                <div class="text-[9px] text-right opacity-50 mt-1">${m.edited ? 'Edited' : ''}</div>
+                <div class="text-[9px] text-right opacity-40 mt-1">${m.edited ? 'Edited' : ''}</div>
             </div>
         `).join('');
-        box.scrollTop = box.scrollHeight;
+        container.scrollTop = container.scrollHeight;
     }
 
-    // 10) LONG PRESS LOGIC
-    window.startHold = (id, owner) => {
-        selectedMsgId = id;
-        holdTimer = setTimeout(() => {
-            const menu = document.getElementById('context-menu');
-            const isMine = owner === userUID;
-            document.getElementById('ctx-edit').style.display = isMine ? 'block' : 'none';
-            document.getElementById('ctx-all').style.display = isMine ? 'block' : 'none';
+    // 10) LONG PRESS RECOGNIZER
+    window.longPressStart = (msgObj) => {
+        selectedMsg = msgObj;
+        touchTimer = setTimeout(() => {
+            const menu = document.getElementById('ctx-menu');
+            const isMine = msgObj.uid === myUID;
+            document.getElementById('ctx-edit-btn').style.display = isMine ? 'block' : 'none';
+            document.getElementById('ctx-all-btn').style.display = isMine ? 'block' : 'none';
             menu.style.display = 'block';
             menu.style.left = '50%'; menu.style.top = '50%'; menu.style.transform = 'translate(-50%, -50%)';
-        }, 600);
+        }, 500);
     };
-    window.endHold = () => clearTimeout(holdTimer);
+    window.longPressEnd = () => clearTimeout(touchTimer);
 
-    window.msgDelete = async (mode) => {
+    window.msgAction = async (type) => {
         const ref = doc(db, "rooms", activeRoom);
         const snap = await getDoc(ref);
         let msgs = snap.data().messages;
 
-        if(mode === 'all') {
-            msgs = msgs.filter(m => m.id !== selectedMsgId);
+        if(type === 'all') {
+            msgs = msgs.filter(m => m.id !== selectedMsg.id);
         } else {
-            msgs = msgs.map(m => m.id === selectedMsgId ? {...m, hiddenFor: [...m.hiddenFor, userUID]} : m);
+            msgs = msgs.map(m => m.id === selectedMsg.id ? {...m, hideList: [...m.hideList, myUID]} : m);
         }
         await updateDoc(ref, { messages: msgs });
-        document.getElementById('context-menu').style.display = 'none';
+        document.getElementById('ctx-menu').style.display = 'none';
     };
 
-    // ADMIN HUB
-    window.approveUser = async (user) => {
+    // ADMIN ACTIONS
+    window.approveEntry = async (user) => {
         await updateDoc(doc(db, "rooms", activeRoom), {
             pending: arrayRemove(user),
             members: arrayUnion(user),
@@ -361,63 +360,54 @@
         });
     };
 
-    window.updatePfp = async (url) => {
-        await updateDoc(doc(db, "rooms", activeRoom), { pfp: url });
+    window.doRename = async () => {
+        const val = document.getElementById('rename-input').value;
+        await updateDoc(doc(db, "rooms", activeRoom), { title: val });
     };
 
-    window.renameGroup = async () => {
-        const val = document.getElementById('edit-group-name').value;
-        await updateDoc(doc(db, "rooms", activeRoom), { name: val });
+    window.doPfpChange = async (url) => {
+        if(url) await updateDoc(doc(db, "rooms", activeRoom), { pfp: url });
     };
 
-    window.deleteGroup = async () => {
-        if(confirm("DANGER: This action is permanent and deletes the group for all members.")) {
+    window.doDeleteGroup = async () => {
+        if(confirm("Confirm: Delete this group for everyone? This cannot be undone.")) {
             await deleteDoc(doc(db, "rooms", activeRoom));
         }
     };
 
-    window.leaveGroup = async () => {
+    // 7) LEAVE GROUP
+    window.doLeave = async () => {
         if(confirm("Leave this group?")) {
-            const name = localStorage.getItem('ae_name');
+            const name = localStorage.getItem('pro_user_name');
             await updateDoc(doc(db, "rooms", activeRoom), {
-                members: arrayRemove({id: userUID, name}),
-                memberIDs: arrayRemove(userUID)
+                members: arrayRemove({id: myUID, name}),
+                memberIDs: arrayRemove(myUID)
             });
             location.reload();
         }
     };
 
-    // UI HELPERS
-    function renderPending(list) {
-        document.getElementById('knock-roster').innerHTML = list.map(u => `
-            <div class="flex items-center justify-between bg-white/5 p-3 rounded-lg">
-                <span class="font-bold">${u.name}</span>
-                <button onclick='approveUser(${JSON.stringify(u)})' class="bg-emerald-600 px-4 py-1.5 rounded-lg text-xs font-bold">ACCEPT</button>
+    // INTERFACE HELPERS
+    function drawApprovals(list) {
+        document.getElementById('approval-list-ui').innerHTML = list.map(u => `
+            <div class="flex items-center justify-between bg-white/5 p-3 rounded-xl">
+                <span class="font-bold text-sm">${u.name}</span>
+                <button onclick='approveEntry(${JSON.stringify(u)})' class="bg-emerald-600 px-4 py-1.5 rounded-lg text-[10px] font-bold">ACCEPT</button>
             </div>
         `).join('');
     }
 
-    function renderMembers(list, adminID) {
-        document.getElementById('member-list').innerHTML = list.map(m => `
-            <div class="flex items-center gap-3 p-3 bg-white/5 rounded-lg">
+    function drawMembers(list, adminID) {
+        document.getElementById('member-list-ui').innerHTML = list.map(m => `
+            <div class="flex items-center gap-4 p-3 bg-white/5 rounded-xl">
                 <img src="https://ui-avatars.com/api/?name=${m.name}" class="w-10 h-10 rounded-full">
-                <div class="flex-1 font-bold">${m.name}</div>
-                ${m.id === adminID ? '<span class="text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded">ADMIN</span>' : ''}
+                <div class="flex-1 font-bold text-sm">${m.name}</div>
+                ${m.id === adminID ? '<span class="text-[9px] text-emerald-500 font-bold border border-emerald-500/30 px-2 py-0.5 rounded">ADMIN</span>' : ''}
             </div>
         `).join('');
     }
 
-    window.showInfo = () => document.getElementById('info-screen').classList.add('layer-show');
-    window.hideInfo = () => document.getElementById('info-screen').classList.remove('layer-show');
-    window.toggleApprovalPopup = (show) => document.getElementById('approval-modal').classList.toggle('hidden', !show);
-    window.zoomPfp = () => { document.getElementById('zoom-img').src = document.getElementById('chat-pfp').src; document.getElementById('pfp-zoom').style.display = 'flex'; };
-    window.setEditMode = () => { 
-        isEditing = true; 
-        document.getElementById('context-menu').style.display = 'none'; 
-        alert("Edit mode active. Change the text and press Send."); 
-    };
-
-    document.addEventListener('click', e => { if(!e.target.closest('#context-menu')) document.getElementById('context-menu').style.display = 'none'; });
-</script>
-</body>
-</html>
+    window.openProfile = () => document.getElementById('screen-profile').classList.add('screen-active');
+    window.closeProfile = () => document.getElementById('screen-profile').classList.remove('screen-active');
+    window.showApprovalModal = () => document.getElementById('modal-approval').classList.remove('hidden');
+    window.triggerEdit = () => { editState = true; document.getElementById('ctx-menu').style.display='none'; alert("Editing Active: Update message text and press send.
