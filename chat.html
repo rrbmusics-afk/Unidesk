@@ -3,175 +3,146 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Aether | Professional Student Lounge</title>
+    <title>Aether Pro | Secure Student Network</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root { 
-            --accent: #007AFF; 
-            --wa-green: #25D366; 
-            --bg-main: #0b141a; 
-            --bubble-me: #005c4b; 
-            --bubble-them: #202c33; 
-            --border: rgba(255,255,255,0.1);
-            --text-primary: #e9edef;
-            --text-secondary: #8696a0;
+            --bg-dark: #0b141a; --bg-nav: #202c33; --bg-input: #2a3942;
+            --wa-green: #25d366; --wa-blue: #34b7f1; --wa-bubble-me: #005c4b;
+            --wa-bubble-them: #202c33; --text-primary: #e9edef; --text-secondary: #8696a0;
         }
         
-        html, body { 
-            background: var(--bg-main); color: var(--text-primary); 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
-            margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
-            -webkit-font-smoothing: antialiased;
-        }
-
-        .view-layer { position: fixed; inset: 0; display: none; flex-direction: column; z-index: 10; background: var(--bg-main); }
+        body { background: var(--bg-dark); color: var(--text-primary); font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; overflow: hidden; height: 100vh; }
         
-        /* Dashboard Styling */
-        #home-view { display: flex; z-index: 100; overflow-y: auto; padding: 24px; padding-top: 60px; }
-        .glass-panel { background: #111b21; border-radius: 16px; padding: 24px; border: 1px solid var(--border); box-shadow: 0 4px 20px rgba(0,0,0,0.4); }
+        /* Layout */
+        .view-layer { position: fixed; inset: 0; display: none; flex-direction: column; background: var(--bg-dark); }
+        .active-view { display: flex; }
         
-        input { background: #2a3942 !important; border: 1px solid transparent !important; border-radius: 12px !important; }
-        input:focus { border-color: var(--accent) !important; outline: none; }
-
-        /* Professional Header & Sub-Header */
-        .nav-bar { 
-            height: 60px; background: #202c33; display: flex; align-items: center; 
-            padding: 0 16px; border-bottom: 1px solid var(--border); z-index: 100; cursor: pointer;
-        }
-        .sub-header {
-            height: 32px; background: #111b21; display: flex; align-items: center; 
-            justify-content: center; border-bottom: 1px solid var(--border);
-        }
-
-        /* Chat Layout */
-        #chatBox { 
-            flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; 
-            gap: 4px; background-color: #0b141a; 
-            background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); 
-            background-blend-mode: overlay; background-size: 400px;
-        }
+        /* Professional Alignment & Spacing */
+        .header { height: 64px; background: var(--bg-nav); display: flex; align-items: center; padding: 0 16px; gap: 12px; z-index: 50; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .chat-area { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 6px; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); background-blend-mode: overlay; background-size: 400px; }
         
-        .bubble { 
-            max-width: 85%; padding: 6px 10px 8px 10px; border-radius: 8px; 
-            font-size: 14.5px; line-height: 1.45; position: relative; 
-            box-shadow: 0 1px 0.5px rgba(0,0,0,0.15);
-        }
-        .bubble-me { background: var(--bubble-me); align-self: flex-end; border-top-right-radius: 0; margin-left: 40px; }
-        .bubble-them { background: var(--bubble-them); align-self: flex-start; border-top-left-radius: 0; margin-right: 40px; }
+        /* WhatsApp Bubble Physics */
+        .bubble { max-width: 85%; padding: 8px 12px; border-radius: 8px; font-size: 14.5px; position: relative; box-shadow: 0 1px 0.5px rgba(0,0,0,0.2); line-height: 1.4; }
+        .bubble-me { background: var(--wa-bubble-me); align-self: flex-end; border-top-right-radius: 0; }
+        .bubble-them { background: var(--wa-bubble-them); align-self: flex-start; border-top-left-radius: 0; }
+        .bubble-name { font-size: 12px; font-weight: 700; color: var(--wa-blue); margin-bottom: 2px; }
+
+        /* Request Notification Bar */
+        .admin-alert { background: #ff9800; color: #000; padding: 8px 16px; font-weight: 800; font-size: 12px; text-transform: uppercase; cursor: pointer; display: flex; justify-content: space-between; align-items: center; letter-spacing: 0.5px; }
+
+        /* Form Styling */
+        input { background: var(--bg-input) !important; border: 1px solid transparent !important; color: white !important; transition: 0.2s; }
+        input:focus { border-color: var(--wa-blue) !important; outline: none; }
         
-        .sender-name { font-size: 11.5px; font-weight: 700; color: #34b7f1; margin-bottom: 2px; }
-
-        .footer { 
-            background: #202c33; padding: 8px 12px; display: flex; align-items: center; gap: 8px; 
-            padding-bottom: calc(8px + env(safe-area-inset-bottom));
-        }
-        .input-pill { background: #2a3942; border-radius: 24px; flex: 1; padding: 0 16px; height: 42px; display: flex; align-items: center; }
-        .send-btn { background: var(--wa-green); color: #0b141a; width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
-
-        .room-card { 
-            background: #111b21; border-bottom: 1px solid var(--border); padding: 12px 0; 
-            display: flex; align-items: center; gap: 14px; cursor: pointer;
-        }
-        .room-icon { width: 48px; height: 48px; border-radius: 50%; background: #6b7280; display: flex; align-items: center; justify-content: center; font-weight: 700; color: white; }
+        .pfp-circle { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; background: #6b7280; display: flex; align-items: center; justify-content: center; font-weight: bold; overflow: hidden; }
     </style>
 </head>
 <body>
 
-    <!-- 1. DASHBOARD VIEW -->
-    <div id="home-view" class="view-layer">
-        <div class="w-full max-w-md mx-auto space-y-6">
-            <header class="text-center mb-8">
-                <h1 class="text-4xl font-extrabold tracking-tighter text-blue-500 italic">AETHER</h1>
-                <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Personal Dashboard</p>
-            </header>
-            
-            <div class="glass-panel space-y-4">
-                <input type="text" id="userName" placeholder="Display Name" class="w-full p-4 font-semibold text-white">
-                <div class="grid grid-cols-2 gap-3">
-                    <button onclick="handleAction('create')" class="bg-white/5 p-4 rounded-xl font-bold text-xs uppercase">New Room</button>
-                    <button onclick="handleAction('join')" class="bg-blue-600 p-4 rounded-xl font-bold text-xs uppercase">Join Code</button>
-                </div>
+    <!-- 1. DASHBOARD / LOGIN -->
+    <div id="view-login" class="view-layer active-view p-6 overflow-y-auto">
+        <div class="max-w-md mx-auto w-full space-y-8 py-10">
+            <div class="text-center">
+                <h1 class="text-5xl font-black text-blue-500 italic">AETHER</h1>
+                <p class="text-[10px] uppercase tracking-[0.3em] font-bold text-gray-500 mt-2">Enterprise Student Hub</p>
+            </div>
+
+            <div class="bg-[#111b21] p-6 rounded-2xl border border-white/5 space-y-4">
+                <input type="text" id="input-username" placeholder="Your Full Name" class="w-full p-4 rounded-xl font-bold">
                 
-                <div id="extra-fields" class="hidden space-y-3 pt-4 border-t border-white/10">
-                    <input type="text" id="groupName" placeholder="Group Name" class="hidden w-full p-4 font-bold text-white">
-                    <input type="text" id="roomCode" placeholder="Enter 6-Char Code" class="hidden w-full p-4 font-mono font-bold text-blue-400 text-center uppercase tracking-widest">
-                    <button id="finalSubmit" class="w-full bg-green-600 p-4 rounded-xl font-black text-xs uppercase text-[#0b141a]">Access Lounge</button>
+                <div class="flex border-b border-white/10 mb-4">
+                    <button id="tab-create-btn" onclick="toggleTab('create')" class="flex-1 py-3 font-bold text-xs uppercase border-b-2 border-blue-500">Create</button>
+                    <button id="tab-join-btn" onclick="toggleTab('join')" class="flex-1 py-3 font-bold text-xs uppercase text-gray-500">Join</button>
+                </div>
+
+                <div id="form-create" class="space-y-4">
+                    <input type="text" id="input-group-name" placeholder="New Group Name" class="w-full p-4 rounded-xl text-sm">
+                    <button onclick="handleCreate()" class="w-full bg-blue-600 p-4 rounded-xl font-black text-xs uppercase shadow-xl">Launch Organization</button>
+                </div>
+
+                <div id="form-join" class="hidden space-y-4">
+                    <input type="text" id="input-join-code" placeholder="Enter 6-Digit Access Code" class="w-full p-4 rounded-xl text-center font-mono text-blue-400 tracking-widest uppercase">
+                    <button onclick="handleJoin()" class="w-full bg-green-600 p-4 rounded-xl font-black text-xs uppercase text-black">Request Entry</button>
                 </div>
             </div>
 
-            <div class="pt-4">
-                <h3 class="text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-2 px-1">Your Recents</h3>
-                <div id="my-rooms-list" class="divide-y divide-white/5"></div>
+            <div>
+                <h3 class="text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-4">Member Of</h3>
+                <div id="list-my-groups" class="space-y-3"></div>
             </div>
         </div>
     </div>
 
-    <!-- 2. MAIN CHAT WORKSPACE -->
-    <div id="main-workspace" class="view-layer">
-        <header class="nav-bar" onclick="openInfo()">
-            <div class="flex items-center gap-3">
-                <div id="header-initial" class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center font-bold text-white">?</div>
-                <div class="flex flex-col">
-                    <span id="header-title" class="text-[15px] font-bold leading-tight">...</span>
-                    <span id="sub-count" class="text-[11px] text-[#8696a0]">...</span>
-                </div>
-            </div>
-            <button id="admin-req-pill" onclick="event.stopPropagation(); toggleReqs(true)" class="hidden ml-auto bg-orange-500 text-black px-3 py-1 rounded-full text-[10px] font-bold">REQUESTS</button>
-        </header>
-        
-        <!-- NEW ROOM CODE SUB-HEADER -->
-        <div class="sub-header">
-            <span class="text-[10px] text-gray-500 font-bold uppercase tracking-widest mr-2">Room Code:</span>
-            <span id="header-code-display" class="text-[11px] font-mono font-black text-blue-400 tracking-widest">------</span>
+    <!-- 2. CHAT WORKSPACE -->
+    <div id="view-chat" class="view-layer">
+        <div id="admin-notif-bar" onclick="showApprovals()" class="admin-alert hidden">
+            <span>PENDING ACCESS REQUESTS</span>
+            <span id="notif-count" class="bg-black text-white px-2 py-0.5 rounded text-[10px]">0</span>
         </div>
 
-        <main id="chatBox"></main>
-
-        <footer class="footer">
-            <div class="input-pill">
-                <input type="text" id="msgInput" placeholder="Message" class="w-full bg-transparent border-none text-white text-[15px] p-0 focus:ring-0">
+        <div class="header" onclick="openGroupInfo()">
+            <div id="group-pfp" class="pfp-circle text-white">?</div>
+            <div class="flex-1">
+                <div id="display-group-name" class="font-bold text-[16px] leading-tight">...</div>
+                <div id="display-group-status" class="text-[12px] text-[#8696a0]">tap for info</div>
             </div>
-            <button onclick="sendMsg()" class="send-btn">
-                <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M1.101 21.757L23.8 12.028 1.101 2.3l.011 7.912 13.623 1.816-13.623 1.817-.011 7.912z"></path></svg>
+            <div class="text-[11px] font-mono bg-white/5 px-2 py-1 rounded text-blue-400" id="display-code">------</div>
+        </div>
+
+        <div id="chat-box" class="chat-area"></div>
+
+        <div class="p-2 bg-[#202c33] flex items-center gap-2">
+            <div class="flex-1 bg-[#2a3942] rounded-full px-4 py-2">
+                <input type="text" id="msg-input" placeholder="Type a message" class="bg-transparent w-full text-sm border-none focus:ring-0 p-0">
+            </div>
+            <button onclick="sendMessage()" class="w-10 h-10 bg-[#25d366] rounded-full flex items-center justify-center text-black">
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M1.101 21.757L23.8 12.028 1.101 2.3l.011 7.912 13.623 1.816-13.623 1.817-.011 7.912z"></path></svg>
             </button>
-        </footer>
+        </div>
     </div>
 
-    <!-- INFO SCREEN -->
-    <div id="info-overlay" class="view-layer" style="background: #0b141a;">
-        <div class="p-4 flex items-center bg-[#202c33] gap-4">
-            <button onclick="document.getElementById('info-overlay').style.display='none'" class="text-blue-500">
-                <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"></path></svg>
-            </button>
-            <span class="font-bold text-lg">Group Info</span>
+    <!-- 3. ADMIN / INFO MODAL -->
+    <div id="modal-info" class="view-layer" style="background: #0b141a;">
+        <div class="header">
+            <button onclick="closeInfo()" class="text-blue-500 font-bold">Close</button>
+            <span class="flex-1 text-center font-bold">Group Settings</span>
+            <div class="w-10"></div>
         </div>
-        <div class="flex-1 overflow-y-auto px-6 py-8">
-            <div class="flex flex-col items-center mb-8">
-                <div id="info-initial" class="w-24 h-24 bg-blue-600 rounded-full flex items-center justify-center text-3xl font-bold shadow-xl mb-4">?</div>
-                <h2 id="info-title" class="text-2xl font-bold mb-1"></h2>
+        <div class="p-6 space-y-8 overflow-y-auto">
+            <div class="flex flex-col items-center">
+                <div id="info-pfp" class="w-32 h-32 rounded-full bg-gray-700 flex items-center justify-center text-5xl font-bold mb-4 overflow-hidden border-4 border-white/5">?</div>
                 
-                <!-- NEW ROOM CODE IN INFO -->
-                <div class="bg-blue-500/10 border border-blue-500/20 px-4 py-2 rounded-lg mt-2 text-center">
-                    <p class="text-[9px] text-blue-400 font-bold uppercase tracking-widest mb-1">Invite Code</p>
-                    <p id="info-code-display" class="text-lg font-mono font-black text-white tracking-[0.3em]">------</p>
+                <div id="admin-controls" class="hidden w-full space-y-4">
+                    <div class="text-center">
+                        <label class="text-[10px] font-bold text-gray-500 uppercase">Change Group Icon (URL)</label>
+                        <input type="text" id="edit-pfp-url" onchange="updatePFP(this.value)" class="w-full mt-1 p-3 rounded-lg text-xs" placeholder="https://image-url.com">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-gray-500 uppercase">Rename Group</label>
+                        <div class="flex gap-2">
+                            <input type="text" id="edit-group-name" class="flex-1 p-3 rounded-lg text-sm">
+                            <button onclick="renameGroup()" class="bg-blue-600 px-4 rounded-lg font-bold text-xs">SAVE</button>
+                        </div>
+                    </div>
                 </div>
             </div>
-            
-            <h3 class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">Participants</h3>
-            <div id="members-list" class="space-y-3"></div>
-        </div>
-        <div class="p-6 space-y-3">
-            <button id="del-btn" onclick="deleteRoom()" class="hidden w-full bg-red-500/10 text-red-500 p-4 rounded-xl font-bold text-sm">Terminate Lounge</button>
-            <button id="leave-btn" onclick="leaveRoom()" class="hidden w-full bg-white/5 p-4 rounded-xl font-bold text-sm">Leave Lounge</button>
+
+            <div class="space-y-4">
+                <h3 class="text-xs font-bold text-gray-500 uppercase">Participants</h3>
+                <div id="list-participants" class="space-y-2"></div>
+            </div>
+
+            <button id="btn-delete-group" onclick="deleteGroup()" class="hidden w-full py-4 bg-red-600/10 text-red-500 rounded-xl font-bold text-sm">Terminate Group Forever</button>
         </div>
     </div>
 
-    <!-- REQUESTS -->
-    <div id="req-overlay" class="fixed inset-0 bg-black/95 z-[2000] hidden flex-col justify-center p-6">
-        <div class="bg-[#202c33] rounded-3xl overflow-hidden max-w-sm mx-auto w-full">
-            <div class="p-4 border-b border-white/5 font-bold text-center text-xs uppercase tracking-widest">Pending Access</div>
-            <div id="req-list" class="p-4 space-y-2"></div>
-            <button onclick="toggleReqs(false)" class="w-full p-4 text-xs font-bold text-gray-500 uppercase">Dismiss</button>
+    <!-- 4. APPROVAL POPUP -->
+    <div id="modal-approvals" class="fixed inset-0 bg-black/90 z-[100] hidden flex-col items-center justify-center p-6">
+        <div class="bg-[#202c33] w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl">
+            <div class="p-4 bg-orange-500 text-black font-black text-center text-xs uppercase">Entry Requests</div>
+            <div id="list-approvals" class="max-h-80 overflow-y-auto p-4 space-y-3"></div>
+            <button onclick="closeApprovals()" class="w-full p-4 font-bold text-gray-500 text-xs border-t border-white/5">CLOSE</button>
         </div>
     </div>
 
@@ -182,160 +153,191 @@
         const firebaseConfig = { apiKey: "AIzaSyDbfmd0zmv_mFV0CG2OrhKPPeU3zPYGOBg", authDomain: "unidesk-a70ac.firebaseapp.com", projectId: "unidesk-a70ac" };
         const db = getFirestore(initializeApp(firebaseConfig));
 
-        let myId = localStorage.getItem('ae_id') || "USR-" + Math.random().toString(36).substr(2, 5).toUpperCase();
+        // State & Persistence
+        let myId = localStorage.getItem('ae_id') || "U"+Date.now();
         localStorage.setItem('ae_id', myId);
+        let myName = localStorage.getItem('ae_name') || "";
+        let currentGroup = null;
+        let myJoinedGroups = JSON.parse(localStorage.getItem('ae_my_groups') || "[]");
 
-        let myRooms = JSON.parse(localStorage.getItem('ae_rooms') || "[]");
-        let currentUserName = localStorage.getItem('ae_name') || "";
-        document.getElementById('userName').value = currentUserName;
+        // UI Tabs
+        window.toggleTab = (tab) => {
+            document.getElementById('form-create').classList.toggle('hidden', tab !== 'create');
+            document.getElementById('form-join').classList.toggle('hidden', tab !== 'join');
+            document.getElementById('tab-create-btn').className = `flex-1 py-3 font-bold text-xs uppercase ${tab === 'create' ? 'border-b-2 border-blue-500 text-white' : 'text-gray-500'}`;
+            document.getElementById('tab-join-btn').className = `flex-1 py-3 font-bold text-xs uppercase ${tab === 'join' ? 'border-b-2 border-blue-500 text-white' : 'text-gray-500'}`;
+        };
 
-        function renderMyRooms() {
-            const listDiv = document.getElementById('my-rooms-list');
-            listDiv.innerHTML = '';
-            myRooms.forEach(code => {
+        // Create Real Group
+        window.handleCreate = async () => {
+            const name = document.getElementById('input-username').value.trim();
+            const gName = document.getElementById('input-group-name').value.trim();
+            if(!name || !gName) return alert("Fill all fields");
+            
+            const code = Math.random().toString(36).substring(2,8).toUpperCase();
+            const groupData = {
+                name: gName, code: code, admin: myId, pfp: "",
+                members: [{id: myId, name: name}], memberIds: [myId],
+                pending: [], messages: []
+            };
+            
+            localStorage.setItem('ae_name', name);
+            await setDoc(doc(db, "rooms", code), groupData);
+            saveGroupLocally(code);
+            enterChat(code);
+        };
+
+        // Join Real Group
+        window.handleJoin = async () => {
+            const name = document.getElementById('input-username').value.trim();
+            const code = document.getElementById('input-join-code').value.trim().toUpperCase();
+            if(!name || !code) return alert("Enter name and code");
+
+            const ref = doc(db, "rooms", code);
+            const snap = await getDoc(ref);
+            if(!snap.exists()) return alert("Group not found");
+
+            localStorage.setItem('ae_name', name);
+            await updateDoc(ref, { pending: arrayUnion({ id: myId, name: name }) });
+            alert("Request sent to Admin. You will enter automatically once approved.");
+            
+            // Listen for approval
+            onSnapshot(ref, (doc) => {
+                if(doc.exists() && doc.data().memberIds.includes(myId)) {
+                    saveGroupLocally(code);
+                    enterChat(code);
+                }
+            });
+        };
+
+        function saveGroupLocally(code) {
+            if(!myJoinedGroups.includes(code)) {
+                myJoinedGroups.push(code);
+                localStorage.setItem('ae_my_groups', JSON.stringify(myJoinedGroups));
+            }
+        }
+
+        // Load Personal Group List
+        function loadDash() {
+            const container = document.getElementById('list-my-groups');
+            container.innerHTML = "";
+            myJoinedGroups.forEach(code => {
                 onSnapshot(doc(db, "rooms", code), (s) => {
-                    if(!s.exists()) {
-                        myRooms = myRooms.filter(c => c !== code);
-                        localStorage.setItem('ae_rooms', JSON.stringify(myRooms));
-                        return renderMyRooms();
-                    }
+                    if(!s.exists()) return;
                     const data = s.data();
-                    let el = document.getElementById(`card-${code}`) || document.createElement('div');
-                    el.id = `card-${code}`;
-                    el.className = 'room-card';
-                    el.onclick = () => { if(currentUserName) enterRoom(code); else alert("Enter your name"); };
-                    el.innerHTML = `
-                        <div class="room-icon">${data.name[0]}</div>
-                        <div class="flex-1">
-                            <div class="text-[16px] font-bold text-white">${data.name}</div>
-                            <div class="text-[13px] text-gray-500">${data.memberIds.length} members</div>
-                        </div>
+                    let div = document.getElementById('item-'+code) || document.createElement('div');
+                    div.id = 'item-'+code;
+                    div.className = "flex items-center gap-4 bg-white/5 p-4 rounded-xl border border-white/5 cursor-pointer";
+                    div.onclick = () => enterChat(code);
+                    div.innerHTML = `
+                        <div class="pfp-circle">${data.pfp ? `<img src="${data.pfp}">` : data.name[0]}</div>
+                        <div class="flex-1"><div class="font-bold">${data.name}</div><div class="text-[10px] text-gray-500 uppercase tracking-tighter">${code}</div></div>
                     `;
-                    listDiv.appendChild(el);
+                    container.appendChild(div);
                 });
             });
         }
-        renderMyRooms();
+        loadDash();
 
-        window.handleAction = (mode) => {
-            currentUserName = document.getElementById('userName').value.trim();
-            if(!currentUserName) return alert("Enter name first");
-            localStorage.setItem('ae_name', currentUserName);
-            document.getElementById('extra-fields').classList.remove('hidden');
-            if(mode === 'create') {
-                document.getElementById('groupName').classList.remove('hidden');
-                document.getElementById('roomCode').classList.add('hidden');
-                document.getElementById('finalSubmit').onclick = createRoom;
-            } else {
-                document.getElementById('roomCode').classList.remove('hidden');
-                document.getElementById('groupName').classList.add('hidden');
-                document.getElementById('finalSubmit').onclick = joinRoom;
-            }
-        };
-
-        async function createRoom() {
-            const gName = document.getElementById('groupName').value.trim() || "New Lounge";
-            const code = Math.random().toString(36).substr(2, 6).toUpperCase();
-            await setDoc(doc(db, "rooms", code), {
-                name: gName, admin: myId, members: [{id: myId, name: currentUserName}], memberIds: [myId], pending: [], msgs: []
-            });
-            saveRoomLocal(code);
-            enterRoom(code);
-        }
-
-        async function joinRoom() {
-            const code = document.getElementById('roomCode').value.trim().toUpperCase();
-            const ref = doc(db, "rooms", code);
-            const snap = await getDoc(ref);
-            if(!snap.exists()) return alert("Invalid room code");
-            if(snap.data().memberIds.includes(myId)) return enterRoom(code);
-            await updateDoc(ref, { pending: arrayUnion({ id: myId, name: currentUserName }) });
-            alert("Request sent. Waiting for admin.");
-            onSnapshot(ref, (s) => { if(s.exists() && s.data().memberIds.includes(myId)) { saveRoomLocal(code); enterRoom(code); } });
-        }
-
-        function saveRoomLocal(code) {
-            if(!myRooms.includes(code)) {
-                myRooms.push(code);
-                localStorage.setItem('ae_rooms', JSON.stringify(myRooms));
-            }
-        }
-
-        function enterRoom(code) {
-            document.getElementById('home-view').style.display = 'none';
-            document.getElementById('main-workspace').style.display = 'flex';
-            document.getElementById('header-code-display').innerText = code;
-            document.getElementById('info-code-display').innerText = code;
+        // Chat View & RBAC
+        function enterChat(code) {
+            currentGroup = code;
+            document.querySelectorAll('.view-layer').forEach(v => v.classList.remove('active-view'));
+            document.getElementById('view-chat').classList.add('active-view');
             
             onSnapshot(doc(db, "rooms", code), (s) => {
-                if(!s.exists()) { location.reload(); return; }
+                if(!s.exists()) return location.reload();
                 const data = s.data();
                 const isAdmin = data.admin === myId;
-                
-                document.getElementById('header-title').innerText = data.name;
-                document.getElementById('header-initial').innerText = data.name[0];
-                document.getElementById('sub-count').innerText = `${data.memberIds.length} members`;
-                document.getElementById('info-title').innerText = data.name;
-                document.getElementById('info-initial').innerText = data.name[0];
 
-                document.getElementById('del-btn').style.display = isAdmin ? 'block' : 'none';
-                document.getElementById('leave-btn').style.display = isAdmin ? 'none' : 'block';
+                // UI Updates
+                document.getElementById('display-group-name').innerText = data.name;
+                document.getElementById('display-code').innerText = code;
+                document.getElementById('group-pfp').innerHTML = data.pfp ? `<img src="${data.pfp}">` : data.name[0];
+                document.getElementById('edit-group-name').value = data.name;
 
-                if(isAdmin) {
-                    const p = data.pending || [];
-                    document.getElementById('admin-req-pill').style.display = p.length > 0 ? 'block' : 'none';
-                    document.getElementById('req-list').innerHTML = p.map(u => `
-                        <div class="flex justify-between items-center p-3 bg-white/5 rounded-xl">
-                            <span class="text-sm font-bold">${u.name}</span>
-                            <button onclick="approve('${code}','${u.id}','${u.name}')" class="bg-blue-600 px-3 py-1 rounded-lg text-[10px] font-black">ACCEPT</button>
-                        </div>
-                    `).join('');
+                // Admin Header Logic (Requirement 4)
+                if(isAdmin && data.pending?.length > 0) {
+                    document.getElementById('admin-notif-bar').classList.remove('hidden');
+                    document.getElementById('notif-count').innerText = data.pending.length;
+                    renderApprovals(data.pending);
+                } else {
+                    document.getElementById('admin-notif-bar').classList.add('hidden');
                 }
 
-                document.getElementById('members-list').innerHTML = data.members.map(m => `
-                    <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-[10px] font-bold">${m.name[0]}</div>
-                        <span class="text-sm font-semibold">${m.name} ${m.id === data.admin ? '👑' : ''}</span>
-                    </div>
-                `).join('');
-
-                const box = document.getElementById('chatBox');
-                box.innerHTML = (data.msgs || []).map(m => `
+                // Chat Rendering
+                const box = document.getElementById('chat-box');
+                box.innerHTML = data.messages.map(m => `
                     <div class="bubble ${m.uid === myId ? 'bubble-me' : 'bubble-them'}">
-                        ${m.uid !== myId ? `<div class="sender-name">${m.uName}</div>` : ''}
-                        <div>${m.text}</div>
+                        ${m.uid !== myId ? `<div class="bubble-name">${m.uName}</div>` : ''}
+                        ${m.text}
                     </div>
                 `).join('');
                 box.scrollTop = box.scrollHeight;
+
+                // Member List
+                document.getElementById('list-participants').innerHTML = data.members.map(m => `
+                    <div class="flex items-center gap-3 p-3 bg-white/5 rounded-xl">
+                        <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center font-bold text-xs">${m.name[0]}</div>
+                        <span class="text-sm font-semibold">${m.name} ${m.id === data.admin ? '<span class="text-[10px] text-blue-400 ml-2">ADMIN</span>' : ''}</span>
+                    </div>
+                `).join('');
+
+                // Toggle Admin UI (Requirement 3)
+                document.getElementById('admin-controls').classList.toggle('hidden', !isAdmin);
+                document.getElementById('btn-delete-group').classList.toggle('hidden', !isAdmin);
             });
-
-            window.sendMsg = async () => {
-                const inp = document.getElementById('msgInput');
-                if(!inp.value.trim()) return;
-                await updateDoc(doc(db, "rooms", code), { msgs: arrayUnion({ uid: myId, uName: currentUserName, text: inp.value }) });
-                inp.value = "";
-            };
-
-            window.approve = async (c, id, name) => {
-                await updateDoc(doc(db, "rooms", c), { pending: arrayRemove({ id, name }), members: arrayUnion({ id, name }), memberIds: arrayUnion(id) });
-            };
-
-            window.deleteRoom = async () => { if(confirm("Delete room?")) await deleteDoc(doc(db, "rooms", code)); };
-            window.leaveRoom = async () => {
-                if(confirm("Leave group?")) {
-                    const snap = await getDoc(doc(db, "rooms", code));
-                    const me = snap.data().members.find(m => m.id === myId);
-                    await updateDoc(doc(db, "rooms", code), { members: arrayRemove(me), memberIds: arrayRemove(myId) });
-                    myRooms = myRooms.filter(c => c !== code);
-                    localStorage.setItem('ae_rooms', JSON.stringify(myRooms));
-                    location.reload();
-                }
-            };
         }
 
-        window.openInfo = () => document.getElementById('info-overlay').style.display = 'flex';
-        window.toggleReqs = (show) => document.getElementById('req-overlay').style.display = show ? 'flex' : 'none';
-        document.getElementById('msgInput').onkeypress = (e) => { if(e.key === 'Enter') sendMsg(); };
+        // Admin Core Actions
+        window.approveUser = async (user) => {
+            await updateDoc(doc(db, "rooms", currentGroup), {
+                pending: arrayRemove(user),
+                members: arrayUnion(user),
+                memberIds: arrayUnion(user.id)
+            });
+        };
+
+        window.renameGroup = async () => {
+            const newName = document.getElementById('edit-group-name').value.trim();
+            if(newName) await updateDoc(doc(db, "rooms", currentGroup), { name: newName });
+        };
+
+        window.updatePFP = async (url) => {
+            await updateDoc(doc(db, "rooms", currentGroup), { pfp: url });
+        };
+
+        window.deleteGroup = async () => {
+            if(confirm("DANGER: This will delete everything. Proceed?")) {
+                await deleteDoc(doc(db, "rooms", currentGroup));
+            }
+        };
+
+        window.sendMessage = async () => {
+            const input = document.getElementById('msg-input');
+            const name = localStorage.getItem('ae_name');
+            if(!input.value.trim()) return;
+            await updateDoc(doc(db, "rooms", currentGroup), {
+                messages: arrayUnion({ uid: myId, uName: name, text: input.value.trim() })
+            });
+            input.value = "";
+        };
+
+        // UI Helpers
+        function renderApprovals(list) {
+            document.getElementById('list-approvals').innerHTML = list.map(u => `
+                <div class="flex items-center justify-between bg-white/5 p-3 rounded-xl">
+                    <span class="font-bold text-sm">${u.name}</span>
+                    <button onclick='approveUser(${JSON.stringify(u)})' class="bg-blue-600 px-4 py-1.5 rounded-lg text-[10px] font-black">ACCEPT</button>
+                </div>
+            `).join('');
+        }
+
+        window.showApprovals = () => document.getElementById('modal-approvals').classList.remove('hidden');
+        window.closeApprovals = () => document.getElementById('modal-approvals').classList.add('hidden');
+        window.openGroupInfo = () => document.getElementById('modal-info').classList.add('active-view');
+        window.closeInfo = () => document.getElementById('modal-info').classList.remove('active-view');
+        document.getElementById('msg-input').onkeypress = (e) => { if(e.key === 'Enter') sendMessage(); };
     </script>
 </body>
 </html>
