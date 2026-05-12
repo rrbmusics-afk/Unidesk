@@ -28,11 +28,15 @@
         .action-btn { background: var(--wa-green); color: #0b141a; width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; shrink: 0; border: none; }
         
         .overlay { position: fixed; inset: 0; background: #0b141a; z-index: 5000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
+        #admin-panel { display: none; background: #f59e0b; color: black; font-size: 10px; padding: 4px 10px; border-radius: 6px; font-weight: bold; cursor: pointer; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
         .input-field { width: 100%; background: #2a3942; padding: 15px; border-radius: 12px; text-align: center; outline: none; border: 1px solid rgba(255,255,255,0.05); color: #007AFF; font-weight: bold; }
     </style>
 </head>
 <body>
 
+    <!-- Startup View -->
     <div id="home-view" class="overlay">
         <div class="w-full max-w-xs space-y-6 text-center">
             <h1 class="text-4xl font-black text-blue-500 tracking-tighter italic">Student Lounge</h1>
@@ -52,13 +56,26 @@
         </div>
     </div>
 
+    <!-- Waiting View -->
+    <div id="wait-view" class="overlay" style="display:none">
+        <div class="text-center space-y-6">
+            <div class="relative animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
+            <h2 class="text-xl font-bold text-white">Knocking...</h2>
+            <p class="text-gray-400 text-sm">The creator needs to let you in.</p>
+        </div>
+    </div>
+
+    <!-- Main Chat Workspace -->
     <div id="main-workspace">
         <header class="header">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center font-bold text-sm shadow-inner">S</div>
                 <div class="flex flex-col">
                     <span class="text-[15px] font-bold leading-tight">Student Lounge</span>
-                    <span id="status-text" class="text-[11px] text-gray-400 tracking-wider">Secure Channel</span>
+                    <div class="flex items-center gap-2">
+                        <span id="status-text" class="text-[11px] text-gray-400 tracking-wider uppercase">Secure</span>
+                        <div id="admin-panel" onclick="approveUser()">ACCEPT REQ?</div>
+                    </div>
                 </div>
             </div>
         </header>
@@ -84,8 +101,6 @@
         const firebaseConfig = { apiKey: "AIzaSyDbfmd0zmv_mFV0CG2OrhKPPeU3zPYGOBg", authDomain: "unidesk-a70ac.firebaseapp.com", projectId: "unidesk-a70ac" };
         const db = getFirestore(initializeApp(firebaseConfig));
         
-        // UNIQUE TAB IDENTIFICATION:
-        // Using sessionStorage ensures every tab has its own unique ID
         let myId = sessionStorage.getItem('tab_unique_id');
         if (!myId) {
             myId = "USER-" + Date.now() + "-" + Math.floor(Math.random()*1000);
@@ -93,7 +108,7 @@
         }
         
         let savedName = "";
-        let currentRoom;
+        let currentRoom, isAdmin = false;
 
         window.showNamingView = (mode) => {
             document.getElementById('initial-options').classList.add('hidden');
@@ -116,8 +131,10 @@
             const name = document.getElementById('userNameInput').value.trim();
             if(!name) return;
             savedName = name;
+            isAdmin = true;
             const code = Math.random().toString(36).substring(2, 8).toUpperCase();
-            await setDoc(doc(db, "rooms", code), { messages: [], status: 'active' });
+            // Room starts with no pending requests
+            await setDoc(doc(db, "rooms", code), { messages: [], status: 'active', pendingId: null });
             openWorkspace(code);
         };
 
@@ -126,16 +143,50 @@
             const code = document.getElementById('roomCodeInput').value.toUpperCase().trim();
             if(!name || !code) return;
             savedName = name;
-            openWorkspace(code);
+
+            // Step 1: Tell the room someone is waiting
+            await updateDoc(doc(db, "rooms", code), { pendingId: myId });
+            
+            document.getElementById('home-view').style.display = 'none';
+            document.getElementById('wait-view').style.display = 'flex';
+
+            // Step 2: Listen for approval
+            const unsub = onSnapshot(doc(db, "rooms", code), (docSnap) => {
+                const data = docSnap.data();
+                if (data.pendingId === "APPROVED_" + myId) {
+                    unsub(); // Stop listening for approval
+                    openWorkspace(code);
+                }
+            });
+        };
+
+        window.approveUser = async () => {
+            const currentData = await doc(db, "rooms", currentRoom);
+            const docSnap = await onSnapshot(doc(db, "rooms", currentRoom), (s) => {
+                const pid = s.data().pendingId;
+                if(pid && !pid.startsWith("APPROVED_")) {
+                    updateDoc(doc(db, "rooms", currentRoom), { pendingId: "APPROVED_" + pid });
+                }
+            });
+            document.getElementById('admin-panel').style.display = 'none';
         };
 
         function openWorkspace(code) {
             currentRoom = code;
             document.getElementById('home-view').style.display = 'none';
+            document.getElementById('wait-view').style.display = 'none';
             document.getElementById('main-workspace').style.display = 'flex';
-            document.getElementById('status-text').innerText = "ROOM: " + code;
+            document.getElementById('status-text').innerText = "CODE: " + code;
+            
             onSnapshot(doc(db, "rooms", code), s => {
-                renderChat(s.data()?.messages || []);
+                const data = s.data();
+                // Admin logic: Show approval button if someone is waiting
+                if(isAdmin && data.pendingId && !data.pendingId.startsWith("APPROVED_")) {
+                    document.getElementById('admin-panel').style.display = 'block';
+                } else {
+                    document.getElementById('admin-panel').style.display = 'none';
+                }
+                renderChat(data?.messages || []);
             });
         }
 
@@ -145,12 +196,7 @@
             if(!text) return;
             chatInput.value = "";
             await updateDoc(doc(db, "rooms", currentRoom), { 
-                messages: arrayUnion({ 
-                    user: myId, 
-                    senderName: savedName, 
-                    text: text, 
-                    time: Date.now() 
-                }) 
+                messages: arrayUnion({ user: myId, senderName: savedName, text: text, time: Date.now() }) 
             });
         };
 
@@ -161,18 +207,11 @@
             box.appendChild(banner);
 
             messages.forEach(m => {
-                // Strict check against this specific tab's ID
                 const isMe = m.user === myId;
-                
                 const row = document.createElement('div');
                 row.className = `msg-row ${isMe ? 'row-me' : 'row-them'}`;
                 
-                let html = "";
-                // Name tag ONLY for others (on the left)
-                if (!isMe) {
-                    html += `<span class="sender-tag">${m.senderName || 'Student'}</span>`;
-                }
-                
+                let html = isMe ? "" : `<span class="sender-tag">${m.senderName}</span>`;
                 html += `<div class="bubble ${isMe ? 'bubble-me' : 'bubble-them'}">${m.text}</div>`;
                 
                 row.innerHTML = html;
@@ -181,10 +220,7 @@
             box.scrollTop = box.scrollHeight;
         }
 
-        // Allow 'Enter' key to send
-        document.getElementById('chatInput').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') sendMessage();
-        });
+        document.getElementById('chatInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
     </script>
 </body>
 </html>
