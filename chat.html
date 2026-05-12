@@ -35,6 +35,7 @@
 </head>
 <body>
 
+    <!-- Join/Create UI -->
     <div id="home-view" class="overlay">
         <div class="w-full max-w-xs space-y-6 text-center">
             <h1 class="text-4xl font-black text-blue-500 tracking-tighter italic">AETHERCORE</h1>
@@ -44,6 +45,8 @@
                 <input type="text" id="roomCodeInput" placeholder="ENTER CODE" class="w-full bg-[#2a3942] p-5 rounded-2xl text-center outline-none text-blue-400 uppercase font-mono tracking-widest border border-white/5">
                 <button onclick="joinRoom()" class="w-full bg-blue-600 h-14 rounded-2xl font-bold text-xs uppercase shadow-lg">Connect</button>
             </div>
+            <!-- Added a link back to Dashboard for convenience -->
+            <a href="index.html" class="block text-gray-500 text-[10px] uppercase tracking-widest mt-4">Back to Dashboard</a>
         </div>
     </div>
 
@@ -55,9 +58,13 @@
         </div>
     </div>
 
+    <!-- Chat UI -->
     <div id="main-workspace">
         <header class="header">
             <div class="flex items-center gap-3">
+                <a href="index.html" class="text-gray-400 mr-1">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"/></svg>
+                </a>
                 <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center font-bold text-sm shadow-inner">A</div>
                 <div class="flex flex-col">
                     <span class="text-[15px] font-bold leading-tight">UniDesk Shield</span>
@@ -66,14 +73,6 @@
                         <div id="admin-panel" onclick="approveUser()">ACCEPT REQ?</div>
                     </div>
                 </div>
-              <header class="header">
-    <div class="flex items-center gap-3">
-        <!-- Back Arrow -->
-        <a href="index.html" class="text-gray-400 mr-1">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"/></svg>
-        </a>
-        <div class="w-10 h-10 rounded-full bg-blue-600 ...">A</div>
-        ...
             </div>
         </header>
 
@@ -96,6 +95,7 @@
         </footer>
     </div>
 
+    <!-- Photo Viewer -->
     <div id="photo-viewer">
         <div class="viewer-header">
             <button onclick="closeViewer()" class="text-white font-bold text-sm">CLOSE</button>
@@ -115,9 +115,14 @@
         const firebaseConfig = { apiKey: "AIzaSyDbfmd0zmv_mFV0CG2OrhKPPeU3zPYGOBg", authDomain: "unidesk-a70ac.firebaseapp.com", projectId: "unidesk-a70ac" };
         const db = getFirestore(initializeApp(firebaseConfig));
         
-        let currentRoom, isAdmin = false, myId = "User-" + Math.floor(Math.random()*9999);
+        // Persistent User ID logic
+        let myId = localStorage.getItem('user_persistent_id') || "User-" + Math.floor(Math.random()*9999);
+        localStorage.setItem('user_persistent_id', myId);
+
+        let currentRoom, isAdmin = false;
         let mediaRecorder, audioChunks = [];
 
+        // Fix for mobile viewports
         if (window.visualViewport) {
             window.visualViewport.addEventListener('resize', () => { 
                 document.body.style.height = window.visualViewport.height + 'px'; 
@@ -164,7 +169,6 @@
                 };
                 mediaRecorder.start();
                 document.getElementById('recIndicator').classList.remove('hidden');
-                // Set opacity instead of display hidden to keep keyboard context
                 chatInput.style.opacity = "0";
             } catch(e) { alert("Mic error: Check permissions."); }
         };
@@ -231,6 +235,7 @@
             reader.readAsDataURL(file);
         };
 
+        // Image Zoom Logic
         let scale = 1, lastDist = 0;
         const vImg = document.getElementById('viewer-img');
         document.getElementById('viewer-stage').addEventListener('touchmove', e => {
@@ -280,10 +285,6 @@
             });
             box.scrollTop = box.scrollHeight;
         }
-      // Locate this line in your script:
-let myId = localStorage.getItem('user_persistent_id') || "User-" + Math.floor(Math.random()*9999);
-localStorage.setItem('user_persistent_id', myId);
-      
     </script>
 </body>
 </html>
