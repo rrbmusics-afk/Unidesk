@@ -2,167 +2,78 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Aethercore | Secure Communication</title>
-    <!-- CSS file will be linked here -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Aethercore Pro</title>
     <link rel="stylesheet" href="chat.css">
-    <!-- Google Icons & Fonts -->
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
 </head>
 <body>
 
-    <!-- 1. ENTRY SCREEN (Create/Join Tabs) -->
-    <div id="auth-screen" class="screen active">
-        <div class="auth-container">
-            <div class="brand-header">
-                <div class="logo"></div>
+    <div id="app-root">
+        
+        <section id="screen-auth" class="v-screen active">
+            <div class="aether-brand">
                 <h1>Aethercore</h1>
-                <p>End-to-End Encrypted</p>
+                <span>ENCRYPTED END-TO-END</span>
             </div>
 
-            <div class="tabs">
-                <button class="tab-btn active" onclick="switchTab('create')">Create Room</button>
-                <button class="tab-btn" onclick="switchTab('join')">Join Room</button>
-            </div>
-
-            <div class="tab-content">
-                <!-- Create Room Form -->
-                <form id="create-form" class="auth-form active">
-                    <div class="input-group">
-                        <label>Admin Name</label>
-                        <input type="text" id="admin-name" placeholder="Enter your name" required>
-                    </div>
-                    <div class="input-group">
-                        <label>Group Name</label>
-                        <input type="text" id="group-name" placeholder="e.g. Project Alpha" required>
-                    </div>
-                    <button type="submit" id="btn-create" class="primary-btn" disabled>Create Experience</button>
-                </form>
-
-                <!-- Join Room Form -->
-                <form id="join-form" class="auth-form">
-                    <div class="input-group">
-                        <label>Your Name</label>
-                        <input type="text" id="user-name" placeholder="Enter your name" required>
-                    </div>
-                    <div class="input-group">
-                        <label>Room Code</label>
-                        <input type="text" id="room-code-input" placeholder="Paste code here" required>
-                    </div>
-                    <button type="submit" id="btn-join" class="primary-btn" disabled>Knock to Join</button>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- 2. MAIN CHAT SCREEN -->
-    <div id="chat-screen" class="screen">
-        <!-- Header -->
-        <header class="chat-header">
-            <div class="header-main" onclick="openGroupInfo()">
-                <div id="group-avatar" class="avatar-container">
-                    <img src="default-group.png" alt="Group Profile" id="header-profile-img">
+            <div class="tab-system">
+                <div class="tab-nav">
+                    <button id="t-create" class="t-btn active" onclick="ui.toggleTab('create')">Create</button>
+                    <button id="t-join" class="t-btn" onclick="ui.toggleTab('join')">Join</button>
                 </div>
-                <div class="header-info">
-                    <h2 id="display-group-name">Loading...</h2>
-                    <span id="display-room-code">Code: ----</span>
+
+                <div id="f-create" class="tab-panel active">
+                    <input type="text" id="in-admin-name" placeholder="Admin Name" required>
+                    <input type="text" id="in-group-name" placeholder="Group Name" required>
+                    <button id="btn-create" class="main-action" onclick="core.createRoom()" disabled>Create Experience</button>
+                </div>
+
+                <div id="f-join" class="tab-panel">
+                    <input type="text" id="in-user-name" placeholder="Your Name" required>
+                    <input type="text" id="in-code" placeholder="Room Code" required>
+                    <button id="btn-join" class="main-action" onclick="core.joinRoom()" disabled>Knock to Join</button>
                 </div>
             </div>
-            <div class="header-actions">
-                <span class="material-icons-round">more_vert</span>
-            </div>
-        </header>
+        </section>
 
-        <!-- Admin Approval Notification Bar -->
-        <div id="admin-approval-bar" class="approval-strip hidden">
-            <p><span id="request-count">0</span> pending join requests</p>
-            <button onclick="openApprovalPopup()">View All</button>
-        </div>
-
-        <!-- Chat Area with Doodle Background -->
-        <main id="chat-messages" class="chat-area">
-            <!-- Messages will be injected here via JS -->
-        </main>
-
-        <!-- Message Input Footer -->
-        <footer class="chat-footer">
-            <div class="input-wrapper">
-                <button class="icon-btn" id="attach-btn">
-                    <span class="material-icons-round">attach_file</span>
-                </button>
-                <textarea id="msg-input" placeholder="Type a message..." rows="1"></textarea>
-                <button class="icon-btn" id="voice-btn">
-                    <span class="material-icons-round" id="mic-icon">mic</span>
-                </button>
-                <button class="icon-btn hidden" id="send-btn">
-                    <span class="material-icons-round">send</span>
-                </button>
-            </div>
-        </footer>
-    </div>
-
-    <!-- 3. POPUPS & OVERLAYS -->
-
-    <!-- Group Info Sidebar/Overlay -->
-    <div id="group-info-overlay" class="overlay">
-        <div class="overlay-content full-screen">
-            <nav class="overlay-nav">
-                <span class="material-icons-round" onclick="closeOverlay('group-info-overlay')">arrow_back</span>
-                <span>Group Info</span>
-            </nav>
-            <div class="info-body">
-                <div class="info-profile-section">
-                    <img id="info-profile-img" src="default-group.png" onclick="viewLargeImage(this.src)">
-                    <button id="change-photo-btn" class="admin-only hidden">
-                        <span class="material-icons-round">photo_camera</span>
-                    </button>
-                </div>
-                <h2 id="info-group-title">Group Name</h2>
-                <p id="info-group-code" class="code-badge">Code: </p>
-                
-                <div class="info-actions">
-                    <div class="admin-only hidden">
-                        <button class="list-item text-danger" onclick="deleteGroup()">
-                            <span class="material-icons-round">delete_forever</span> Delete Group
-                        </button>
-                        <button class="list-item" onclick="renameGroup()">
-                            <span class="material-icons-round">edit</span> Rename Group
-                        </button>
+        <section id="screen-chat" class="v-screen">
+            <header class="app-header" onclick="ui.openInfo()">
+                <div class="h-user">
+                    <img id="h-img" src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png">
+                    <div class="h-details">
+                        <b id="h-title">Group</b>
+                        <small id="h-code">Code: ---</small>
                     </div>
-                    <button class="list-item text-danger" onclick="leaveGroup()">
-                        <span class="material-icons-round">logout</span> Leave Group
-                    </button>
                 </div>
+            </header>
+
+            <div id="admin-notif" class="admin-strip hidden" onclick="ui.openApprovals()">
+                <span>Pending Approval Requests</span>
+                <span class="material-icons-round">arrow_forward</span>
             </div>
-        </div>
+
+            <div id="chat-flow" class="doodle-bg">
+                </div>
+
+            <footer class="app-input">
+                <div class="input-card">
+                    <button onclick="ui.triggerDocs()"><span class="material-icons-round">attach_file</span></button>
+                    <textarea id="main-input" placeholder="Message..." rows="1"></textarea>
+                    <button id="mic-trigger" class="mic-btn"><span class="material-icons-round">mic</span></button>
+                    <button id="send-trigger" class="hidden"><span class="material-icons-round">send</span></button>
+                </div>
+            </footer>
+        </section>
+
     </div>
 
-    <!-- Approval Requests Popup -->
-    <div id="approval-popup" class="overlay">
-        <div class="overlay-content popup-small">
-            <h3>Join Requests</h3>
-            <div id="requests-list">
-                <!-- Requests injected here -->
-            </div>
-            <button onclick="closeOverlay('approval-popup')">Close</button>
-        </div>
-    </div>
+    <input type="file" id="file-pick" hidden multiple>
+    <input type="file" id="img-pick" hidden accept="image/*">
 
-    <!-- Media Viewer (WhatsApp Style) -->
-    <div id="media-viewer" class="overlay">
-        <div class="media-container">
-            <nav class="media-nav">
-                <span class="material-icons-round" onclick="closeOverlay('media-viewer')">arrow_back</span>
-                <button id="download-media"><span class="material-icons-round">file_download</span></button>
-            </nav>
-            <img id="large-view-img" src="">
-        </div>
-    </div>
-
-    <!-- Hidden File Inputs -->
-    <input type="file" id="photo-upload" accept="image/*" style="display:none">
-    <input type="file" id="doc-upload" multiple style="display:none">
-
-    <!-- Firebase & Custom Scripts to be added later -->
+    <script src="chat.js"></script>
 </body>
 </html>
