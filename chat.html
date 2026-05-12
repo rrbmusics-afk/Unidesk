@@ -2,57 +2,65 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Student Lounge</title>
-    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <!-- 1. ENTRY SCREEN -->
-    <div id="entry-screen" class="container">
-        <h1 class="logo">Student Lounge</h1>
-        <div class="tab-buttons">
-            <button id="tab-create" onclick="showTab('create')">Create</button>
-            <button id="tab-join" onclick="showTab('join')">Join</button>
-        </div>
+    <div id="app">
+        <!-- VIEW 1: ENTRANCE -->
+        <section id="entrance-view" class="view">
+            <div class="card">
+                <h1>Student Lounge</h1>
+                <div class="tabs">
+                    <button id="tab-create" class="active" onclick="switchTab('create')">Create</button>
+                    <button id="tab-join" onclick="switchTab('join')">Join</button>
+                </div>
 
-        <div id="form-container">
-            <input type="text" id="user-name" placeholder="Your Name">
-            <input type="text" id="lounge-name" placeholder="Lounge Name" class="create-field">
-            <input type="text" id="lounge-code-input" placeholder="Lounge Code" class="join-field hidden">
-            <button id="action-btn" onclick="handleAction()">Start</button>
-        </div>
-    </div>
-
-    <!-- 2. WAITING SCREEN (KNOCKING) -->
-    <div id="waiting-screen" class="container hidden">
-        <div class="loader"></div>
-        <h2>Knocking...</h2>
-        <p>Waiting for Admin to approve your entry.</p>
-    </div>
-
-    <!-- 3. CHAT SCREEN -->
-    <div id="chat-screen" class="chat-container hidden">
-        <header>
-            <div class="lounge-info">
-                <h3 id="display-lounge-name">Lounge Name</h3>
-                <span id="display-lounge-code">Code: ####</span>
+                <div class="form-group">
+                    <input type="text" id="username" placeholder="Your Name">
+                    <input type="text" id="lounge-name" placeholder="Lounge Name">
+                    <input type="text" id="lounge-code-input" placeholder="Lounge Code" class="hidden">
+                    <button id="main-action-btn" onclick="processEntry()">Continue</button>
+                </div>
             </div>
-            <div id="admin-controls" class="hidden">
-                <button onclick="toggleRequests()" id="req-count">Requests (0)</button>
+        </section>
+
+        <!-- VIEW 2: KNOCKING -->
+        <section id="knocking-view" class="view hidden">
+            <div class="card text-center">
+                <div class="loader-circle"></div>
+                <h2>Knocking...</h2>
+                <p>Wait for the Admin to approve your request.</p>
             </div>
-        </header>
+        </section>
 
-        <div id="request-panel" class="hidden"></div>
-        <div id="messages"></div>
+        <!-- VIEW 3: CHAT SPACE -->
+        <section id="chat-view" class="view hidden">
+            <div class="chat-container">
+                <header>
+                    <div class="lounge-meta">
+                        <h2 id="header-lname">Lounge</h2>
+                        <span id="header-lcode">#0000</span>
+                    </div>
+                    <div id="admin-tools" class="hidden">
+                        <button onclick="toggleRequests()" class="req-toggle">
+                            Requests (<span id="req-count">0</span>)
+                        </button>
+                    </div>
+                </header>
 
-        <div class="input-area">
-            <input type="text" id="msg-input" placeholder="Type a message...">
-            <button onclick="sendMessage()">Send</button>
-        </div>
+                <div id="request-drawer" class="hidden"></div>
+                <div id="chat-messages"></div>
+
+                <div class="bottom-bar">
+                    <input type="text" id="chat-input" placeholder="Message...">
+                    <button onclick="handleSend()">Send</button>
+                </div>
+            </div>
+        </section>
     </div>
 
-    <!-- Firebase SDKs -->
-    <script type="module" src="script.js"></script>
+    <script type="module" src="app.js"></script>
 </body>
 </html>
