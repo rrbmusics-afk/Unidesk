@@ -9,87 +9,84 @@
         :root { --accent: #007AFF; --wa-green: #25D366; --bg-main: #0b141a; --bubble-me: #005c4b; --bubble-them: #202c33; }
         
         html, body { 
-            background: var(--bg-main); 
-            color: #e9edef; 
-            font-family: -apple-system, BlinkMacSystemFont, sans-serif; 
+            background: var(--bg-main); color: #e9edef; font-family: -apple-system, sans-serif; 
             margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; position: fixed;
         }
         
-        #main-workspace { display: none; flex-direction: column; height: 100%; width: 100%; position: relative; }
+        #main-workspace { display: none; flex-direction: column; height: 100%; width: 100%; }
 
-        /* Separated Header Logic */
-        .nav-bar { 
-            height: 60px; background: #202c33; display: flex; align-items: center; 
-            justify-content: space-between; padding: 0 16px; z-index: 20; flex-shrink: 0; 
-        }
+        .nav-bar { height: 60px; background: #202c33; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; z-index: 20; cursor: pointer; }
+        .status-bar { height: 40px; background: #111b21; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; border-bottom: 1px solid rgba(255,255,255,0.05); }
 
-        .status-bar {
-            height: 40px; background: #111b21; display: flex; align-items: center;
-            justify-content: space-between; padding: 0 16px; border-bottom: 1px solid rgba(255,255,255,0.05);
-            z-index: 10; flex-shrink: 0;
-        }
-
-        #chatBox { 
-            flex: 1; overflow-y: auto; padding: 20px 16px; display: flex; flex-direction: column; gap: 12px; 
-            background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); 
-            background-blend-mode: overlay; background-color: #0b141a; -webkit-overflow-scrolling: touch;
-        }
+        #chatBox { flex: 1; overflow-y: auto; padding: 20px 16px; display: flex; flex-direction: column; gap: 12px; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); background-blend-mode: overlay; background-color: #0b141a; }
         
-        .msg-row { display: flex; flex-direction: column; width: 100%; }
-        .row-me { align-items: flex-end; }
-        .row-them { align-items: flex-start; }
-
-        .bubble { max-width: 85%; padding: 8px 12px; border-radius: 8px; font-size: 14.5px; position: relative; box-shadow: 0 1px 0.5px rgba(0,0,0,0.13); word-wrap: break-word; }
-        .bubble-me { background: var(--bubble-me); border-top-right-radius: 0; }
-        .bubble-them { background: var(--bubble-them); border-top-left-radius: 0; }
+        .bubble { max-width: 85%; padding: 8px 12px; border-radius: 8px; font-size: 14.5px; box-shadow: 0 1px 0.5px rgba(0,0,0,0.13); word-wrap: break-word; }
+        .bubble-me { background: var(--bubble-me); align-self: flex-end; border-top-right-radius: 0; }
+        .bubble-them { background: var(--bubble-them); align-self: flex-start; border-top-left-radius: 0; }
         
-        .sender-tag { font-size: 11px; font-weight: 700; margin-bottom: 2px; color: #34b7f1; padding-left: 4px; }
-        
-        .footer { background: #202c33; padding: 10px 12px; display: flex; align-items: center; gap: 8px; z-index: 10; flex-shrink: 0; }
-        .input-pill { background: #2a3942; border-radius: 24px; flex: 1; display: flex; align-items: center; padding: 0 14px; height: 44px; position: relative; }
-        .action-btn { background: var(--wa-green); color: #0b141a; width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; shrink: 0; border: none; }
+        .footer { background: #202c33; padding: 10px 12px; display: flex; align-items: center; gap: 8px; }
+        .input-pill { background: #2a3942; border-radius: 24px; flex: 1; padding: 0 14px; height: 44px; display: flex; align-items: center; }
+        .action-btn { background: var(--wa-green); color: #0b141a; width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: none; }
         
         .overlay { position: fixed; inset: 0; background: #0b141a; z-index: 5000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
         
-        #admin-panel { display: none; background: #f59e0b; color: black; font-size: 10px; padding: 4px 10px; border-radius: 20px; font-weight: bold; cursor: pointer; animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
-
-        #req-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 6000; align-items: center; justify-content: center; padding: 20px; }
-        .modal-content { background: #202c33; width: 100%; max-width: 300px; border-radius: 16px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); }
-        
+        /* Modal Styles */
+        .full-modal { position: fixed; inset: 0; background: #0b141a; z-index: 6000; display: none; flex-direction: column; }
         .input-field { width: 100%; background: #2a3942; padding: 15px; border-radius: 12px; text-align: center; outline: none; border: 1px solid rgba(255,255,255,0.05); color: #007AFF; font-weight: bold; }
-        .code-display { color: #007AFF; font-family: 'Courier New', Courier, monospace; font-weight: 900; letter-spacing: 2px; font-size: 14px; }
+        .group-pic { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; background: #2a3942; border: 3px solid #007AFF; }
     </style>
 </head>
 <body>
 
-    <!-- Admin Request Modal -->
-    <div id="req-modal">
-        <div class="modal-content">
-            <div class="p-4 border-bottom border-white/10 font-bold text-center text-sm">Waiting Room</div>
-            <div id="req-list" class="max-h-60 overflow-y-auto"></div>
-            <button onclick="closeModal()" class="w-full p-4 text-[10px] text-gray-500 font-bold uppercase">Close</button>
+    <!-- Group Info / Edit Modal -->
+    <div id="info-modal" class="full-modal">
+        <div class="p-4 flex items-center gap-4 bg-[#202c33]">
+            <button onclick="closeInfo()" class="text-blue-500 font-bold">Done</button>
+            <span class="font-bold">Group Info</span>
+        </div>
+        <div class="flex-1 flex flex-col items-center p-8 space-y-6">
+            <div class="relative">
+                <img id="modal-group-pic" src="" class="group-pic" onerror="this.src='https://ui-avatars.com/api/?name=Group&background=007AFF&color=fff'">
+                <button id="edit-pic-btn" onclick="editGroupDetails()" class="hidden absolute bottom-0 right-0 bg-blue-600 p-2 rounded-full border-2 border-[#0b141a]">
+                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                </button>
+            </div>
+            <div class="text-center w-full">
+                <div class="flex items-center justify-center gap-2">
+                    <h2 id="modal-group-name" class="text-2xl font-black italic">Group Name</h2>
+                    <button id="edit-name-btn" onclick="editGroupDetails()" class="hidden text-gray-500">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" stroke-width="2"/></svg>
+                    </button>
+                </div>
+                <p id="modal-room-code" class="text-blue-500 font-mono tracking-widest text-sm mt-2"></p>
+            </div>
         </div>
     </div>
 
-    <!-- Home / Entry View -->
+    <!-- Requests Modal -->
+    <div id="req-modal" class="overlay" style="display:none; background: rgba(0,0,0,0.9);">
+        <div class="bg-[#202c33] w-full max-w-xs rounded-2xl overflow-hidden">
+            <div class="p-4 border-b border-white/5 font-bold text-center">Pending Access</div>
+            <div id="req-list" class="max-h-60 overflow-y-auto"></div>
+            <button onclick="document.getElementById('req-modal').style.display='none'" class="w-full p-4 text-xs text-gray-500 font-bold">CLOSE</button>
+        </div>
+    </div>
+
+    <!-- Home View -->
     <div id="home-view" class="overlay">
         <div class="w-full max-w-xs space-y-6 text-center">
             <h1 class="text-4xl font-black text-blue-500 tracking-tighter italic">Student Lounge</h1>
-            
             <div id="initial-options" class="space-y-3">
-                <button onclick="showNamingView('create')" class="w-full bg-white/5 border border-white/10 p-5 rounded-2xl font-bold uppercase text-xs text-white/70">New Session</button>
+                <button onclick="showNamingView('create')" class="w-full bg-white/5 border border-white/10 p-5 rounded-2xl font-bold uppercase text-xs">New Session</button>
                 <button onclick="showNamingView('join')" class="w-full bg-blue-600/10 border border-blue-500/20 p-5 rounded-2xl font-bold uppercase text-xs text-blue-500">Connect to Room</button>
-                
                 <div id="recent-session-area" class="hidden pt-4 text-left">
-                    <div class="py-2 text-gray-600 text-[10px] font-bold uppercase tracking-widest mb-1">Previous Session</div>
+                    <div class="py-2 text-gray-600 text-[10px] font-bold uppercase tracking-widest">Resume Previous</div>
                     <div onclick="resumeRecent()" class="bg-gradient-to-br from-gray-800 to-gray-900 border border-blue-500/30 p-5 rounded-2xl cursor-pointer">
-                        <div id="recent-group-name" class="text-white font-bold text-lg">Group</div>
+                        <div id="recent-group-name" class="text-white font-bold text-lg truncate">Group</div>
                         <div id="recent-code-display" class="text-blue-400 text-xs font-mono mt-1">CODE: -----</div>
                     </div>
                 </div>
             </div>
-
             <div id="naming-view" class="space-y-3 hidden">
                 <input type="text" id="userNameInput" placeholder="Your Name" class="input-field">
                 <input type="text" id="groupNameInput" placeholder="Group Name" class="input-field hidden">
@@ -102,45 +99,29 @@
         </div>
     </div>
 
-    <!-- Waiting Screen -->
-    <div id="wait-view" class="overlay" style="display:none">
-        <div class="text-center space-y-4">
-            <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-blue-500 mx-auto"></div>
-            <h2 class="text-lg font-bold">Request Sent</h2>
-            <p class="text-gray-500 text-xs">Waiting for the admin to approve...</p>
-        </div>
-    </div>
-
-    <!-- Main App Workspace -->
+    <!-- Workspace -->
     <div id="main-workspace">
-        <header class="nav-bar">
+        <header class="nav-bar" onclick="openInfo()">
             <div class="flex items-center gap-3">
-                <div class="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center font-black text-xs">SL</div>
-                <span class="text-sm font-bold tracking-tight">Student Lounge</span>
+                <img id="header-group-pic" src="" class="w-10 h-10 rounded-full bg-blue-600 border border-white/10" onerror="this.src='https://ui-avatars.com/api/?name=S&background=007AFF&color=fff'">
+                <div class="flex flex-col">
+                    <span class="text-sm font-bold">Student Lounge</span>
+                    <span id="group-name-display" class="text-[10px] text-gray-400 font-bold uppercase truncate max-w-[120px]">Group Name</span>
+                </div>
             </div>
-            <div id="admin-panel" onclick="openModal()">REQUESTS (<span id="req-count">0</span>)</div>
+            <div id="admin-panel" onclick="event.stopPropagation(); document.getElementById('req-modal').style.display='flex'" class="hidden bg-orange-500 text-black px-3 py-1 rounded-full text-[10px] font-black animate-pulse">REQ (<span id="req-count">0</span>)</div>
         </header>
-
-        <!-- Sub-header for Room Details -->
         <div class="status-bar">
-            <span id="group-name-display" class="text-[10px] font-bold text-gray-400 uppercase tracking-wider truncate mr-4">Loading Group...</span>
+            <span class="text-[9px] text-gray-600 font-bold uppercase">Privacy: Encrypted</span>
             <div class="flex items-center gap-2">
-                <span class="text-[9px] text-gray-600 font-bold uppercase">Room Code:</span>
-                <span id="header-code-pill" class="code-display">------</span>
+                <span class="text-[9px] text-gray-600 font-bold uppercase">Code:</span>
+                <span id="header-code-pill" class="text-[#007AFF] font-black tracking-widest text-xs font-mono">------</span>
             </div>
         </div>
-
-        <main id="chatBox">
-            <div id="e2ee-banner" class="self-center bg-[#182229] text-[#ffd700] text-[9px] px-4 py-1.5 rounded-full mb-4 border border-[#ffd700]/10 tracking-widest uppercase font-bold">End-to-End Encrypted</div>
-        </main>
-
+        <main id="chatBox"></main>
         <footer class="footer">
-            <div class="input-pill">
-                <input type="text" id="chatInput" placeholder="Type a message..." autocomplete="off" class="w-full bg-transparent outline-none text-sm text-white">
-            </div>
-            <button onclick="sendMessage()" class="action-btn">
-                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
-            </button>
+            <div class="input-pill"><input type="text" id="chatInput" placeholder="Message" autocomplete="off" class="w-full bg-transparent outline-none text-sm text-white"></div>
+            <button onclick="sendMessage()" class="action-btn"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg></button>
         </footer>
     </div>
 
@@ -151,7 +132,7 @@
         const firebaseConfig = { apiKey: "AIzaSyDbfmd0zmv_mFV0CG2OrhKPPeU3zPYGOBg", authDomain: "unidesk-a70ac.firebaseapp.com", projectId: "unidesk-a70ac" };
         const db = getFirestore(initializeApp(firebaseConfig));
         
-        let myId = localStorage.getItem('sl_myId') || "USER-" + Math.random().toString(36).substr(2, 9);
+        let myId = localStorage.getItem('sl_myId') || "U-" + Math.random().toString(36).substr(2, 6);
         localStorage.setItem('sl_myId', myId);
 
         let savedName = localStorage.getItem('sl_userName') || "";
@@ -159,19 +140,17 @@
         let isAdmin = false;
 
         window.onload = () => {
-            const lastRoom = localStorage.getItem('sl_lastRoom');
-            const lastGroup = localStorage.getItem('sl_lastGroupName');
-            if(lastRoom && savedName) {
+            const lr = localStorage.getItem('sl_lastRoom');
+            if(lr && savedName) {
                 document.getElementById('recent-session-area').classList.remove('hidden');
-                document.getElementById('recent-group-name').innerText = lastGroup || "Untitled Group";
-                document.getElementById('recent-code-display').innerText = "CODE: " + lastRoom;
+                document.getElementById('recent-group-name').innerText = localStorage.getItem('sl_lastGroupName') || "Group";
+                document.getElementById('recent-code-display').innerText = "CODE: " + lr;
             }
         };
 
         window.resumeRecent = () => {
-            const lastRoom = localStorage.getItem('sl_lastRoom');
             isAdmin = localStorage.getItem('sl_isAdmin') === 'true';
-            openWorkspace(lastRoom);
+            openWorkspace(localStorage.getItem('sl_lastRoom'));
         };
 
         window.showNamingView = (mode) => {
@@ -179,35 +158,31 @@
             document.getElementById('naming-view').classList.remove('hidden');
             if(mode === 'join') {
                 document.getElementById('roomCodeInput').classList.remove('hidden');
-                document.getElementById('groupNameInput').classList.add('hidden');
-                document.getElementById('confirmBtn').onclick = () => joinRoom();
+                document.getElementById('confirmBtn').onclick = joinRoom;
             } else {
-                document.getElementById('roomCodeInput').classList.add('hidden');
                 document.getElementById('groupNameInput').classList.remove('hidden');
-                document.getElementById('confirmBtn').onclick = () => createRoom();
+                document.getElementById('confirmBtn').onclick = createRoom;
             }
         };
 
         window.cancelNaming = () => {
             document.getElementById('initial-options').classList.remove('hidden');
             document.getElementById('naming-view').classList.add('hidden');
+            document.getElementById('groupNameInput').classList.add('hidden');
+            document.getElementById('roomCodeInput').classList.add('hidden');
         };
 
         window.createRoom = async () => {
             const name = document.getElementById('userNameInput').value.trim();
-            const gname = document.getElementById('groupNameInput').value.trim() || "New Lounge";
+            const gname = document.getElementById('groupNameInput').value.trim() || "New Room";
             if(!name) return;
             const code = Math.random().toString(36).substring(2, 8).toUpperCase();
-            
-            isAdmin = true;
-            savedName = name;
-            localStorage.setItem('sl_userName', name);
-            localStorage.setItem('sl_lastRoom', code);
-            localStorage.setItem('sl_lastGroupName', gname);
-            localStorage.setItem('sl_isAdmin', 'true');
+            isAdmin = true; savedName = name;
+            localStorage.setItem('sl_userName', name); localStorage.setItem('sl_lastRoom', code);
+            localStorage.setItem('sl_isAdmin', 'true'); localStorage.setItem('sl_lastGroupName', gname);
 
             await setDoc(doc(db, "rooms", code), { 
-                groupName: gname, messages: [], pendingRequests: [], approvedIds: [myId] 
+                groupName: gname, groupPic: '', messages: [], pendingRequests: [], approvedIds: [myId], adminId: myId 
             });
             openWorkspace(code);
         };
@@ -216,52 +191,50 @@
             const name = document.getElementById('userNameInput').value.trim();
             const code = document.getElementById('roomCodeInput').value.toUpperCase().trim();
             if(!name || !code) return;
-            
             const roomRef = doc(db, "rooms", code);
             const snap = await getDoc(roomRef);
-            if(!snap.exists()) { alert("Invalid Room Code"); return; }
+            if(!snap.exists()) return alert("Room not found");
 
             savedName = name;
-            localStorage.setItem('sl_userName', name);
-            localStorage.setItem('sl_lastRoom', code);
+            localStorage.setItem('sl_userName', name); localStorage.setItem('sl_lastRoom', code);
             localStorage.setItem('sl_isAdmin', 'false');
-            localStorage.setItem('sl_lastGroupName', snap.data().groupName);
 
-            if(snap.data().approvedIds.includes(myId)) {
-                openWorkspace(code);
-                return;
-            }
+            if(snap.data().approvedIds.includes(myId)) return openWorkspace(code);
 
             await updateDoc(roomRef, { pendingRequests: arrayUnion({ id: myId, name: savedName }) });
             document.getElementById('home-view').style.display = 'none';
-            document.getElementById('wait-view').style.display = 'flex';
-
-            onSnapshot(roomRef, (s) => {
-                if (s.data().approvedIds.includes(myId)) openWorkspace(code);
-            });
+            alert("Knocking... waiting for admin.");
+            onSnapshot(roomRef, (s) => { if(s.data().approvedIds.includes(myId)) openWorkspace(code); });
         };
 
         function openWorkspace(code) {
             currentRoom = code;
             document.getElementById('home-view').style.display = 'none';
-            document.getElementById('wait-view').style.display = 'none';
             document.getElementById('main-workspace').style.display = 'flex';
             document.getElementById('header-code-pill').innerText = code;
             
             onSnapshot(doc(db, "rooms", code), s => {
-                const data = s.data();
-                if(!data) return;
-                document.getElementById('group-name-display').innerText = data.groupName;
+                const data = s.data(); if(!data) return;
+                isAdmin = data.adminId === myId;
                 
+                document.getElementById('group-name-display').innerText = data.groupName;
+                document.getElementById('modal-group-name').innerText = data.groupName;
+                document.getElementById('modal-room-code').innerText = "ROOM CODE: " + code;
+                
+                const picUrl = data.groupPic || `https://ui-avatars.com/api/?name=${data.groupName}&background=007AFF&color=fff`;
+                document.getElementById('header-group-pic').src = picUrl;
+                document.getElementById('modal-group-pic').src = picUrl;
+
                 if(isAdmin) {
-                    const reqs = data.pendingRequests || [];
-                    const panel = document.getElementById('admin-panel');
-                    panel.style.display = reqs.length > 0 ? 'block' : 'none';
-                    document.getElementById('req-count').innerText = reqs.length;
-                    document.getElementById('req-list').innerHTML = reqs.map(r => `
+                    document.getElementById('admin-panel').classList.remove('hidden');
+                    document.getElementById('req-count').innerText = data.pendingRequests.length;
+                    document.getElementById('edit-pic-btn').classList.remove('hidden');
+                    document.getElementById('edit-name-btn').classList.remove('hidden');
+                    
+                    document.getElementById('req-list').innerHTML = data.pendingRequests.map(r => `
                         <div class="flex justify-between items-center p-4 border-b border-white/5">
                             <span class="text-xs font-bold">${r.name}</span>
-                            <button onclick="approveUser('${r.id}', '${r.name}')" class="bg-green-500 text-black text-[10px] font-bold px-3 py-1.5 rounded-lg">APPROVE</button>
+                            <button onclick="approveUser('${r.id}', '${r.name}')" class="bg-green-500 text-black text-[10px] font-bold px-3 py-1 rounded">APPROVE</button>
                         </div>
                     `).join('');
                 }
@@ -269,39 +242,49 @@
             });
         }
 
-        window.approveUser = async (userId, userName) => {
+        window.approveUser = async (uid, uname) => {
             await updateDoc(doc(db, "rooms", currentRoom), { 
-                pendingRequests: arrayRemove({ id: userId, name: userName }),
-                approvedIds: arrayUnion(userId)
+                pendingRequests: arrayRemove({ id: uid, name: uname }), approvedIds: arrayUnion(uid) 
             });
         };
+
+        window.editGroupDetails = async () => {
+            if(!isAdmin) return;
+            const newName = prompt("Enter new Group Name:", document.getElementById('modal-group-name').innerText);
+            const newPic = prompt("Paste Group Icon URL (leave blank for none):");
+            if(newName) {
+                await updateDoc(doc(db, "rooms", currentRoom), { 
+                    groupName: newName, groupPic: newPic || '' 
+                });
+                localStorage.setItem('sl_lastGroupName', newName);
+            }
+        };
+
+        window.openInfo = () => document.getElementById('info-modal').style.display = 'flex';
+        window.closeInfo = () => document.getElementById('info-modal').style.display = 'none';
 
         window.sendMessage = async () => {
-            const input = document.getElementById('chatInput');
-            const text = input.value.trim();
-            if(!text) return;
-            input.value = "";
+            const inp = document.getElementById('chatInput');
+            const txt = inp.value.trim(); if(!txt) return;
+            inp.value = "";
             await updateDoc(doc(db, "rooms", currentRoom), { 
-                messages: arrayUnion({ user: myId, senderName: savedName, text: text, time: Date.now() }) 
+                messages: arrayUnion({ user: myId, senderName: savedName, text: txt, time: Date.now() }) 
             });
         };
 
-        function renderChat(messages) {
+        function renderChat(msgs) {
             const box = document.getElementById('chatBox');
-            const banner = document.getElementById('e2ee-banner');
-            box.innerHTML = ''; box.appendChild(banner);
-            messages.forEach(m => {
+            box.innerHTML = '<div class="self-center bg-[#182229] text-[#ffd700] text-[9px] px-4 py-1.5 rounded-full mb-4 border border-[#ffd700]/10 font-bold uppercase">End-to-End Encrypted</div>';
+            msgs.forEach(m => {
                 const isMe = m.user === myId;
-                const row = document.createElement('div');
-                row.className = `msg-row ${isMe ? 'row-me' : 'row-them'}`;
-                row.innerHTML = `${!isMe ? `<span class="sender-tag">${m.senderName}</span>` : ''}<div class="bubble ${isMe ? 'bubble-me' : 'bubble-them'}">${m.text}</div>`;
-                box.appendChild(row);
+                const div = document.createElement('div');
+                div.className = `bubble ${isMe ? 'bubble-me' : 'bubble-them'}`;
+                div.innerHTML = `${!isMe ? `<div class="text-[10px] font-bold text-blue-400 mb-1">${m.senderName}</div>` : ''}${m.text}`;
+                box.appendChild(div);
             });
             box.scrollTop = box.scrollHeight;
         }
 
-        window.openModal = () => document.getElementById('req-modal').style.display = 'flex';
-        window.closeModal = () => document.getElementById('req-modal').style.display = 'none';
         document.getElementById('chatInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
     </script>
 </body>
