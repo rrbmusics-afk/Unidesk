@@ -3,71 +3,185 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Aethercore | Student Lounge</title>
+    <title>Unidesk | Aethercore Lounge</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="chat.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700&display=swap');
+        
+        :root { 
+            --accent: #2D7FF9; 
+            --bg: #050608; 
+            --card: #0F1116; 
+            --border: rgba(255,255,255,0.08); 
+            --wa-green: #00a884;
+        }
+
+        * { font-family: 'Space Grotesk', sans-serif; -webkit-tap-highlight-color: transparent; }
+        
+        body { 
+            background: var(--bg); color: #fff; margin: 0; min-height: 100dvh;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            background-image: radial-gradient(circle at 50% 50%, #111827 0%, #050608 100%);
+        }
+
+        /* High-End Container */
+        .glass-card {
+            width: 90%; max-width: 400px; background: var(--card); border-radius: 40px;
+            padding: 32px; border: 1px solid var(--border);
+            box-shadow: 0 40px 80px rgba(0,0,0,0.6); position: relative;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Tab Switcher Logic */
+        .tab-switcher {
+            display: grid; grid-template-columns: 1fr 1fr; background: #000; 
+            padding: 5px; border-radius: 20px; margin-bottom: 25px; border: 1px solid var(--border);
+        }
+
+        .tab-btn {
+            border: none; background: transparent; color: #555;
+            padding: 12px; border-radius: 16px; font-size: 11px;
+            font-weight: 700; cursor: pointer; transition: 0.4s;
+            letter-spacing: 1px;
+        }
+
+        .tab-btn.active { background: var(--accent); color: #fff; box-shadow: 0 4px 15px rgba(45,127,249,0.3); }
+
+        /* PFP WhatsApp 1:1 Requirement */
+        .pfp-box {
+            width: 100px; height: 100px; margin: 0 auto 20px; position: relative; cursor: pointer;
+        }
+        #pfp-preview { 
+            width: 100%; height: 100%; border-radius: 30px; object-fit: cover;
+            border: 2px solid var(--border); background: #161B22; 
+        }
+        .cam-icon {
+            position: absolute; right: -4px; bottom: -4px; background: var(--accent);
+            width: 30px; height: 30px; border-radius: 10px; display: flex;
+            align-items: center; justify-content: center; border: 4px solid var(--card); font-size: 11px;
+        }
+
+        /* Inputs & Buttons */
+        input {
+            width: 100%; background: rgba(0,0,0,0.4); border: 1px solid var(--border);
+            padding: 16px; border-radius: 18px; color: #fff; text-align: center;
+            margin-bottom: 12px; font-size: 14px; outline: none; transition: 0.3s;
+        }
+        input:focus { border-color: var(--accent); background: rgba(45,127,249,0.05); }
+
+        .go-btn {
+            width: 100%; padding: 18px; border-radius: 20px; border: none;
+            background: #1c2128; color: #444; font-weight: 800; font-size: 13px;
+            margin-top: 10px; transition: 0.5s; cursor: not-allowed;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            letter-spacing: 1px;
+        }
+
+        .go-btn.ready { background: #fff; color: #000; cursor: pointer; box-shadow: 0 15px 30px rgba(255,255,255,0.1); }
+        
+        .hidden { display: none !important; }
+
+        /* Branding */
+        .brand-logo { font-style: italic; font-weight: 900; font-size: 2.5rem; color: var(--accent); letter-spacing: -2px; }
+    </style>
 </head>
-<body class="bg-[#050608] text-white overflow-hidden">
+<body>
 
-    <header class="h-16 bg-[#0F1116]/80 backdrop-blur-md border-b border-white/5 flex items-center justify-between px-4 z-50 sticky top-0" onclick="openGroupInfo()">
-        <div class="flex items-center gap-3">
-            <div class="relative">
-                <img id="groupPfp" src="https://api.dicebear.com/7.x/bottts/svg?seed=Strategy" class="w-10 h-10 rounded-2xl border border-white/10 bg-[#161B22]">
-                <div class="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 border-2 border-[#0F1116] rounded-full"></div>
-            </div>
-            <div class="flex flex-col">
-                <h3 class="text-[15px] font-bold tracking-tight">Strategy Hub</h3>
-                <span class="text-[11px] text-gray-500 uppercase tracking-widest font-medium">#492011 • Secure</span>
-            </div>
-        </div>
-        <div id="adminBadge" class="bg-blue-600/20 text-blue-400 text-[9px] px-2 py-1 rounded-md font-black uppercase border border-blue-500/30">Admin</div>
-    </header>
-
-    <div id="reqBanner" class="hidden bg-amber-500 text-black px-4 py-2 flex justify-between items-center text-xs font-bold cursor-pointer animate-pulse" onclick="showRequests()">
-        <span><i class="fas fa-user-plus mr-2"></i> NEW JOIN REQUEST</span>
-        <i class="fas fa-chevron-right"></i>
+    <div class="text-center mb-8">
+        <h1 class="brand-logo uppercase">Unidesk</h1>
+        <p class="text-[10px] text-gray-500 tracking-[0.4em] font-bold uppercase">Student Lounge Hub</p>
     </div>
 
-    <main id="chatBox" class="flex-1 overflow-y-auto p-4 space-y-4 doodle-bg">
-        <div class="flex justify-center">
-            <span class="bg-white/5 border border-white/10 text-[10px] px-4 py-1.5 rounded-full text-amber-200/70 uppercase tracking-tighter">
-                <i class="fas fa-lock mr-1 text-[8px]"></i> End-to-End Encrypted
-            </span>
-        </div>
-        
-        <div class="flex flex-col items-start max-w-[85%]">
-            <span class="text-[10px] font-bold text-blue-400 ml-1 mb-1">Alex (Admin)</span>
-            <div class="bg-[#1C1F26] p-3 rounded-2xl rounded-tl-none border border-white/5 shadow-xl">
-                <p class="text-sm leading-relaxed">Welcome to the Student Lounge! All project files are pinned in the vault.</p>
-                <span class="block text-[9px] text-gray-500 mt-1 text-right">10:45 AM</span>
-            </div>
+    <div class="glass-card" id="entrance-card">
+        <div class="tab-switcher">
+            <button class="tab-btn active" id="tab-create" onclick="switchTab('create')">CREATE</button>
+            <button class="tab-btn" id="tab-join" onclick="switchTab('join')">JOIN</button>
         </div>
 
-        <div class="flex flex-col items-end ml-auto max-w-[85%]">
-            <div class="bg-blue-600 p-3 rounded-2xl rounded-tr-none shadow-lg shadow-blue-900/20">
-                <p class="text-sm leading-relaxed text-white">Got it, thanks! I'll check the PDF maker now.</p>
-                <div class="flex items-center justify-end gap-1 mt-1">
-                    <span class="text-[9px] text-blue-200/60">10:46 AM</span>
-                    <i class="fas fa-check-double text-[8px] text-blue-200"></i>
-                </div>
-            </div>
+        <div id="pfp-area" class="pfp-box" onclick="document.getElementById('file-input').click()">
+            <img id="pfp-preview" src="https://api.dicebear.com/7.x/bottts/svg?seed=Strategy">
+            <div class="cam-icon"><i class="fas fa-camera"></i></div>
+            <input type="file" id="file-input" class="hidden" accept="image/*" onchange="previewPfp(this)">
         </div>
-    </main>
 
-    <footer class="p-3 bg-[#0F1116] border-t border-white/5 pb-[env(safe-area-inset-bottom)]">
-        <div class="flex items-center gap-2">
-            <button class="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-white transition-colors">
-                <i class="fas fa-plus-circle text-xl"></i>
-            </button>
-            <div class="flex-1 bg-white/5 border border-white/10 rounded-2xl px-4 py-2.5">
-                <input type="text" id="msgInput" placeholder="Message Strategy Hub..." class="bg-transparent w-full outline-none text-sm placeholder:text-gray-600" oninput="toggleInputMode()">
-            </div>
-            <button id="actionBtn" class="w-11 h-11 bg-white text-black rounded-full flex items-center justify-center shadow-lg active:scale-90 transition-transform">
-                <i id="actionIcon" class="fas fa-microphone"></i>
-            </button>
+        <div class="space-y-1">
+            <input type="text" id="user-name" placeholder="Your Name" oninput="validateForm()">
+            <input type="text" id="lounge-name" placeholder="Lounge Name" oninput="validateForm()">
+            <input type="text" id="lounge-code" class="hidden" placeholder="6-Digit Lounge Code" maxlength="6" oninput="validateForm()">
         </div>
-    </footer>
 
+        <button id="proceed-btn" class="go-btn" disabled onclick="handleProceed()">
+            <span id="btn-text">ESTABLISH HUB</span>
+            <i class="fas fa-bolt-lightning"></i>
+        </button>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // Firebase Config from your project
+        const firebaseConfig = {
+            apiKey: "AIzaSyDbfmd0zmv_mFV0CG2OrhKPPeU3zPYGOBg",
+            authDomain: "unidesk-a70ac.firebaseapp.com",
+            projectId: "unidesk-a70ac",
+            storageBucket: "unidesk-a70ac.firebasestorage.app",
+            messagingSenderId: "882535016432",
+            appId: "1:882535016432:web:6eca2645a47a827e779f35"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        let activeTab = 'create';
+
+        window.switchTab = (mode) => {
+            activeTab = mode;
+            // Update Buttons
+            document.getElementById('tab-create').classList.toggle('active', mode === 'create');
+            document.getElementById('tab-join').classList.toggle('active', mode === 'join');
+            
+            // Toggle Inputs
+            document.getElementById('pfp-area').classList.toggle('hidden', mode === 'join');
+            document.getElementById('lounge-name').classList.toggle('hidden', mode === 'join');
+            document.getElementById('lounge-code').classList.toggle('hidden', mode === 'create');
+            
+            // Update Action Text
+            document.getElementById('btn-text').innerText = mode === 'create' ? 'ESTABLISH HUB' : 'REQUEST ENTRY';
+            validateForm();
+        };
+
+        window.previewPfp = (input) => {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = (e) => document.getElementById('pfp-preview').src = e.target.result;
+                reader.readAsDataURL(input.files[0]);
+            }
+        };
+
+        window.validateForm = () => {
+            const user = document.getElementById('user-name').value.trim();
+            const lounge = document.getElementById('lounge-name').value.trim();
+            const code = document.getElementById('lounge-code').value.trim();
+            const btn = document.getElementById('proceed-btn');
+
+            let isValid = false;
+            if (activeTab === 'create') {
+                isValid = user.length > 0 && lounge.length > 0;
+            } else {
+                isValid = user.length > 0 && code.length === 6;
+            }
+
+            btn.disabled = !isValid;
+            btn.classList.toggle('ready', isValid);
+        };
+
+        window.handleProceed = () => {
+            // Add your transition logic to the chat UI here
+            const name = document.getElementById('user-name').value;
+            console.log("Proceeding with:", activeTab, name);
+        };
+    </script>
 </body>
 </html>
