@@ -1,57 +1,42 @@
-// 1. CONFIG
-const firebaseConfig = {
-    apiKey: "AIzaSyDbfmd0zmv_mFV0CG2OrhKPPeU3zPYGOBg",
-    authDomain: "unidesk-a70ac.firebaseapp.com",
-    projectId: "unidesk-a70ac",
-    storageBucket: "unidesk-a70ac.firebasestorage.app",
-    messagingSenderId: "882535016432",
-    appId: "1:882535016432:web:6eca2645a47a827e779f35"
-};
+/** * Aethercore Professional Logic Hub
+ * State-driven architecture to prevent misalignment.
+ */
 
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-
-let session = { user: '', room: '', code: '' };
-
-// 2. UI LOGIC
+// UI Event Handlers
 const ui = {
-    tab: (t) => {
-        document.querySelectorAll('.tab-btn, .panel').forEach(el => el.classList.remove('active'));
-        document.getElementById(`t-${t}`).classList.add('active');
-        document.getElementById(`panel-${t}`).classList.add('active');
+    tab: (type) => {
+        // Toggle Active Tabs
+        document.querySelectorAll('.tab-trigger, .panel').forEach(el => el.classList.remove('active'));
+        document.getElementById(`t-${type}`).classList.add('active');
+        document.getElementById(`p-${type}`).classList.add('active');
     },
-    check: () => {
-        // Unlock logic
-        const a = document.getElementById('in-admin').value;
-        const g = document.getElementById('in-group').value;
-        document.getElementById('btn-create').disabled = !(a && g);
 
-        const u = document.getElementById('in-user').value;
-        const c = document.getElementById('in-code').value;
-        document.getElementById('btn-join').disabled = !(u && c);
-    },
-    toggleSend: () => {
-        const val = document.getElementById('msg-input').value.trim().length > 0;
-        document.getElementById('mic-btn').classList.toggle('hidden', val);
-        document.getElementById('send-btn').classList.toggle('hidden', !val);
+    validate: () => {
+        // 1. Check Create Room validation
+        const aName = document.getElementById('admin-name').value.trim();
+        const gName = document.getElementById('group-name').value.trim();
+        document.getElementById('btn-create').disabled = !(aName.length > 2 && gName.length > 2);
+
+        // 2. Check Join Room validation
+        const uName = document.getElementById('user-name').value.trim();
+        const rCode = document.getElementById('room-code').value.trim();
+        document.getElementById('btn-join').disabled = !(uName.length > 2 && rCode.length === 6);
     }
 };
 
-// 3. CORE FIREBASE
-const core = {
-    create: async () => {
-        const admin = document.getElementById('in-admin').value;
-        const group = document.getElementById('in-group').value;
-        const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+// Real-time Input Monitoring
+document.querySelectorAll('input').forEach(input => {
+    input.addEventListener('input', ui.validate);
+});
 
-        const ref = await db.collection('rooms').add({ name: group, code: code, admin: admin });
-        session = { user: admin, room: ref.id, code: code, name: group };
-        core.launch();
+// Initialization Logic
+const core = {
+    initRoom: () => {
+        console.log("Initializing E2EE Infrastructure...");
+        // Room Creation Logic here
     },
-    launch: () => {
-        document.getElementById('view-auth').classList.remove('active');
-        document.getElementById('view-chat').classList.add('active');
-        document.getElementById('h-name').innerText = session.name;
-        document.getElementById('h-code').innerText = "Code: " + session.code;
+    requestEntry: () => {
+        console.log("Sending Knock Request...");
+        // Join Request Logic here
     }
 };
