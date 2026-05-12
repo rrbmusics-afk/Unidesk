@@ -11,7 +11,6 @@
         :root { --accent: #2D7FF9; --bg: #050608; --surface: #0F1116; --border: rgba(255,255,255,0.08); }
         body { background: var(--bg); color: #fff; font-family: 'Space Grotesk', sans-serif; height: 100dvh; overflow: hidden; margin: 0; }
         
-        /* Premium Chat Surface */
         #chat-window { 
             background-image: url("https://www.transparenttextures.com/patterns/carbon-fibre.png"); 
             background-blend-mode: overlay; 
@@ -21,13 +20,27 @@
         .sent { background: var(--accent); border-bottom-right-radius: 4px; }
         .received { background: #1c1e26; border-bottom-left-radius: 4px; }
 
-        /* Smooth Bottom Dock */
         .input-dock { 
             padding-bottom: calc(10px + env(safe-area-inset-bottom)); 
             background: rgba(15, 17, 22, 0.9);
             backdrop-blur: 20px;
             border-top: 1px solid var(--border);
         }
+
+        /* Container for Admin Requests */
+        #admin-request-well {
+            position: fixed;
+            top: 105px; /* Directly below the header */
+            left: 0;
+            right: 0;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 0 16px;
+            pointer-events: none; /* Allows clicking through to chat if empty */
+        }
+        #admin-request-well > div { pointer-events: auto; }
     </style>
 </head>
 <body>
@@ -35,7 +48,10 @@
     <!-- 1. CORPORATE HEADER -->
     <div class="fixed top-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-2xl border-b border-white/5">
         <header class="h-16 flex items-center px-5 gap-4">
-            <img id="header-pfp" src="https://ui-avatars.com/api/?name=L&background=2D7FF9&color=fff" class="w-10 h-10 rounded-full object-cover border border-white/10">
+            <!-- PROFILE PICTURE FIX -->
+            <img id="header-pfp" src="" class="w-10 h-10 rounded-full object-cover border border-white/10 hidden">
+            <div id="pfp-fallback" class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center font-bold text-xs border border-white/10">?</div>
+            
             <div class="flex-1">
                 <h1 id="header-lounge-name" class="text-sm font-bold tracking-tight">Loading...</h1>
                 <p class="text-[9px] text-green-500 font-bold uppercase tracking-widest">Secured Connection</p>
@@ -54,10 +70,13 @@
         </div>
     </div>
 
-    <!-- 2. MESSAGE STREAM -->
+    <!-- 2. ADMIN REQUEST AREA -->
+    <div id="admin-request-well"></div>
+
+    <!-- 3. MESSAGE STREAM -->
     <main id="chat-window" class="absolute top-[100px] bottom-[85px] left-0 right-0 overflow-y-auto p-5 flex flex-col gap-5"></main>
 
-    <!-- 3. ACTION BAR -->
+    <!-- 4. ACTION BAR -->
     <footer class="fixed bottom-0 left-0 right-0 input-dock px-4 py-3">
         <div class="flex items-center gap-3 max-w-4xl mx-auto">
             <div class="flex-1 bg-white/5 rounded-2xl flex items-center px-4 border border-white/5 focus-within:border-blue-500/50 transition-all">
@@ -77,19 +96,16 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
         import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-        import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDbfmd0zmv_mFV0CG2OrhKPPeU3zPYGOBg",
             databaseURL: "https://unidesk-a70ac-default-rtdb.firebaseio.com",
             projectId: "unidesk-a70ac",
-            storageBucket: "unidesk-a70ac.firebasestorage.app"
         };
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
         const fs = getFirestore(app);
-        const storage = getStorage(app);
 
         // --- SESSION DATA ---
         const myName = localStorage.getItem('user_name');
@@ -99,8 +115,19 @@
         const myRole = localStorage.getItem('user_role');
         const myId = "UID_" + Math.random().toString(36).substr(2, 4).toUpperCase();
 
+        // --- HEADER SETUP ---
         document.getElementById('header-lounge-name').innerText = loungeTitle;
         document.getElementById('display-code').innerText = loungeCode;
+        
+        // Load PFP into Header
+        if(myPfp) {
+            const pfpEl = document.getElementById('header-pfp');
+            pfpEl.src = myPfp;
+            pfpEl.classList.remove('hidden');
+            document.getElementById('pfp-fallback').classList.add('hidden');
+        } else {
+            document.getElementById('pfp-fallback').innerText = myName ? myName[0].toUpperCase() : "?";
+        }
 
         // --- 1. ADMIN APPROVAL ENGINE ---
         if (myRole === 'admin') {
@@ -123,7 +150,7 @@
 
             const banner = document.createElement('div');
             banner.id = bId;
-            banner.className = "fixed top-20 left-4 right-4 bg-blue-600 p-4 rounded-3xl flex items-center justify-between z-[500] shadow-2xl animate-bounce";
+            banner.className = "bg-[#2D7FF9] p-4 rounded-3xl flex items-center justify-between shadow-2xl border border-white/20";
             banner.innerHTML = `
                 <div class="flex items-center gap-3">
                     <img src="${info.pfp || 'https://ui-avatars.com/api/?name='+name}" class="w-10 h-10 rounded-full object-cover border-2 border-white/20">
@@ -137,9 +164,10 @@
                     <button onclick="this.parentElement.parentElement.remove()" class="bg-black/20 text-white px-3 rounded-2xl"><i class="fas fa-x"></i></button>
                 </div>
             `;
-            document.body.appendChild(banner);
+            document.getElementById('admin-request-well').appendChild(banner);
         }
 
+        // Make approveUser global for the button
         window.approveUser = async (name) => {
             await update(ref(db, `rooms/${loungeCode}/requests/${name}`), { status: 'approved' });
             document.getElementById(`banner-${name.replace(/\s+/g, '')}`)?.remove();
@@ -167,7 +195,7 @@
             await addDoc(collection(fs, `rooms/${loungeCode}/chats`), {
                 uid: myId,
                 uName: myName,
-                uPfp: myPfp, // SYNCED: Sends local PFP to everyone
+                uPfp: myPfp, 
                 msg: btoa(payload),
                 type: type,
                 time: serverTimestamp()
@@ -200,22 +228,10 @@
             win.scrollTop = win.scrollHeight;
         });
 
-        // --- 4. MEDIA UPLOAD ---
-        document.getElementById('file-input').onchange = async (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-            
-            const fRef = sRef(storage, `lounge/${loungeCode}/${Date.now()}`);
-            const up = await uploadBytes(fRef, file);
-            const url = await getDownloadURL(up.ref);
-            await sendMessage(url, 'image');
-        };
-
         window.copyCode = () => {
             navigator.clipboard.writeText(loungeCode);
             alert("Lounge Code Copied!");
         };
-
     </script>
 </body>
 </html>
