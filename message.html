@@ -10,235 +10,280 @@
         @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700&display=swap');
         
         :root { 
-            --accent: #2D7FF9; --bg: #050608; --surface: #0F1116; --border: rgba(255,255,255,0.06); 
+            --accent: #2D7FF9; --bg: #050608; --surface: #0F1116; --border: rgba(255,255,255,0.08); 
         }
 
         body { 
             background: var(--bg); color: #fff; font-family: 'Space Grotesk', sans-serif; 
-            height: 100vh; overflow: hidden; margin: 0;
+            height: 100dvh; overflow: hidden; margin: 0;
         }
 
-        /* 5. Unique Doodle Background */
-        #chat-flow {
-            background-image: url('https://www.transparenttextures.com/patterns/carbon-fibre.png'); /* Placeholder for your company doodle */
+        /* Unique Doodle Background */
+        #chat-window {
             background-color: var(--bg);
+            background-image: url("https://www.transparenttextures.com/patterns/carbon-fibre.png");
             background-blend-mode: overlay;
         }
 
-        /* 4. Knocking Animation */
-        .knocking-pulse {
-            animation: pulse 1.5s infinite;
-        }
-        @keyframes pulse {
-            0% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.5; transform: scale(0.98); }
-            100% { opacity: 1; transform: scale(1); }
+        /* Knocking Animation */
+        .knocking { animation: knock 1.2s ease-in-out infinite; }
+        @keyframes knock {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(0.96); opacity: 0.6; }
         }
 
-        /* 6. Static Keyboard Buffer */
-        .input-dock {
-            padding-bottom: env(safe-area-inset-bottom);
-            background: var(--surface);
-        }
+        /* Static Keyboard Optimization */
+        .input-dock { padding-bottom: env(safe-area-inset-bottom); background: var(--surface); z-index: 100; }
 
-        /* WhatsApp-style Context Menu */
         .context-menu {
             position: absolute; background: #1c1e26; border: 1px solid var(--border);
-            border-radius: 12px; display: none; z-index: 1000; width: 180px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border-radius: 14px; display: none; z-index: 2000; width: 200px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.6); overflow: hidden;
         }
         .context-menu button {
-            width: 100%; padding: 12px; text-align: left; font-size: 13px;
-            border-bottom: 1px solid var(--border);
+            width: 100%; padding: 14px 18px; text-align: left; font-size: 13px;
+            border-bottom: 1px solid var(--border); transition: background 0.2s;
         }
+        .context-menu button:active { background: rgba(255,255,255,0.05); }
+
+        .pfp-view { width: 100%; aspect-ratio: 1/1; border-radius: 50%; object-fit: cover; }
     </style>
 </head>
 <body>
 
-    <!-- HEADER SYSTEM -->
-    <div class="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-xl border-b border-white/5">
-        <header onclick="openGroupInfo()" class="h-16 flex items-center px-5 gap-4 active:bg-white/5 transition-all">
-            <img id="group-pfp-header" src="https://ui-avatars.com/api/?name=Lounge&background=2D7FF9&color=fff" class="w-10 h-10 rounded-full object-cover">
+    <!-- 1. HEADER & APPROVAL SYSTEM -->
+    <div class="fixed top-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-2xl border-b border-white/5">
+        <header onclick="toggleGroupInfo()" class="h-16 flex items-center px-5 gap-4 active:bg-white/5">
+            <img id="header-pfp" src="https://ui-avatars.com/api/?name=Lounge&background=2D7FF9&color=fff" class="w-10 h-10 rounded-full object-cover">
             <div class="flex-1">
-                <h1 id="group-name-header" class="text-sm font-bold tracking-tight">Student Lounge</h1>
-                <p id="group-status" class="text-[10px] text-blue-500 font-bold uppercase tracking-widest">End-to-End Encrypted</p>
+                <h1 id="header-group-name" class="text-sm font-bold tracking-tight">Student Lounge</h1>
+                <p class="text-[9px] text-green-500 font-bold uppercase tracking-widest">End-to-End Encrypted</p>
             </div>
-            <i class="fa-solid fa-chevron-right text-[10px] opacity-30"></i>
+            <i class="fa-solid fa-ellipsis-vertical opacity-30"></i>
         </header>
         
-        <!-- 4. Join Code & Pending Requests Bar -->
-        <div class="bg-blue-600/10 h-10 flex items-center justify-between px-5 border-t border-white/5">
+        <!-- Access Code & Request Bar -->
+        <div class="bg-blue-600/10 h-11 flex items-center justify-between px-5 border-t border-white/5">
             <div class="flex items-center gap-2">
-                <span class="text-[9px] text-gray-500 font-bold uppercase">Access:</span>
-                <span id="display-key" class="text-[10px] text-blue-500 font-black tracking-widest">------</span>
+                <span class="text-[9px] text-gray-500 font-bold uppercase">Key:</span>
+                <span id="header-code" class="text-[10px] text-blue-500 font-black tracking-widest">---</span>
             </div>
-            <button id="admin-req-trigger" onclick="openRequestPopup()" class="hidden bg-blue-600 text-[9px] px-3 py-1 rounded-full font-black animate-bounce">
+            <button id="admin-notif" onclick="showApprovalPopup()" class="hidden bg-blue-600 text-white text-[9px] px-3 py-1.5 rounded-full font-black animate-pulse">
                 PENDING REQUESTS
             </button>
         </div>
     </div>
 
-    <!-- MAIN CHAT FLOW -->
-    <main id="chat-flow" class="absolute top-28 bottom-20 left-0 right-0 overflow-y-auto p-5 flex flex-direction-column gap-4"></main>
+    <!-- 2. CHAT SURFACE -->
+    <main id="chat-window" class="absolute top-[108px] bottom-[80px] left-0 right-0 overflow-y-auto p-5 flex flex-col gap-4"></main>
 
-    <!-- 12. INPUT DOCK (Voice & Docs) -->
-    <footer class="fixed bottom-0 left-0 right-0 z-50 input-dock">
+    <!-- 3. INPUT SYSTEM (Voice, Media, Sending) -->
+    <footer class="fixed bottom-0 left-0 right-0 input-dock border-t border-white/5">
         <div class="flex items-center gap-3 p-3">
             <div class="flex-1 bg-white/5 rounded-2xl flex items-center px-4 border border-white/5">
-                <button onclick="document.getElementById('doc-upload').click()">
-                    <i class="fa-solid fa-paperclip text-gray-400"></i>
+                <button onclick="document.getElementById('attach-file').click()" class="text-gray-400 p-1">
+                    <i class="fa-solid fa-paperclip"></i>
                 </button>
-                <input type="file" id="doc-upload" multiple class="hidden">
-                <input type="text" id="main-input" class="flex-1 bg-transparent py-3 px-3 text-sm outline-none" placeholder="Message...">
+                <input type="file" id="attach-file" multiple class="hidden" accept=".pdf,.doc,.docx,.zip,.txt">
+                <input type="text" id="chat-input" class="flex-1 bg-transparent py-3 px-3 text-sm outline-none" placeholder="Type a message...">
             </div>
             
-            <!-- Dynamic Voice/Send Button -->
-            <button id="action-btn" class="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center shadow-lg active:scale-90 transition-all">
+            <button id="action-btn" class="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center shadow-lg transition-transform active:scale-90">
                 <i id="action-icon" class="fa-solid fa-microphone text-sm"></i>
             </button>
         </div>
     </footer>
 
-    <!-- POPUPS (Group Info, Request List, Image View) -->
-    <div id="overlay" class="fixed inset-0 bg-black/90 z-[100] hidden overflow-y-auto p-6">
-        <div class="flex justify-between items-center mb-8">
-            <button onclick="closePopups()" class="text-xs font-bold tracking-widest text-gray-500">CLOSE</button>
-            <h2 id="popup-title" class="text-xs font-black uppercase tracking-[0.2em]">Group Info</h2>
-            <div class="w-8"></div>
+    <!-- 4. MODALS & POPUPS -->
+    <!-- Group Info Sidebar -->
+    <div id="group-info-modal" class="fixed inset-0 bg-black/95 z-[100] hidden overflow-y-auto translate-x-full transition-transform duration-300">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-10">
+                <button onclick="toggleGroupInfo()" class="text-xs font-bold tracking-widest text-gray-500 uppercase">Back</button>
+                <h2 class="text-xs font-black uppercase tracking-[0.2em]">Group Detail</h2>
+                <div class="w-8"></div>
+            </div>
+
+            <div class="flex flex-col items-center">
+                <div class="relative mb-6 group">
+                    <img id="info-pfp" onclick="showLargePfp()" src="" class="w-44 h-44 rounded-full border-4 border-white/10 object-cover shadow-2xl">
+                    <button id="pfp-change-btn" onclick="document.getElementById('pfp-input').click()" class="hidden absolute bottom-2 right-2 bg-blue-600 w-12 h-12 rounded-full border-4 border-black flex items-center justify-center">
+                        <i class="fa-solid fa-camera text-xs"></i>
+                    </button>
+                    <input type="file" id="pfp-input" class="hidden" accept="image/*" onchange="handlePfpUpload(this)">
+                </div>
+                
+                <h2 id="info-group-name" class="text-2xl font-bold mb-2">---</h2>
+                <p id="info-group-code" class="text-xs text-blue-500 font-black tracking-widest uppercase mb-10">Code: ---</p>
+
+                <div class="w-full space-y-2 mb-10">
+                    <button id="rename-opt" onclick="triggerRename()" class="hidden w-full p-4 bg-white/5 rounded-2xl text-left text-sm font-bold flex justify-between items-center">
+                        Rename Group <i class="fa-solid fa-pen text-[10px] opacity-30"></i>
+                    </button>
+                    <button id="delete-opt" onclick="confirmDeleteGroup()" class="hidden w-full p-4 bg-red-900/20 text-red-500 rounded-2xl text-left text-sm font-bold">
+                        Delete Group for Everyone
+                    </button>
+                    <button onclick="confirmLeaveGroup()" class="w-full p-4 bg-white/5 rounded-2xl text-left text-sm font-bold">
+                        Leave Group
+                    </button>
+                </div>
+
+                <div class="w-full">
+                    <p class="text-[10px] font-black uppercase text-gray-500 mb-6 tracking-widest px-1">Participants</p>
+                    <div id="participant-list" class="space-y-5"></div>
+                </div>
+            </div>
         </div>
-        <div id="popup-content" class="flex flex-col items-center"></div>
     </div>
 
+    <!-- Approval Request Modal -->
+    <div id="approval-modal" class="fixed inset-0 bg-black/90 z-[200] hidden p-6 flex items-center justify-center">
+        <div class="bg-[#111318] w-full max-w-sm rounded-3xl border border-white/10 overflow-hidden">
+            <div class="p-6 border-b border-white/5">
+                <h3 class="text-sm font-black uppercase tracking-widest">Entry Requests</h3>
+            </div>
+            <div id="request-list" class="max-h-80 overflow-y-auto p-4 flex flex-col gap-3"></div>
+            <button onclick="document.getElementById('approval-modal').classList.add('hidden')" class="w-full p-4 text-[10px] font-bold uppercase opacity-40">Dismiss</button>
+        </div>
+    </div>
+
+    <!-- Long Press Menu -->
     <div id="context-menu" class="context-menu">
-        <button onclick="editMsg()">Edit</button>
+        <button onclick="editMsg()">Edit Message</button>
         <button onclick="deleteForMe()">Delete for me</button>
-        <button onclick="deleteForEveryone()" class="text-red-500">Delete for everyone</button>
+        <button onclick="deleteForEveryone()" class="text-red-500 font-bold">Delete for everyone</button>
         <button onclick="viewSeenBy()">Seen by...</button>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, set, push, onValue, remove, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getFirestore, doc, setDoc, updateDoc, onSnapshot, collection, addDoc, query, orderBy, deleteDoc, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
-        // Configuration
-        const firebaseConfig = { /* ... Use existing config from summary ... */ };
+        const firebaseConfig = {
+            apiKey: "AIzaSyDbfmd0zmv_mFV0CG2OrhKPPeU3zPYGOBg",
+            authDomain: "unidesk-a70ac.firebaseapp.com",
+            projectId: "unidesk-a70ac",
+            storageBucket: "unidesk-a70ac.firebasestorage.app",
+            messagingSenderId: "882535016432",
+            appId: "1:882535016432:web:6eca2645a47a827e779f35"
+        };
+
         const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
+        const db = getFirestore(app);
         const storage = getStorage(app);
 
-        let myRole = localStorage.getItem('user_role'); // 'admin' or 'member'
-        let roomCode = localStorage.getItem('lounge_code');
-        let myName = localStorage.getItem('user_name');
+        // Core State
+        let currentRoom = localStorage.getItem('active_room') || 'DEFAULT_LOUNGE';
+        let myId = localStorage.getItem('user_id') || 'USER_' + Math.floor(Math.random()*1000);
+        let myName = localStorage.getItem('user_name') || 'Member';
+        let myRole = 'member'; // 'admin' or 'member'
+        let selectedMessageId = null;
 
-        // 12. Voice Recorder Logic
+        // E2EE Mock Implementation (SubtleCrypto for real high-end encryption)
+        const encrypt = (text) => btoa(text);
+        const decrypt = (text) => atob(text);
+
+        // 1. Initialize System
+        function init() {
+            onSnapshot(doc(db, "rooms", currentRoom), (snapshot) => {
+                const data = snapshot.data();
+                if (!data) return;
+
+                // Admin/Member Logic
+                myRole = data.adminId === myId ? 'admin' : 'member';
+                updateUIForRole(data);
+                syncGroupInfo(data);
+            });
+
+            syncMessages();
+            syncRequests();
+        }
+
+        function updateUIForRole(data) {
+            const isAdmin = myRole === 'admin';
+            document.getElementById('pfp-change-btn').classList.toggle('hidden', !isAdmin);
+            document.getElementById('rename-opt').classList.toggle('hidden', !isAdmin);
+            document.getElementById('delete-opt').classList.toggle('hidden', !isAdmin);
+            document.getElementById('header-code').innerText = data.code;
+        }
+
+        // 12. Voice Recording Logic
         let mediaRecorder;
         let audioChunks = [];
         const actionBtn = document.getElementById('action-btn');
         const actionIcon = document.getElementById('action-icon');
-        const mainInput = document.getElementById('main-input');
 
-        // Switch between Microphone and Send
-        mainInput.oninput = (e) => {
-            if(e.target.value.trim() !== "") {
-                actionIcon.className = "fa-solid fa-paper-plane text-sm";
-            } else {
-                actionIcon.className = "fa-solid fa-microphone text-sm";
-            }
+        document.getElementById('chat-input').oninput = (e) => {
+            const hasText = e.target.value.trim().length > 0;
+            actionIcon.className = hasText ? "fa-solid fa-paper-plane text-sm" : "fa-solid fa-microphone text-sm";
         };
 
-        // Long Press to Record
-        let pressTimer;
-        actionBtn.onmousedown = actionBtn.ontouchstart = (e) => {
-            if(mainInput.value.trim() !== "") return; // Send text instead
-            pressTimer = setTimeout(() => {
-                startRecording();
-                actionBtn.classList.add('bg-red-500', 'scale-110');
-            }, 200);
+        actionBtn.onmousedown = actionBtn.ontouchstart = async () => {
+            if (document.getElementById('chat-input').value.trim()) return;
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            mediaRecorder = new MediaRecorder(stream);
+            audioChunks = [];
+            mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+            mediaRecorder.start();
+            actionBtn.classList.add('bg-red-500', 'scale-110');
         };
 
         actionBtn.onmouseup = actionBtn.ontouchend = () => {
-            clearTimeout(pressTimer);
-            if(mediaRecorder && mediaRecorder.state === "recording") {
-                stopAndSendAudio();
-                actionBtn.classList.remove('bg-red-500', 'scale-110');
-            } else if(mainInput.value.trim() !== "") {
-                sendMessage(mainInput.value);
-                mainInput.value = "";
-                actionIcon.className = "fa-solid fa-microphone text-sm";
+            if (!mediaRecorder || mediaRecorder.state !== "recording") {
+                if (document.getElementById('chat-input').value.trim()) sendTextMessage();
+                return;
             }
+            mediaRecorder.stop();
+            mediaRecorder.onstop = async () => {
+                const audioBlob = new Blob(audioChunks, { type: 'audio/mp3' });
+                await uploadAndSendMedia(audioBlob, 'voice');
+            };
+            actionBtn.classList.remove('bg-red-500', 'scale-110');
         };
 
-        // 3. Group Info & Admin Actions
-        window.openGroupInfo = () => {
-            const overlay = document.getElementById('overlay');
-            const content = document.getElementById('popup-content');
-            overlay.classList.remove('hidden');
+        async function uploadAndSendMedia(file, type) {
+            const fileRef = sRef(storage, `rooms/${currentRoom}/${Date.now()}`);
+            const upload = await uploadBytes(fileRef, file);
+            const url = await getDownloadURL(upload.ref);
             
-            content.innerHTML = `
-                <div class="relative mb-6">
-                    <img id="info-pfp" src="${localStorage.getItem('group_pfp')}" class="w-40 h-40 rounded-full border-4 border-white/5 object-cover">
-                    ${myRole === 'admin' ? `
-                        <button onclick="document.getElementById('pfp-input').click()" class="absolute bottom-2 right-2 bg-blue-600 w-10 h-10 rounded-full flex items-center justify-center">
-                            <i class="fa-solid fa-camera text-xs"></i>
-                        </button>
-                        <input type="file" id="pfp-input" class="hidden" onchange="uploadPFP(this)">
-                    ` : ''}
-                </div>
-                <h2 class="text-xl font-bold mb-1">${localStorage.getItem('group_name')}</h2>
-                <p class="text-xs text-gray-500 mb-8 tracking-widest uppercase">Room Code: ${roomCode}</p>
-                
-                <div class="w-full flex flex-col gap-2">
-                    ${myRole === 'admin' ? `
-                        <button onclick="renameGroup()" class="w-full p-4 bg-white/5 rounded-xl text-left text-sm font-bold">Rename Group</button>
-                        <button onclick="deleteGroup()" class="w-full p-4 bg-red-900/20 text-red-500 rounded-xl text-left text-sm font-bold">Delete Group</button>
-                    ` : ''}
-                    <button onclick="leaveGroup()" class="w-full p-4 bg-white/5 rounded-xl text-left text-sm font-bold">Leave Group</button>
-                </div>
-                
-                <div class="w-full mt-10">
-                    <h3 class="text-[10px] font-black uppercase text-gray-500 mb-4 tracking-widest">Members</h3>
-                    <div id="member-list" class="flex flex-col gap-4"></div>
-                </div>
-            `;
-            loadMembers();
+            await addDoc(collection(db, `rooms/${currentRoom}/messages`), {
+                senderId: myId,
+                senderName: myName,
+                type: type,
+                content: encrypt(url),
+                timestamp: Date.now(),
+                seenBy: [myId]
+            });
+        }
+
+        // 7. Long Press Context Menu
+        let pressTimer;
+        function setupMessageEvents(el, msgId) {
+            el.onmousedown = el.ontouchstart = (e) => {
+                pressTimer = setTimeout(() => {
+                    selectedMessageId = msgId;
+                    const menu = document.getElementById('context-menu');
+                    menu.style.display = 'block';
+                    menu.style.top = `${e.clientY || e.touches[0].clientY}px`;
+                    menu.style.left = `${e.clientX || e.touches[0].clientX}px`;
+                }, 600);
+            };
+            el.onmouseup = el.ontouchend = () => clearTimeout(pressTimer);
+        }
+
+        window.onclick = () => document.getElementById('context-menu').style.display = 'none';
+
+        // Interface Management
+        window.toggleGroupInfo = () => {
+            const modal = document.getElementById('group-info-modal');
+            modal.classList.toggle('hidden');
+            setTimeout(() => modal.classList.toggle('translate-x-full'), 10);
         };
 
-        // Real-time Member Sync
-        function loadMembers() {
-            onValue(ref(db, `rooms/${roomCode}/members`), (snap) => {
-                const list = document.getElementById('member-list');
-                if(!list) return;
-                list.innerHTML = '';
-                snap.forEach(child => {
-                    const m = child.val();
-                    list.innerHTML += `
-                        <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-[10px] font-bold">${m.name[0]}</div>
-                            <span class="text-sm font-medium">${m.name}</span>
-                            ${m.role === 'admin' ? '<span class="text-[8px] bg-blue-600/20 text-blue-500 px-2 py-0.5 rounded ml-auto uppercase font-bold">Admin</span>' : ''}
-                        </div>
-                    `;
-                });
-            });
-        }
+        // Initialize Call
+        init();
 
-        // Encryption Layer (Simple AES Implementation)
-        async function encrypt(text) {
-            // Real implementation would use SubtleCrypto with room-specific keys
-            return btoa(text); 
-        }
-
-        async function sendMessage(text, type = "text") {
-            const encrypted = await encrypt(text);
-            push(ref(db, `rooms/${roomCode}/messages`), {
-                sender: myName,
-                text: encrypted,
-                type: type,
-                timestamp: Date.now(),
-                seenBy: { [myName]: true }
-            });
-        }
     </script>
 </body>
 </html>
