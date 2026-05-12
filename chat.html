@@ -1,97 +1,14 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Aethercore Hub | Student Lounge</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="chat.css">
-</head>
-<body>
-
-    <div id="entrance-view" class="view active">
-        <div class="brand-zone">
-            <h1 class="logo-text">Aethercore</h1>
-            <p class="tagline">ENTERPRISE STUDENT LOUNGE</p>
-        </div>
-
-        <div class="card-container">
-            <div class="tab-header">
-                <button id="tab-create" class="tab-btn active" onclick="switchMode('create')">Create Lounge</button>
-                <button id="tab-join" class="tab-btn" onclick="switchMode('join')">Join Lounge</button>
-            </div>
-
-            <div class="form-body">
-                <div class="input-group">
-                    <input type="text" id="nameInput" placeholder="Your Full Name" oninput="validate()">
-                    <input type="text" id="loungeNameInput" placeholder="Lounge Name" oninput="validate()">
-                    <input type="text" id="codeInput" placeholder="Enter Room Code" class="hidden" oninput="validate()">
-                </div>
-                <button id="actionBtn" class="locked" disabled onclick="handleAction()">Proceed</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="chat-view" class="view">
-        <header class="chat-header" onclick="toggleInfo()">
-            <div class="h-left">
-                <img id="groupPfp" src="https://via.placeholder.com/100" class="pfp-circle">
-                <div class="h-meta">
-                    <h3 id="displayLoungeName">Hub</h3>
-                    <span id="displayLoungeCode">#------</span>
-                </div>
-            </div>
-            <div id="adminBadge" class="hidden">ADMIN</div>
-        </header>
-
-        <div id="reqBanner" class="req-banner hidden" onclick="showApprovals()">
-            <i class="fas fa-user-shield"></i> <span id="reqCount">0</span> Pending Join Requests
-        </div>
-
-        <main id="chatBox" class="doodle-bg">
-            <div class="e2ee-tag">Messages are end-to-end encrypted</div>
-        </main>
-
-        <footer class="chat-footer">
-            <div class="input-pill">
-                <label class="icon-btn"><i class="fas fa-plus"></i><input type="file" id="docInput" multiple hidden></label>
-                <input type="text" id="msgInput" placeholder="Message" oninput="checkInput()">
-            </div>
-            <button id="triggerBtn" class="wa-action-btn" onmousedown="startVoice()" onmouseup="stopVoice()">
-                <i id="triggerIcon" class="fas fa-microphone"></i>
-            </button>
-        </footer>
-    </div>
-
-    <div id="info-view" class="view overlay">
-        <div class="info-header">
-            <button onclick="toggleInfo()"><i class="fas fa-arrow-left"></i></button>
-            <h2>Group Info</h2>
-        </div>
-        <div class="info-content">
-            <div class="pfp-large-box">
-                <img id="largePfp" src="https://via.placeholder.com/300">
-                <button id="changePfpBtn" class="hidden" onclick="triggerPfpUpload()">Change Photo</button>
-                <input type="file" id="pfpUpload" hidden accept="image/*">
-            </div>
-            <div class="info-list">
-                <div class="item"><span>Lounge Name</span><b id="infoLoungeName">...</b></div>
-                <div class="item"><span>Code</span><b id="infoLoungeCode">...</b></div>
-            </div>
-            <button class="danger-btn" onclick="leaveGroup()">Leave Group</button>
-            <button id="deleteBtn" class="danger-btn hidden" onclick="deleteGroup()">Delete Group for Everyone</button>
-        </div>
-    </div>
-
-    <div id="approveModal" class="modal hidden">
-        <div class="modal-box">
-            <h3>Join Requests</h3>
-            <div id="requestList"></div>
-            <button onclick="closeApprovals()" class="close-modal">Close</button>
-        </div>
-    </div>
-
-    <script type="module" src="chat.js"></script>
-</body>
-</html>
+<!-- Join/Create Toggle Container -->
+<div class="max-w-md mx-auto p-8 bg-white shadow-2xl rounded-2xl border border-gray-100">
+  <h1 class="text-2xl font-bold text-gray-900 mb-6">Student Lounge</h1>
+  
+  <!-- Fields for Create (Show if state is 'create') -->
+  <div class="space-y-4">
+    <input type="text" placeholder="Your Name" class="w-full p-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-black outline-none transition">
+    <input type="text" placeholder="Lounge Name" class="w-full p-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-black outline-none transition">
+    
+    <button disabled class="w-full py-3 bg-black text-white rounded-lg font-semibold disabled:opacity-30 disabled:cursor-not-allowed">
+      Create Lounge
+    </button>
+  </div>
+</div>
