@@ -144,15 +144,17 @@
 
         const startRec = async () => {
             try {
+                // Request stream
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                const mimeType = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/ogg';
+                
+                // Mime types check for high compatibility
+                const types = ["audio/webm", "audio/ogg", "audio/mp4"];
+                const mimeType = types.find(t => MediaRecorder.isTypeSupported(t)) || "";
+                
                 mediaRecorder = new MediaRecorder(stream, { mimeType });
                 audioChunks = [];
                 
-                mediaRecorder.ondataavailable = e => {
-                    if (e.data.size > 0) audioChunks.push(e.data);
-                };
-
+                mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
                 mediaRecorder.onstop = () => {
                     const blob = new Blob(audioChunks, { type: mimeType });
                     const reader = new FileReader();
