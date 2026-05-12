@@ -3,272 +3,249 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Aether Enterprise Messenger</title>
+    <title>Aether Pro Messenger</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root {
-            --wa-dark-bg: #0b141a;
+            --wa-bg: #0b141a;
             --wa-nav: #202c33;
-            --wa-input: #2a3942;
             --wa-green: #00a884;
             --wa-bubble-me: #005c4b;
             --wa-bubble-them: #202c33;
-            --accent: #53bdeb;
         }
 
         body { 
-            background: var(--wa-dark-bg); 
+            background: var(--wa-bg); 
             color: #e9edef; 
             font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             height: 100vh; overflow: hidden; margin: 0;
         }
 
-        /* 5) Unique Brand Doodle Background */
-        .chat-canvas {
+        /* 5) Aesthetic Custom Doodle Background */
+        .chat-area {
             background-color: #0b141a;
-            background-image: url("https://www.transparenttextures.com/patterns/carbon-fibre.png");
+            background-image: url("https://www.transparenttextures.com/patterns/graphy-dark.png");
             background-blend-mode: soft-light;
-            flex: 1; overflow-y: auto; display: flex; flex-direction: column; padding: 20px; gap: 8px;
+            flex: 1; overflow-y: auto; display: flex; flex-direction: column; padding: 15px; gap: 4px;
         }
 
-        .layer { position: fixed; inset: 0; display: none; flex-direction: column; background: var(--wa-dark-bg); z-index: 10; }
-        .layer-active { display: flex; }
+        .screen { position: fixed; inset: 0; display: none; flex-direction: column; background: var(--wa-bg); z-index: 10; }
+        .screen-active { display: flex; }
 
-        /* WhatsApp Standard Headers */
-        .app-header { height: 60px; background: var(--wa-nav); display: flex; align-items: center; padding: 0 15px; gap: 15px; flex-shrink: 0; z-index: 50; }
-        .avatar-ring { width: 42px; height: 42px; border-radius: 50%; object-fit: cover; background: #374151; cursor: pointer; }
+        /* Professional Alignment & Headers */
+        .header { height: 62px; background: var(--wa-nav); display: flex; align-items: center; padding: 0 15px; gap: 12px; flex-shrink: 0; }
+        .pfp-thumb { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; cursor: pointer; background: #374151; }
 
-        /* 10) Message Bubbles & Context */
-        .msg-bubble { max-width: 85%; padding: 8px 12px; border-radius: 8px; font-size: 15px; position: relative; box-shadow: 0 1px 1px rgba(0,0,0,0.2); line-height: 1.5; }
-        .me { background: var(--wa-bubble-me); align-self: flex-end; border-top-right-radius: 0; }
-        .them { background: var(--wa-bubble-them); align-self: flex-start; border-top-left-radius: 0; }
+        /* 10) Bubble Logic */
+        .bubble { max-width: 80%; padding: 8px 12px; border-radius: 8px; font-size: 15px; position: relative; box-shadow: 0 1px 1px rgba(0,0,0,0.2); transition: transform 0.1s; }
+        .bubble-me { background: var(--wa-bubble-me); align-self: flex-end; border-top-right-radius: 0; }
+        .bubble-them { background: var(--wa-bubble-them); align-self: flex-start; border-top-left-radius: 0; }
         
-        /* 9) Static Keyboard Input Construction */
-        .toolbar { background: var(--wa-nav); padding: 10px 15px; display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
-        .input-pill { background: var(--wa-input); border-radius: 24px; flex: 1; padding: 10px 18px; color: white; border: none; outline: none; font-size: 16px; }
+        /* 9) Static Input Logic */
+        .input-footer { background: var(--wa-nav); padding: 10px; display: flex; align-items: center; gap: 8px; flex-shrink: 0; position: sticky; bottom: 0; }
+        .input-field { background: #2a3942; border-radius: 24px; flex: 1; padding: 10px 16px; color: white; border: none; outline: none; font-size: 16px; }
 
-        /* Context Action Menu */
-        #msg-context { display: none; position: fixed; background: #233138; border-radius: 12px; z-index: 1000; min-width: 190px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); }
-        .context-btn { padding: 12px 16px; font-size: 14px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
-        .context-btn:active { background: #182229; }
-        .danger { color: #f15c5c; }
+        /* Admin Controls */
+        .approval-strip { background: #e67e22; color: #fff; padding: 10px; font-weight: bold; font-size: 12px; text-align: center; cursor: pointer; letter-spacing: 0.5px; }
+        
+        /* Context Menu Styles */
+        #context-menu { display: none; position: fixed; background: #233138; border-radius: 12px; z-index: 2000; min-width: 180px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); overflow: hidden; }
+        .ctx-item { padding: 14px 18px; font-size: 14px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .ctx-item:active { background: #182229; }
+        .ctx-danger { color: #ff5e5e; }
 
-        /* 4) Approval Strip */
-        .approval-alert { background: #ff8c00; color: #000; padding: 12px; font-weight: 700; font-size: 13px; text-align: center; cursor: pointer; }
+        .btn-disabled { opacity: 0.4; pointer-events: none; }
     </style>
 </head>
 <body>
 
-    <!-- 1) HOME SCREEN: CREATE / JOIN TABS -->
-    <div id="screen-home" class="layer layer-active">
-        <div class="p-6 max-w-lg mx-auto w-full flex flex-col h-full">
-            <h1 class="text-3xl font-bold text-center my-8 text-emerald-500">Aether Enterprise</h1>
-            
-            <div class="bg-[#111b21] rounded-3xl overflow-hidden shadow-2xl border border-white/5">
-                <div class="flex">
-                    <button onclick="toggleTab('create')" id="tab-c" class="flex-1 py-4 font-bold text-sm uppercase tracking-wider border-b-2 border-emerald-500 bg-[#202c33]">Create Room</button>
-                    <button onclick="toggleTab('join')" id="tab-j" class="flex-1 py-4 font-bold text-sm uppercase tracking-wider text-gray-500 border-b-2 border-transparent">Join Room</button>
+    <!-- HOME SCREEN: CREATE/JOIN TABS -->
+    <div id="screen-home" class="screen screen-active">
+        <div class="flex-1 flex flex-col p-6 items-center justify-center">
+            <div class="w-full max-w-sm">
+                <div class="flex mb-8 bg-[#202c33] p-1 rounded-xl">
+                    <button id="btn-tab-create" onclick="setTab('create')" class="flex-1 py-3 font-bold rounded-lg bg-emerald-600">Create</button>
+                    <button id="btn-tab-join" onclick="setTab('join')" class="flex-1 py-3 font-bold rounded-lg text-gray-400">Join</button>
                 </div>
 
-                <div id="form-create" class="p-8 space-y-4">
-                    <input type="text" id="admin-name" placeholder="Admin Display Name" class="w-full bg-[#2a3942] p-4 rounded-xl outline-none border-none">
-                    <input type="text" id="group-title" placeholder="Organization/Group Name" class="w-full bg-[#2a3942] p-4 rounded-xl outline-none border-none">
-                    <button onclick="initGroup()" class="w-full bg-emerald-600 hover:bg-emerald-500 p-4 rounded-xl font-bold transition-all shadow-lg">INITIALIZE ROOM</button>
+                <div id="panel-create" class="space-y-4">
+                    <input type="text" id="c-name" oninput="validateForm()" placeholder="Your Admin Name" class="w-full bg-[#2a3942] p-4 rounded-xl outline-none border-none">
+                    <input type="text" id="c-group" oninput="validateForm()" placeholder="Group Subject" class="w-full bg-[#2a3942] p-4 rounded-xl outline-none border-none">
+                    <button id="btn-create" onclick="processCreate()" class="w-full bg-emerald-600 p-4 rounded-xl font-bold btn-disabled shadow-xl">CREATE GROUP</button>
                 </div>
 
-                <div id="form-join" class="hidden p-8 space-y-4">
-                    <input type="text" id="member-name" placeholder="Your Full Name" class="w-full bg-[#2a3942] p-4 rounded-xl outline-none border-none">
-                    <input type="text" id="join-room-id" placeholder="ENTER 6-DIGIT ROOM CODE" class="w-full bg-[#2a3942] p-4 rounded-xl outline-none border-none text-center font-mono tracking-widest">
-                    <button onclick="requestJoin()" class="w-full bg-blue-600 hover:bg-blue-500 p-4 rounded-xl font-bold transition-all shadow-lg">REQUEST TO JOIN</button>
+                <div id="panel-join" class="hidden space-y-4">
+                    <input type="text" id="j-name" oninput="validateForm()" placeholder="Your Name" class="w-full bg-[#2a3942] p-4 rounded-xl outline-none border-none">
+                    <input type="text" id="j-code" oninput="validateForm()" placeholder="Room Code" class="w-full bg-[#2a3942] p-4 rounded-xl outline-none border-none text-center font-mono">
+                    <button id="btn-join" onclick="processJoin()" class="w-full bg-blue-600 p-4 rounded-xl font-bold btn-disabled shadow-xl">KNOCK TO JOIN</button>
                 </div>
-            </div>
-
-            <div class="mt-10 overflow-y-auto">
-                <h3 class="text-xs font-black text-gray-500 uppercase mb-4 tracking-widest">Your Active Lounges</h3>
-                <div id="active-rooms-list" class="space-y-3"></div>
             </div>
         </div>
     </div>
 
-    <!-- CHAT INTERFACE -->
-    <div id="screen-chat" class="layer">
-        <!-- 4) Approval Notification (Only for Admins) -->
-        <div id="admin-approval-bar" class="approval-alert hidden" onclick="showApprovalModal()">
-            PENDING JOIN REQUESTS ● CLICK TO MANAGE
+    <!-- CHAT SCREEN -->
+    <div id="screen-chat" class="screen">
+        <div id="approval-bar" class="approval-strip hidden" onclick="openApprovals()">
+            NEW KNOCK REQUESTS • TAP TO MANAGE
         </div>
 
-        <div class="app-header">
-            <img id="chat-pfp" src="" class="avatar-ring" onclick="viewPfpFull()">
-            <div class="flex-1 overflow-hidden" onclick="showGroupInfo()">
-                <div id="view-room-name" class="font-bold text-[17px] truncate">...</div>
-                <div id="view-room-status" class="text-xs text-gray-400">Tap for group info</div>
+        <div class="header">
+            <img id="header-pfp" src="" class="pfp-thumb" onclick="zoomPfp()">
+            <div class="flex-1" onclick="openInfo()">
+                <div id="group-title-text" class="font-bold text-[16px]">...</div>
+                <div class="text-[12px] text-gray-400">Click for group info</div>
             </div>
-            <div id="room-code-badge" class="bg-black/30 px-3 py-1 rounded-full text-[10px] font-mono text-emerald-400 font-bold border border-emerald-900">------</div>
+            <div id="badge-code" class="text-[10px] font-mono bg-black/40 px-2 py-1 rounded text-emerald-500 font-bold">---</div>
         </div>
 
-        <div id="chat-box" class="chat-canvas"></div>
+        <div id="chat-flow" class="chat-area"></div>
 
-        <!-- 10) Editing Message Indicator -->
-        <div id="edit-indicator" class="hidden px-4 py-2 bg-[#1d2a33] text-xs border-l-4 border-emerald-500 flex justify-between">
-            <span>Editing Message...</span>
-            <button onclick="cancelEdit()" class="text-emerald-500 font-bold">CANCEL</button>
-        </div>
-
-        <div class="toolbar">
-            <input type="text" id="chat-input" placeholder="Message" class="input-pill" autocomplete="off">
-            <button onclick="handleSend()" class="bg-emerald-500 w-12 h-12 rounded-full flex items-center justify-center shadow-lg">
+        <div class="input-footer">
+            <input type="text" id="msg-input" placeholder="Message" class="input-field" autocomplete="off">
+            <button onclick="handleSend()" class="bg-emerald-600 w-12 h-12 rounded-full flex items-center justify-center">
                 <svg viewBox="0 0 24 24" width="24" height="24" fill="white"><path d="M1.101 21.757L23.8 12.028 1.101 2.3l.011 7.912 13.623 1.816-13.623 1.817-.011 7.912z"></path></svg>
             </button>
         </div>
     </div>
 
-    <!-- 7) GROUP INFO LAYER -->
-    <div id="screen-info" class="layer">
-        <div class="app-header">
-            <button onclick="backToChat()" class="text-emerald-500 font-bold">Back</button>
-            <span class="flex-1 text-center font-bold">Group Info</span>
+    <!-- GROUP INFO SCREEN -->
+    <div id="screen-info" class="screen">
+        <div class="header">
+            <button onclick="closeInfo()" class="text-emerald-500 font-bold px-2">Back</button>
+            <div class="flex-1 text-center font-bold">Group Info</div>
             <div class="w-10"></div>
         </div>
-        <div class="p-8 overflow-y-auto">
-            <div class="flex flex-col items-center mb-8">
-                <img id="info-pfp" class="w-32 h-32 rounded-full border-4 border-white/5 mb-4 shadow-2xl object-cover">
-                
-                <!-- 3) Admin Only View -->
-                <div id="admin-edit-zone" class="hidden w-full space-y-4">
-                    <input type="text" id="update-room-pfp" class="w-full bg-[#111b21] p-3 rounded-lg text-xs" placeholder="New PFP URL (Admin Only)" onchange="applyPfpUpdate(this.value)">
-                    <div class="flex gap-2">
-                        <input type="text" id="update-room-name" class="flex-1 bg-[#111b21] p-3 rounded-lg font-bold">
-                        <button onclick="applyNameUpdate()" class="bg-emerald-600 px-4 rounded-lg text-xs font-bold">RENAME</button>
-                    </div>
+        <div class="p-6 overflow-y-auto flex flex-col items-center">
+            <img id="info-pfp" class="w-40 h-40 rounded-full mb-6 border-4 border-white/5 object-cover">
+            
+            <div id="admin-actions" class="hidden w-full space-y-4">
+                <div class="flex gap-2">
+                    <input type="text" id="new-title" class="flex-1 bg-[#2a3942] p-3 rounded-lg text-sm">
+                    <button onclick="rename()" class="bg-emerald-600 px-4 rounded-lg font-bold text-xs">UPDATE</button>
                 </div>
+                <input type="text" id="new-pfp" placeholder="New Image URL" class="w-full bg-[#2a3942] p-3 rounded-lg text-xs" onchange="changePfp(this.value)">
+                <button onclick="terminate()" class="w-full py-4 bg-red-600/10 text-red-500 font-bold rounded-xl border border-red-900/50">DELETE GROUP FOR ALL</button>
             </div>
 
-            <h4 class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">Participants</h4>
-            <div id="member-roster" class="space-y-3 mb-10"></div>
+            <div class="w-full mt-8">
+                <p class="text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-4">Members</p>
+                <div id="member-list" class="space-y-2"></div>
+            </div>
 
-            <!-- 7) Leave Group Option -->
-            <button onclick="leaveRoom()" class="w-full py-4 bg-white/5 rounded-2xl font-bold text-red-400 hover:bg-red-500/10 transition-all">Leave Group</button>
-            
-            <!-- 3) Admin Delete Group -->
-            <button id="admin-delete-btn" onclick="terminateRoom()" class="hidden w-full mt-3 py-4 bg-red-600/10 text-red-500 rounded-2xl font-bold">Terminate Group for All</button>
+            <button onclick="exitGroup()" class="w-full mt-10 py-4 bg-white/5 text-red-400 font-bold rounded-xl">Leave Group</button>
         </div>
     </div>
 
-    <!-- MODALS & POPUPS -->
-    <div id="msg-context">
-        <div class="context-btn" id="ctx-edit" onclick="startEditMode()">Edit Message <span>✎</span></div>
-        <div class="context-btn" onclick="deleteMessage('me')">Delete for me <span>🗑️</span></div>
-        <div class="context-btn danger" id="ctx-all" onclick="deleteMessage('all')">Delete for everyone <span>🚮</span></div>
+    <!-- MODALS -->
+    <div id="context-menu">
+        <div class="ctx-item" id="ctx-edit" onclick="initEdit()">Edit Message</div>
+        <div class="ctx-item" onclick="delForMe()">Delete for me</div>
+        <div class="ctx-item ctx-danger" id="ctx-all" onclick="delForAll()">Delete for everyone</div>
     </div>
 
-    <div id="pfp-zoom" class="fixed inset-0 bg-black/95 z-[2000] hidden items-center justify-center p-4" onclick="this.style.display='none'">
-        <img id="pfp-zoom-img" src="" class="max-w-full max-h-full rounded-lg shadow-2xl">
-    </div>
-
-    <div id="modal-approval" class="fixed inset-0 bg-black/80 z-[1500] hidden flex-col items-center justify-center p-6">
-        <div class="bg-[#233138] w-full max-w-md rounded-3xl overflow-hidden shadow-2xl">
-            <div class="p-4 bg-emerald-600 font-bold text-center">Pending Approvals</div>
-            <div id="approval-list" class="p-4 max-h-80 overflow-y-auto space-y-3"></div>
-            <button onclick="hideApprovalModal()" class="w-full p-4 text-gray-400 text-sm font-bold border-t border-white/5">CLOSE</button>
+    <div id="modal-knock" class="fixed inset-0 bg-black/90 z-[3000] hidden flex flex-col p-6 items-center justify-center">
+        <div class="bg-[#202c33] w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl">
+            <div class="p-4 bg-emerald-600 font-bold text-center">Knock Requests</div>
+            <div id="knock-list" class="p-4 space-y-3"></div>
+            <button onclick="document.getElementById('modal-knock').classList.add('hidden')" class="w-full py-4 text-gray-400 font-bold border-t border-white/5">CLOSE</button>
         </div>
     </div>
 
     <script type="module">
-        // Real-Life Firestore Engine
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, doc, setDoc, updateDoc, onSnapshot, arrayUnion, arrayRemove, getDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        const firebaseConfig = { apiKey: "AIzaSyDbfmd0zmv_mFV0CG2OrhKPPeU3zPYGOBg", authDomain: "unidesk-a70ac.firebaseapp.com", projectId: "unidesk-a70ac" };
+        // Firebase Config - Use your actual project keys
+        const firebaseConfig = { apiKey: "AIzaSyDbfmd0zmv_mFV0CG2OrhKPPeU3zPYGOBg", projectId: "unidesk-a70ac" };
         const db = getFirestore(initializeApp(firebaseConfig));
 
-        let currentUserId = localStorage.getItem('ae_uid') || "USER_"+Math.random().toString(36).substr(2,9);
-        localStorage.setItem('ae_uid', currentUserId);
+        let userUID = localStorage.getItem('user_uid') || "UID-"+Math.random().toString(36).substr(2,6).toUpperCase();
+        localStorage.setItem('user_uid', userUID);
 
-        let activeRoom = null;
-        let selectedMsgId = null;
-        let isEditing = false;
-        let pressTimer;
+        let activeCode = null;
+        let selectedMsg = null;
+        let editMode = false;
+        let timer;
 
-        // 1) TABS
-        window.toggleTab = (tab) => {
-            document.getElementById('form-create').classList.toggle('hidden', tab !== 'create');
-            document.getElementById('form-join').classList.toggle('hidden', tab !== 'join');
-            document.getElementById('tab-c').className = tab === 'create' ? "flex-1 py-4 font-bold text-sm uppercase tracking-wider border-b-2 border-emerald-500 bg-[#202c33]" : "flex-1 py-4 font-bold text-sm uppercase tracking-wider text-gray-500 border-b-2 border-transparent";
-            document.getElementById('tab-j').className = tab === 'join' ? "flex-1 py-4 font-bold text-sm uppercase tracking-wider border-b-2 border-emerald-500 bg-[#202c33]" : "flex-1 py-4 font-bold text-sm uppercase tracking-wider text-gray-500 border-b-2 border-transparent";
+        // 1) KEY-TAB VALIDATION
+        window.validateForm = () => {
+            const cName = document.getElementById('c-name').value;
+            const cGroup = document.getElementById('c-group').value;
+            document.getElementById('btn-create').classList.toggle('btn-disabled', !(cName && cGroup));
+
+            const jName = document.getElementById('j-name').value;
+            const jCode = document.getElementById('j-code').value;
+            document.getElementById('btn-join').classList.toggle('btn-disabled', !(jName && jCode));
         };
 
-        // 3) CREATE & 2) REMEMBER ADMIN
-        window.initGroup = async () => {
-            const adminName = document.getElementById('admin-name').value.trim();
-            const title = document.getElementById('group-title').value.trim();
-            if(!adminName || !title) return alert("Validation Failed");
-            
+        window.setTab = (t) => {
+            document.getElementById('panel-create').classList.toggle('hidden', t !== 'create');
+            document.getElementById('panel-join').classList.toggle('hidden', t !== 'join');
+            document.getElementById('btn-tab-create').className = t === 'create' ? "flex-1 py-3 font-bold rounded-lg bg-emerald-600" : "flex-1 py-3 font-bold rounded-lg text-gray-400";
+            document.getElementById('btn-tab-join').className = t === 'join' ? "flex-1 py-3 font-bold rounded-lg bg-emerald-600" : "flex-1 py-3 font-bold rounded-lg text-gray-400";
+        };
+
+        // GROUP LOGIC
+        window.processCreate = async () => {
+            const adminName = document.getElementById('c-name').value;
+            const title = document.getElementById('c-group').value;
             const code = Math.random().toString(36).substr(2,6).toUpperCase();
-            localStorage.setItem('ae_name', adminName);
             
             await setDoc(doc(db, "rooms", code), {
-                id: code,
-                name: title,
-                admin: currentUserId,
+                id: code, name: title, admin: userUID,
                 pfp: `https://ui-avatars.com/api/?name=${title}&background=random`,
-                members: [{id: currentUserId, name: adminName}],
-                memberIds: [currentUserId],
-                pending: [],
+                members: [{id: userUID, name: adminName}],
+                mIds: [userUID],
+                knocks: [],
                 messages: []
             });
-            openRoom(code);
+            openChat(code, adminName);
         };
 
-        window.requestJoin = async () => {
-            const name = document.getElementById('member-name').value.trim();
-            const code = document.getElementById('join-room-id').value.trim().toUpperCase();
-            if(!name || !code) return alert("Enter code and name");
-            
+        window.processJoin = async () => {
+            const name = document.getElementById('j-name').value;
+            const code = document.getElementById('j-code').value.toUpperCase();
             const ref = doc(db, "rooms", code);
-            const snap = await getDoc(ref);
-            if(!snap.exists()) return alert("Room not found");
+            const s = await getDoc(ref);
             
-            localStorage.setItem('ae_name', name);
-            await updateDoc(ref, { pending: arrayUnion({id: currentUserId, name: name}) });
-            alert("Join request sent. Admin must approve.");
+            if(!s.exists()) return alert("Room not found");
+            await updateDoc(ref, { knocks: arrayUnion({id: userUID, name}) });
+            alert("Knocked! Wait for Admin approval.");
 
-            // Listen for approval live
-            onSnapshot(ref, (s) => {
-                if(s.exists() && s.data().memberIds.includes(currentUserId)) openRoom(code);
+            onSnapshot(ref, (snap) => {
+                if(snap.exists() && snap.data().mIds.includes(userUID)) openChat(code, name);
             });
         };
 
-        // CORE CHAT ENGINE
-        function openRoom(code) {
-            activeRoom = code;
-            document.getElementById('screen-home').classList.remove('layer-active');
-            document.getElementById('screen-chat').classList.add('layer-active');
+        // CHAT ENGINE
+        function openChat(code, myName) {
+            activeCode = code;
+            localStorage.setItem('my_name', myName);
+            document.getElementById('screen-home').classList.remove('screen-active');
+            document.getElementById('screen-chat').classList.add('screen-active');
 
             onSnapshot(doc(db, "rooms", code), (s) => {
-                // 4) If Admin deleted group
                 if(!s.exists()) {
-                    alert("This group has been terminated by the admin.");
+                    alert("Admin deleted this group.");
                     location.reload(); return;
                 }
                 const data = s.data();
-                const isAdmin = data.admin === currentUserId;
+                const isAdmin = data.admin === userUID;
 
-                document.getElementById('view-room-name').innerText = data.name;
-                document.getElementById('room-code-badge').innerText = code;
-                document.getElementById('chat-pfp').src = data.pfp;
+                document.getElementById('group-title-text').innerText = data.name;
+                document.getElementById('badge-code').innerText = code;
+                document.getElementById('header-pfp').src = data.pfp;
                 document.getElementById('info-pfp').src = data.pfp;
-                document.getElementById('update-room-name').value = data.name;
+                document.getElementById('new-title').value = data.name;
 
-                // 3) Admin Permissions
-                document.getElementById('admin-edit-zone').classList.toggle('hidden', !isAdmin);
-                document.getElementById('admin-delete-btn').classList.toggle('hidden', !isAdmin);
+                document.getElementById('admin-actions').classList.toggle('hidden', !isAdmin);
                 
-                // 4) Approvals Visibility
-                if(isAdmin && data.pending.length > 0) {
-                    document.getElementById('admin-approval-bar').classList.remove('hidden');
-                    renderPendingList(data.pending);
+                // 4) Approval Management
+                if(isAdmin && data.knocks.length > 0) {
+                    document.getElementById('approval-bar').classList.remove('hidden');
+                    renderKnocks(data.knocks);
                 } else {
-                    document.getElementById('admin-approval-bar').classList.add('hidden');
+                    document.getElementById('approval-bar').classList.add('hidden');
                 }
 
                 renderMessages(data.messages);
@@ -276,104 +253,107 @@
             });
         }
 
-        // 10) MESSAGE LOGIC
-        function renderMessages(msgs) {
-            const box = document.getElementById('chat-box');
-            box.innerHTML = msgs.filter(m => !m.hiddenFor?.includes(currentUserId)).map(m => `
-                <div class="msg-bubble ${m.uid === currentUserId ? 'me' : 'them'}" 
-                     onmousedown="pStart('${m.id}')" onmouseup="pEnd()" 
-                     ontouchstart="pStart('${m.id}')" ontouchend="pEnd()">
-                    ${m.uid !== currentUserId ? `<div class="text-[10px] font-bold text-emerald-400 mb-1">${m.sender}</div>` : ''}
-                    <div>${m.text}</div>
-                    <div class="text-[9px] text-right text-white/40 mt-1">${m.isEdited ? 'Edited' : ''}</div>
-                </div>
-            `).join('');
-            box.scrollTop = box.scrollHeight;
-        }
-
-        window.pStart = (id) => {
-            selectedMsgId = id;
-            pressTimer = setTimeout(() => {
-                const menu = document.getElementById('msg-context');
-                const isMine = selectedMsgId.startsWith(currentUserId);
-                document.getElementById('ctx-edit').style.display = isMine ? 'flex' : 'none';
-                document.getElementById('ctx-all').style.display = isMine ? 'flex' : 'none';
-                menu.style.display = 'block';
-                menu.style.left = '50%';
-                menu.style.top = '50%';
-                menu.style.transform = 'translate(-50%, -50%)';
-            }, 600);
-        };
-        window.pEnd = () => clearTimeout(pressTimer);
-
+        // 10) MESSAGE ACTIONS
         window.handleSend = async () => {
-            const input = document.getElementById('chat-input');
-            const txt = input.value.trim();
-            if(!txt) return;
+            const input = document.getElementById('msg-input');
+            if(!input.value.trim()) return;
 
-            const ref = doc(db, "rooms", activeRoom);
+            const ref = doc(db, "rooms", activeCode);
             const snap = await getDoc(ref);
             let msgs = snap.data().messages;
 
-            if(isEditing) {
-                msgs = msgs.map(m => m.id === selectedMsgId ? {...m, text: txt, isEdited: true} : m);
-                isEditing = false;
-                document.getElementById('edit-indicator').classList.add('hidden');
+            if(editMode) {
+                msgs = msgs.map(m => m.id === selectedMsg.id ? {...m, text: input.value, edited: true} : m);
+                editMode = false;
             } else {
                 msgs.push({
-                    id: currentUserId + "_" + Date.now(),
-                    uid: currentUserId,
-                    sender: localStorage.getItem('ae_name'),
-                    text: txt,
-                    hiddenFor: []
+                    id: userUID + Date.now(),
+                    uid: userUID,
+                    sender: localStorage.getItem('my_name'),
+                    text: input.value,
+                    deletedBy: []
                 });
             }
             await updateDoc(ref, { messages: msgs });
             input.value = "";
         };
 
-        window.deleteMessage = async (type) => {
-            const ref = doc(db, "rooms", activeRoom);
-            const snap = await getDoc(ref);
-            let msgs = snap.data().messages;
+        function renderMessages(msgs) {
+            const flow = document.getElementById('chat-flow');
+            flow.innerHTML = msgs.filter(m => !m.deletedBy.includes(userUID)).map(m => `
+                <div class="bubble ${m.uid === userUID ? 'bubble-me' : 'bubble-them'}" 
+                     onmousedown="pStart(${JSON.stringify(m).replace(/"/g, '&quot;')})" onmouseup="pEnd()" 
+                     ontouchstart="pStart(${JSON.stringify(m).replace(/"/g, '&quot;')})" ontouchend="pEnd()">
+                    ${m.uid !== userUID ? `<div class="text-[10px] font-bold text-emerald-400 mb-1">${m.sender}</div>` : ''}
+                    <div>${m.text}</div>
+                    <div class="text-[9px] text-right opacity-40 mt-1">${m.edited ? 'Edited' : ''}</div>
+                </div>
+            `).join('');
+            flow.scrollTop = flow.scrollHeight;
+        }
 
-            if(type === 'all') {
-                msgs = msgs.filter(m => m.id !== selectedMsgId);
-            } else {
-                msgs = msgs.map(m => m.id === selectedMsgId ? {...m, hiddenFor: [...(m.hiddenFor || []), currentUserId]} : m);
-            }
-            await updateDoc(ref, { messages: msgs });
-            document.getElementById('msg-context').style.display = 'none';
+        window.pStart = (m) => {
+            selectedMsg = m;
+            timer = setTimeout(() => {
+                const menu = document.getElementById('context-menu');
+                const isMine = m.uid === userUID;
+                document.getElementById('ctx-edit').style.display = isMine ? 'block' : 'none';
+                document.getElementById('ctx-all').style.display = isMine ? 'block' : 'none';
+                menu.style.display = 'block';
+                menu.style.left = '50%'; menu.style.top = '50%'; menu.style.transform = 'translate(-50%, -50%)';
+            }, 600);
+        };
+        window.pEnd = () => clearTimeout(timer);
+
+        window.delForAll = async () => {
+            const ref = doc(db, "rooms", activeCode);
+            const snap = await getDoc(ref);
+            const filtered = snap.data().messages.filter(m => m.id !== selectedMsg.id);
+            await updateDoc(ref, { messages: filtered });
+            document.getElementById('context-menu').style.display = 'none';
         };
 
-        // 3) ADMIN ACTION HUB
-        window.approveRequest = async (user) => {
-            await updateDoc(doc(db, "rooms", activeRoom), {
-                pending: arrayRemove(user),
+        // ADMIN TOOLS
+        window.approve = async (user) => {
+            await updateDoc(doc(db, "rooms", activeCode), {
+                knocks: arrayRemove(user),
                 members: arrayUnion(user),
-                memberIds: arrayUnion(user.id)
+                mIds: arrayUnion(user.id)
             });
         };
 
-        window.applyPfpUpdate = async (url) => {
-            await updateDoc(doc(db, "rooms", activeRoom), { pfp: url });
-        };
-
-        window.applyNameUpdate = async () => {
-            const val = document.getElementById('update-room-name').value;
-            await updateDoc(doc(db, "rooms", activeRoom), { name: val });
-        };
-
-        window.terminateRoom = async () => {
-            if(confirm("DANGER: This will permanently delete the group for all members. Continue?")) {
-                await deleteDoc(doc(db, "rooms", activeRoom));
+        window.terminate = async () => {
+            if(confirm("DANGER: This will delete the group for everyone. Proceed?")) {
+                await deleteDoc(doc(db, "rooms", activeCode));
             }
         };
 
-        window.leaveRoom = async () => {
-            if(confirm("Leave this group?")) {
-                const snap = await getDoc(doc(db, "rooms", activeRoom));
-                const me = snap.data().members.find(m => m.id === currentUserId);
-                await updateDoc(doc(db, "rooms", activeRoom), {
-                    members: arrayRemove(me),
-                    memberIds: arrayRemove(curren
+        // UI NAVIGATION
+        function renderKnocks(list) {
+            document.getElementById('knock-list').innerHTML = list.map(u => `
+                <div class="flex items-center justify-between bg-white/5 p-3 rounded-xl">
+                    <span class="font-bold">${u.name}</span>
+                    <button onclick='approve(${JSON.stringify(u)})' class="bg-emerald-600 px-4 py-1 rounded text-xs font-bold">ACCEPT</button>
+                </div>
+            `).join('');
+        }
+
+        function renderMembers(list, adminId) {
+            document.getElementById('member-list').innerHTML = list.map(m => `
+                <div class="flex items-center gap-3 p-2 bg-white/5 rounded-lg">
+                    <img src="https://ui-avatars.com/api/?name=${m.name}" class="w-8 h-8 rounded-full">
+                    <div class="flex-1 font-bold text-sm">${m.name}</div>
+                    ${m.id === adminId ? '<span class="text-[9px] text-emerald-500 font-bold">ADMIN</span>' : ''}
+                </div>
+            `).join('');
+        }
+
+        window.openInfo = () => document.getElementById('screen-info').classList.add('screen-active');
+        window.closeInfo = () => document.getElementById('screen-info').classList.remove('screen-active');
+        window.openApprovals = () => document.getElementById('modal-knock').classList.remove('hidden');
+        window.zoomPfp = () => window.open(document.getElementById('header-pfp').src, '_blank');
+        
+        document.addEventListener('click', e => { if(!e.target.closest('#context-menu')) document.getElementById('context-menu').style.display = 'none'; });
+    </script>
+</body>
+</html>
