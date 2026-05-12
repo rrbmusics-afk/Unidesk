@@ -3,49 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Student Lounge</title>
+    <title>Aethercore Lounge</title>
     <link rel="stylesheet" href="chat.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
 
-    <div id="chat-screen">
-        <div class="chat-header">
-            <div class="header-avatar">SH</div>
-            <div class="header-info">
-                <h4>Strategy Hub</h4>
-                <span>Tap for lounge info</span>
-            </div>
-            <div class="admin-badge">Admin</div>
+    <div id="entrance-screen" class="screen active">
+        <div class="brand-header">
+            <div class="logo">AC</div>
+            <h1>Aethercore</h1>
         </div>
-
-        <div id="message-container" class="message-feed">
-            <div class="msg-group received">
-                <span class="sender-name">Alex (Admin)</span>
-                <div class="msg-bubble">
-                    Welcome to the Student Lounge! All project files are pinned.
-                    <span class="msg-time">10:45 AM</span>
-                </div>
+        
+        <div class="tab-container">
+            <div class="tab-header">
+                <button class="tab-btn active" onclick="switchTab('create')">Create Lounge</button>
+                <button class="tab-btn" onclick="switchTab('join')">Join Lounge</button>
             </div>
 
-            <div class="msg-group sent">
-                <div class="msg-bubble">
-                    Got it, thanks!
-                    <span class="msg-time">10:46 AM</span>
-                </div>
+            <div class="tab-content" id="create-tab">
+                <input type="text" id="create-user-name" placeholder="Your Professional Name" oninput="validateForm()">
+                <input type="text" id="create-lounge-name" placeholder="Lounge Topic" oninput="validateForm()">
+                <button id="create-proceed" class="action-btn locked" disabled onclick="handleCreate()">Establish Hub</button>
+            </div>
+
+            <div class="tab-content hidden" id="join-tab">
+                <input type="text" id="join-user-name" placeholder="Your Name" oninput="validateForm()">
+                <input type="text" id="join-lounge-code" placeholder="Enter 6-Digit Hub Code" oninput="validateForm()">
+                <button id="join-proceed" class="action-btn locked" disabled onclick="handleJoin()">Request Entry</button>
             </div>
         </div>
+    </div>
 
-        <div class="input-area">
-            <div class="input-wrapper">
-                <input type="text" id="msg-input" placeholder="Type a message">
+    <div id="chat-screen" class="screen">
+        <div class="chat-header" onclick="showGroupInfo()">
+            <div class="header-left">
+                <img id="group-icon" src="default-hub.png" class="header-pfp">
+                <div class="header-meta">
+                    <h3 id="display-lounge-name">Strategy Hub</h3>
+                    <span id="display-lounge-code">#------</span>
+                </div>
             </div>
-            <button id="send-btn">
-                <svg viewBox="0 0 24 24" width="24" height="24">
-                    <path fill="currentColor" d="M1.101 21.757L23.8 12.028 1.101 2.3l.011 7.912 13.623 1.816-13.623 1.817-.011 7.912z"></path>
-                </svg>
+            <div id="admin-badge" class="badge hidden">Admin</div>
+        </div>
+
+        <div id="pending-requests-bar" class="request-banner hidden" onclick="openRequestPopup()">
+            <i class="fas fa-user-plus"></i> Pending Join Requests
+        </div>
+
+        <div id="message-feed" class="message-container">
+            </div>
+
+        <div class="input-bar">
+            <label class="attach-btn">
+                <i class="fas fa-plus"></i>
+                <input type="file" id="doc-input" multiple hidden accept=".pdf,.doc,.docx">
+            </label>
+            <div class="text-input-wrapper">
+                <input type="text" id="msg-input" placeholder="Type a message..." oninput="toggleVoiceMode()">
+            </div>
+            <button id="action-trigger" class="voice-btn">
+                <i class="fas fa-microphone" id="trigger-icon"></i>
             </button>
         </div>
     </div>
 
+    <script type="module" src="chat.js"></script>
 </body>
 </html>
