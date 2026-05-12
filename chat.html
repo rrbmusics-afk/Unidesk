@@ -8,7 +8,6 @@
     <style>
         :root { --accent: #007AFF; --wa-green: #25D366; --bg-main: #0b141a; --bubble-me: #005c4b; --bubble-them: #202c33; }
         
-        /* Fixed height to 100% of the visual space */
         html, body { 
             background: var(--bg-main); 
             color: #e9edef; 
@@ -21,37 +20,18 @@
             position: fixed;
         }
         
-        #main-workspace { 
-            display: none; 
-            flex-direction: column; 
-            height: 100%; 
-            width: 100%; 
-            position: relative;
-        }
+        #main-workspace { display: none; flex-direction: column; height: 100%; width: 100%; position: relative; }
 
         .header { 
-            height: 64px; 
-            background: #202c33; 
-            display: flex; 
-            align-items: center; 
-            justify-content: space-between; 
-            padding: 0 16px; 
-            border-bottom: 1px solid rgba(255,255,255,0.05); 
-            z-index: 10; 
-            flex-shrink: 0;
+            height: 64px; background: #202c33; display: flex; align-items: center; 
+            justify-content: space-between; padding: 0 16px; border-bottom: 1px solid rgba(255,255,255,0.05); 
+            z-index: 10; flex-shrink: 0; 
         }
 
         #chatBox { 
-            flex: 1; 
-            overflow-y: auto; 
-            padding: 20px 16px; 
-            display: flex; 
-            flex-direction: column; 
-            gap: 12px; 
+            flex: 1; overflow-y: auto; padding: 20px 16px; display: flex; flex-direction: column; gap: 12px; 
             background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); 
-            background-blend-mode: overlay; 
-            background-color: #0b141a; 
-            -webkit-overflow-scrolling: touch;
+            background-blend-mode: overlay; background-color: #0b141a; -webkit-overflow-scrolling: touch;
         }
         
         .msg-row { display: flex; flex-direction: column; width: 100%; }
@@ -64,27 +44,39 @@
         
         .sender-tag { font-size: 11px; font-weight: 700; margin-bottom: 2px; color: #34b7f1; padding-left: 4px; }
         
-        .footer { 
-            background: #202c33; 
-            padding: 10px 12px; 
-            display: flex; 
-            align-items: center; 
-            gap: 8px; 
-            z-index: 10; 
-            flex-shrink: 0;
-        }
-
+        .footer { background: #202c33; padding: 10px 12px; display: flex; align-items: center; gap: 8px; z-index: 10; flex-shrink: 0; }
         .input-pill { background: #2a3942; border-radius: 24px; flex: 1; display: flex; align-items: center; padding: 0 14px; height: 44px; position: relative; }
         .action-btn { background: var(--wa-green); color: #0b141a; width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; shrink: 0; border: none; }
         
         .overlay { position: fixed; inset: 0; background: #0b141a; z-index: 5000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
-        #admin-panel { display: none; background: #f59e0b; color: black; font-size: 10px; padding: 4px 10px; border-radius: 6px; font-weight: bold; cursor: pointer; animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        
+        /* Admin Badge */
+        #admin-panel { display: none; background: #f59e0b; color: black; font-size: 10px; padding: 4px 10px; border-radius: 20px; font-weight: bold; cursor: pointer; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+
+        /* Popup Modal */
+        #req-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 6000; align-items: center; justify-content: center; padding: 20px; }
+        .modal-content { background: #202c33; width: 100%; max-width: 300px; border-radius: 16px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); }
+        .modal-header { padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); font-weight: bold; text-align: center; font-size: 14px; }
+        .req-list { max-height: 300px; overflow-y: auto; }
+        .req-item { padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .approve-btn { background: var(--wa-green); color: #0b141a; padding: 6px 12px; border-radius: 8px; font-size: 11px; font-weight: bold; }
 
         .input-field { width: 100%; background: #2a3942; padding: 15px; border-radius: 12px; text-align: center; outline: none; border: 1px solid rgba(255,255,255,0.05); color: #007AFF; font-weight: bold; }
     </style>
 </head>
 <body>
+
+    <!-- Request Modal -->
+    <div id="req-modal">
+        <div class="modal-content">
+            <div class="modal-header">Pending Requests</div>
+            <div id="req-list" class="req-list">
+                <!-- Requests injected here -->
+            </div>
+            <button onclick="closeModal()" class="w-full p-3 text-xs text-gray-400 font-bold uppercase">Close</button>
+        </div>
+    </div>
 
     <!-- Home View -->
     <div id="home-view" class="overlay">
@@ -124,7 +116,7 @@
                     <span class="text-[15px] font-bold leading-tight">Student Lounge</span>
                     <div class="flex items-center gap-2">
                         <span id="status-text" class="text-[11px] text-gray-400 tracking-wider uppercase">Secure</span>
-                        <div id="admin-panel" onclick="approveUser()">ACCEPT REQ?</div>
+                        <div id="admin-panel" onclick="openModal()">REQ: <span id="req-count">0</span></div>
                     </div>
                 </div>
             </div>
@@ -146,7 +138,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, doc, setDoc, updateDoc, onSnapshot, arrayUnion, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, updateDoc, onSnapshot, arrayUnion, arrayRemove, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = { apiKey: "AIzaSyDbfmd0zmv_mFV0CG2OrhKPPeU3zPYGOBg", authDomain: "unidesk-a70ac.firebaseapp.com", projectId: "unidesk-a70ac" };
         const db = getFirestore(initializeApp(firebaseConfig));
@@ -155,16 +147,12 @@
         let savedName = "";
         let currentRoom, isAdmin = false;
 
-        // --- KEYBOARD & MOBILE OPTIMIZATION ---
         const workspace = document.getElementById('main-workspace');
         if (window.visualViewport) {
             window.visualViewport.addEventListener('resize', () => {
-                // Resize the entire workspace to match the viewable area (above the keyboard)
                 workspace.style.height = window.visualViewport.height + 'px';
-                // Scroll to bottom of chat when keyboard opens
                 const box = document.getElementById('chatBox');
                 box.scrollTop = box.scrollHeight;
-                // Force layout recalculation to keep header at top
                 window.scrollTo(0, 0);
             });
         }
@@ -192,7 +180,8 @@
             savedName = name;
             isAdmin = true;
             const code = Math.random().toString(36).substring(2, 8).toUpperCase();
-            await setDoc(doc(db, "rooms", code), { messages: [], status: 'active', pendingId: null });
+            // Added pendingRequests array and approvedIds array
+            await setDoc(doc(db, "rooms", code), { messages: [], status: 'active', pendingRequests: [], approvedIds: [] });
             openWorkspace(code);
         };
 
@@ -201,24 +190,32 @@
             const code = document.getElementById('roomCodeInput').value.toUpperCase().trim();
             if(!name || !code) return;
             savedName = name;
-            await updateDoc(doc(db, "rooms", code), { pendingId: myId });
+            
+            // Join as a pending request
+            await updateDoc(doc(db, "rooms", code), { 
+                pendingRequests: arrayUnion({ id: myId, name: savedName }) 
+            });
+
             document.getElementById('home-view').style.display = 'none';
             document.getElementById('wait-view').style.display = 'flex';
+
             const unsub = onSnapshot(doc(db, "rooms", code), (snap) => {
                 const data = snap.data();
-                if (data.pendingId === "APPROVED_" + myId) {
+                if (data.approvedIds && data.approvedIds.includes(myId)) {
                     unsub();
                     openWorkspace(code);
                 }
             });
         };
 
-        window.approveUser = async () => {
-            const snap = await getDoc(doc(db, "rooms", currentRoom));
-            const pid = snap.data().pendingId;
-            if(pid && !pid.startsWith("APPROVED_")) {
-                await updateDoc(doc(db, "rooms", currentRoom), { pendingId: "APPROVED_" + pid });
-            }
+        window.openModal = () => { document.getElementById('req-modal').style.display = 'flex'; };
+        window.closeModal = () => { document.getElementById('req-modal').style.display = 'none'; };
+
+        window.approveUser = async (userId, userName) => {
+            await updateDoc(doc(db, "rooms", currentRoom), { 
+                pendingRequests: arrayRemove({ id: userId, name: userName }),
+                approvedIds: arrayUnion(userId)
+            });
         };
 
         function openWorkspace(code) {
@@ -228,15 +225,29 @@
             document.getElementById('main-workspace').style.display = 'flex';
             document.getElementById('status-text').innerText = "CODE: " + code;
             
-            // Set initial viewport height
             if (window.visualViewport) workspace.style.height = window.visualViewport.height + 'px';
 
             onSnapshot(doc(db, "rooms", code), s => {
                 const data = s.data();
-                if(isAdmin && data.pendingId && !data.pendingId.startsWith("APPROVED_")) {
-                    document.getElementById('admin-panel').style.display = 'block';
-                } else {
-                    document.getElementById('admin-panel').style.display = 'none';
+                if(isAdmin) {
+                    const reqs = data.pendingRequests || [];
+                    const panel = document.getElementById('admin-panel');
+                    const countSpan = document.getElementById('req-count');
+                    const list = document.getElementById('req-list');
+                    
+                    if(reqs.length > 0) {
+                        panel.style.display = 'block';
+                        countSpan.innerText = reqs.length;
+                        list.innerHTML = reqs.map(r => `
+                            <div class="req-item">
+                                <span class="text-xs font-bold">${r.name}</span>
+                                <button onclick="approveUser('${r.id}', '${r.name}')" class="approve-btn">LET IN</button>
+                            </div>
+                        `).join('');
+                    } else {
+                        panel.style.display = 'none';
+                        closeModal();
+                    }
                 }
                 renderChat(data?.messages || []);
             });
@@ -247,10 +258,7 @@
             const text = chatInput.value.trim();
             if(!text) return;
             chatInput.value = "";
-            
-            // Keep keyboard open
             chatInput.focus();
-
             await updateDoc(doc(db, "rooms", currentRoom), { 
                 messages: arrayUnion({ user: myId, senderName: savedName, text: text, time: Date.now() }) 
             });
@@ -261,15 +269,12 @@
             const banner = document.getElementById('e2ee-banner');
             box.innerHTML = ''; 
             box.appendChild(banner);
-
             messages.forEach(m => {
                 const isMe = m.user === myId;
                 const row = document.createElement('div');
                 row.className = `msg-row ${isMe ? 'row-me' : 'row-them'}`;
-                
                 let html = isMe ? "" : `<span class="sender-tag">${m.senderName}</span>`;
                 html += `<div class="bubble ${isMe ? 'bubble-me' : 'bubble-them'}">${m.text}</div>`;
-                
                 row.innerHTML = html;
                 box.appendChild(row);
             });
