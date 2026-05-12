@@ -2,59 +2,267 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Unidesk | Home</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Aethercore | Secure Gateway</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
     <style>
-        :root { --u-blue: #2D7FF9; --u-bg: #0B0E11; --u-border: rgba(255,255,255,0.08); }
-        body, html { margin: 0; padding: 0; height: 100%; font-family: 'Inter', sans-serif; background: var(--u-bg); color: white; display: flex; align-items: center; justify-content: center; }
-        .glass-card { background: rgba(25, 29, 33, 0.98); width: 90%; max-width: 400px; padding: 40px; border-radius: 45px; border: 1px solid var(--u-border); text-align: center; }
-        .tab-nav { display: flex; background: rgba(255,255,255,0.05); border-radius: 18px; padding: 5px; margin-bottom: 30px; border: 1px solid var(--u-border); }
-        .tab-btn { flex: 1; padding: 14px; border: none; background: transparent; color: #8E8E93; font-weight: 800; cursor: pointer; border-radius: 14px; }
-        .tab-btn.active { background: var(--u-blue); color: white; }
-        .pfp-wrap { width: 110px; height: 110px; margin: 0 auto 25px auto; position: relative; cursor: pointer; }
-        #pfp-img { width: 100%; height: 100%; border-radius: 38px; object-fit: cover; border: 3px solid var(--u-blue); background: #1c2126; }
-        .u-input { width: 100%; background: rgba(255,255,255,0.04); border: 1px solid var(--u-border); padding: 18px; border-radius: 20px; color: white; font-size: 16px; margin-bottom: 12px; text-align: center; }
-        .btn-exec { width: 100%; padding: 22px; border-radius: 22px; background: var(--u-blue); color: white; font-weight: 800; border: none; cursor: pointer; opacity: 0.2; pointer-events: none; transition: 0.3s; }
-        .btn-exec.ready { opacity: 1; pointer-events: auto; box-shadow: 0 10px 20px rgba(45, 127, 249, 0.4); }
+        :root {
+            --p-blue: #2D7FF9;
+            --p-dark: #07090C;
+            --p-card: rgba(18, 22, 28, 0.9);
+            --p-border: rgba(255, 255, 255, 0.08);
+            --p-text-dim: #8E9196;
+            --accent-gradient: linear-gradient(135deg, #2D7FF9 0%, #7B61FF 100%);
+        }
+
+        * { 
+            box-sizing: border-box; 
+            -webkit-tap-highlight-color: transparent; 
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        body, html { 
+            margin: 0; padding: 0; height: 100%; width: 100%; 
+            background-color: var(--p-dark); 
+            background-image: 
+                radial-gradient(circle at 0% 0%, rgba(45, 127, 249, 0.15) 0%, transparent 35%),
+                radial-gradient(circle at 100% 100%, rgba(123, 97, 255, 0.1) 0%, transparent 35%);
+            color: #FFFFFF; overflow: hidden;
+            display: flex; align-items: center; justify-content: center;
+        }
+
         .hidden { display: none !important; }
-        #knocking-ui { position: fixed; inset: 0; background: var(--u-bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; }
-        .pulse { font-size: 60px; color: var(--u-blue); animation: p 1.5s infinite; }
-        @keyframes p { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.2); opacity: 0.5; } }
+
+        /* --- AUTH CARD --- */
+        .auth-container {
+            width: 100%;
+            max-width: 420px;
+            padding: 20px;
+            perspective: 1000px;
+        }
+
+        .glass-card {
+            background: var(--p-card);
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
+            border: 1px solid var(--p-border);
+            border-radius: 40px;
+            padding: 40px 30px;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.8);
+            text-align: center;
+            animation: cardSlideIn 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        @keyframes cardSlideIn {
+            from { opacity: 0; transform: translateY(30px) rotateX(-5deg); }
+            to { opacity: 1; transform: translateY(0) rotateX(0); }
+        }
+
+        h1 { font-weight: 800; font-size: 28px; margin: 0 0 10px 0; letter-spacing: -0.5px; }
+        .subtitle { color: var(--p-text-dim); font-size: 14px; margin-bottom: 30px; }
+
+        /* --- TABS --- */
+        .tab-wrapper {
+            display: flex;
+            background: rgba(255,255,255,0.03);
+            padding: 6px;
+            border-radius: 20px;
+            border: 1px solid var(--p-border);
+            margin-bottom: 35px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            background: transparent;
+            color: var(--p-text-dim);
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            border-radius: 15px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            letter-spacing: 0.5px;
+        }
+
+        .tab-btn.active {
+            background: var(--accent-gradient);
+            color: #fff;
+            box-shadow: 0 10px 20px rgba(45, 127, 249, 0.25);
+        }
+
+        /* --- PROFILE UPLOAD --- */
+        .pfp-stage {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 30px auto;
+        }
+
+        #pfp-preview {
+            width: 100%;
+            height: 100%;
+            border-radius: 42px;
+            object-fit: cover;
+            border: 2px solid transparent;
+            background: linear-gradient(var(--p-card), var(--p-card)) padding-box, var(--accent-gradient) border-box;
+            transition: transform 0.3s ease;
+        }
+
+        .cam-btn {
+            position: absolute;
+            bottom: -5px;
+            right: -5px;
+            background: var(--p-blue);
+            width: 38px;
+            height: 38px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center; justify-content: center;
+            border: 4px solid var(--p-dark);
+            color: white;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+        }
+
+        /* --- INPUTS --- */
+        .input-group { margin-bottom: 16px; position: relative; }
+        
+        .u-input {
+            width: 100%;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--p-border);
+            padding: 18px 20px;
+            border-radius: 20px;
+            color: white;
+            font-size: 16px;
+            font-weight: 500;
+            transition: 0.3s;
+            text-align: center;
+        }
+
+        .u-input:focus {
+            background: rgba(255,255,255,0.06);
+            border-color: var(--p-blue);
+            box-shadow: 0 0 0 4px rgba(45, 127, 249, 0.15);
+        }
+
+        /* --- BUTTON --- */
+        .btn-primary {
+            width: 100%;
+            padding: 20px;
+            margin-top: 15px;
+            border-radius: 22px;
+            border: none;
+            background: #25292E;
+            color: rgba(255,255,255,0.2);
+            font-weight: 800;
+            font-size: 16px;
+            cursor: not-allowed;
+            transition: all 0.4s;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+        }
+
+        .btn-primary.ready {
+            background: var(--accent-gradient);
+            color: white;
+            cursor: pointer;
+            box-shadow: 0 15px 30px rgba(45, 127, 249, 0.3);
+        }
+
+        .btn-primary.ready:active { transform: scale(0.97); }
+
+        /* --- KNOCKING OVERLAY --- */
+        #knocking-screen {
+            position: fixed; inset: 0; 
+            background: var(--p-dark);
+            z-index: 2000;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+
+        .radar {
+            width: 150px; height: 150px;
+            border: 2px solid var(--p-blue);
+            border-radius: 50%;
+            position: relative;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        .radar::before {
+            content: ''; position: absolute;
+            width: 100%; height: 100%;
+            border: 2px solid var(--p-blue);
+            border-radius: 50%;
+            animation: pulseRadar 2s linear infinite;
+        }
+
+        @keyframes pulseRadar {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(2.5); opacity: 0; }
+        }
+
+        .radar i { font-size: 40px; color: var(--p-blue); }
+
+        .loading-text { margin-top: 40px; text-align: center; }
+        .loading-text h2 { margin: 0; font-weight: 800; font-size: 24px; letter-spacing: 1px; }
+        .loading-text p { color: var(--p-text-dim); margin: 10px 0; font-size: 15px; }
+
     </style>
 </head>
 <body>
 
-    <div class="glass-card" id="main-ui">
-        <div class="tab-nav">
-            <button id="t-create" class="tab-btn active" onclick="setMode('create')">CREATE</button>
-            <button id="t-join" class="tab-btn" onclick="setMode('join')">JOIN</button>
-        </div>
+    <div class="auth-container" id="auth-ui">
+        <div class="glass-card">
+            <h1>Aethercore</h1>
+            <p class="subtitle">Secure End-to-End Encryption Lounge</p>
 
-        <div id="pfp-zone">
-            <div class="pfp-wrap" onclick="document.getElementById('f-pfp').click()">
-                <img id="pfp-img" src="https://cdn-icons-png.flaticon.com/512/9131/9131529.png">
+            <div class="tab-wrapper">
+                <button id="t-create" class="tab-btn active" onclick="setMode('create')">CREATE</button>
+                <button id="t-join" class="tab-btn" onclick="setMode('join')">JOIN</button>
             </div>
-            <input type="file" id="f-pfp" class="hidden" accept="image/*" onchange="preview(this)">
-        </div>
 
-        <input type="text" id="in-user" class="u-input" placeholder="Your Name" oninput="val()">
-        <input type="text" id="in-lounge" class="u-input" placeholder="Lounge Name" oninput="val()">
-        <input type="text" id="in-code" class="u-input hidden" placeholder="6-Digit Code" oninput="val()">
-        
-        <button id="btn-submit" class="btn-exec" onclick="start()">PROCEED</button>
+            <div id="create-view">
+                <div class="pfp-stage" onclick="document.getElementById('f-input').click()">
+                    <img id="pfp-preview" src="https://cdn-icons-png.flaticon.com/512/9131/9131529.png">
+                    <div class="cam-btn"><i class="fas fa-camera"></i></div>
+                </div>
+                <input type="file" id="f-input" class="hidden" accept="image/*" onchange="previewFile(this)">
+            </div>
+
+            <div class="input-group">
+                <input type="text" id="in-name" class="u-input" placeholder="Display Name" oninput="validate()">
+            </div>
+
+            <div id="lounge-field" class="input-group">
+                <input type="text" id="in-lounge" class="u-input" placeholder="Lounge Name" oninput="validate()">
+            </div>
+
+            <div id="code-field" class="input-group hidden">
+                <input type="text" id="in-code" class="u-input" placeholder="6-Digit Invite Code" maxlength="6" oninput="validate()">
+            </div>
+
+            <button id="btn-main" class="btn-primary" onclick="proceed()">
+                <span>INITIALIZE SESSION</span>
+                <i class="fas fa-arrow-right"></i>
+            </button>
+        </div>
     </div>
 
-    <div id="knocking-ui" class="hidden">
-        <div class="pulse"><i class="fas fa-door-closed"></i></div>
-        <h2 style="margin-top:20px;">KNOCKING...</h2>
-        <p style="color:#8E8E93;">Waiting for Admin approval</p>
+    <div id="knocking-screen" class="hidden">
+        <div class="radar">
+            <i class="fas fa-fingerprint"></i>
+        </div>
+        <div class="loading-text">
+            <h2>KNOCKING...</h2>
+            <p>Waiting for host to grant access</p>
+            <div style="margin-top:20px; font-size: 12px; color: var(--p-blue); font-weight: 800;">ENCRYPTING REQUEST...</div>
+        </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, doc, setDoc, getDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
         const firebaseConfig = {
@@ -69,53 +277,81 @@
         const db = getFirestore(app);
         const storage = getStorage(app);
 
-        let mode = 'create';
-        let uid = 'U' + Math.random().toString(36).substr(2,6);
+        let currentMode = 'create';
+        const sessionUID = 'AC-' + Math.random().toString(36).substr(2, 7).toUpperCase();
 
         window.setMode = (m) => {
-            mode = m;
-            document.getElementById('t-create').classList.toggle('active', m==='create');
-            document.getElementById('t-join').classList.toggle('active', m==='join');
-            document.getElementById('pfp-zone').classList.toggle('hidden', m==='join');
-            document.getElementById('in-lounge').classList.toggle('hidden', m==='join');
-            document.getElementById('in-code').classList.toggle('hidden', m==='create');
-            window.val();
+            currentMode = m;
+            document.getElementById('t-create').classList.toggle('active', m === 'create');
+            document.getElementById('t-join').classList.toggle('active', m === 'join');
+            
+            document.getElementById('create-view').classList.toggle('hidden', m === 'join');
+            document.getElementById('lounge-field').classList.toggle('hidden', m === 'join');
+            document.getElementById('code-field').classList.toggle('hidden', m === 'create');
+            window.validate();
         };
 
-        window.preview = (el) => { if(el.files[0]) document.getElementById('pfp-img').src = URL.createObjectURL(el.files[0]); };
-
-        window.val = () => {
-            const u = document.getElementById('in-user').value.trim();
-            const l = document.getElementById('in-lounge').value.trim();
-            const c = document.getElementById('in-code').value.trim();
-            const ready = (mode === 'create') ? (u && l) : (u && c.length === 6);
-            document.getElementById('btn-submit').classList.toggle('ready', ready);
+        window.previewFile = (el) => {
+            if(el.files[0]) {
+                document.getElementById('pfp-preview').src = URL.createObjectURL(el.files[0]);
+            }
         };
 
-        window.start = async () => {
-            const name = document.getElementById('in-user').value;
-            if(mode === 'create') {
-                const code = Math.floor(100000 + Math.random()*900000).toString();
-                let url = "https://cdn-icons-png.flaticon.com/512/9131/9131529.png";
-                const file = document.getElementById('f-pfp').files[0];
+        window.validate = () => {
+            const name = document.getElementById('in-name').value.trim();
+            const lounge = document.getElementById('in-lounge').value.trim();
+            const code = document.getElementById('in-code').value.trim();
+            const btn = document.getElementById('btn-main');
+
+            const isReady = (currentMode === 'create') ? (name && lounge) : (name && code.length === 6);
+            btn.classList.toggle('ready', isReady);
+        };
+
+        window.proceed = async () => {
+            const name = document.getElementById('in-name').value.trim();
+            const btn = document.getElementById('btn-main');
+            btn.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i> AUTHENTICATING...`;
+
+            if(currentMode === 'create') {
+                const roomCode = Math.floor(100000 + Math.random() * 900000).toString();
+                let pfpUrl = "https://cdn-icons-png.flaticon.com/512/9131/9131529.png";
+                
+                const file = document.getElementById('f-input').files[0];
                 if(file) {
-                    const sRef = ref(storage, `pfps/${code}.jpg`);
+                    const sRef = ref(storage, `rooms/${roomCode}/pfp.jpg`);
                     await uploadBytes(sRef, file);
-                    url = await getDownloadURL(sRef);
+                    pfpUrl = await getDownloadURL(sRef);
                 }
-                await setDoc(doc(db, "rooms", code), { name: document.getElementById('in-lounge').value, code, avatar: url, admin: uid });
-                location.href = `page.html?code=${code}&uid=${uid}&name=${name}`;
+
+                await setDoc(doc(db, "rooms", roomCode), {
+                    name: document.getElementById('in-lounge').value.trim(),
+                    code: roomCode,
+                    avatar: pfpUrl,
+                    admin: sessionUID
+                });
+
+                location.href = `page.html?code=${roomCode}&uid=${sessionUID}&name=${encodeURIComponent(name)}`;
             } else {
-                const code = document.getElementById('in-code').value;
-                const snap = await getDoc(doc(db, "rooms", code));
-                if(!snap.exists()) return alert("Invalid Code");
+                const roomCode = document.getElementById('in-code').value.trim();
+                const roomSnap = await getDoc(doc(db, "rooms", roomCode));
+                
+                if(!roomSnap.exists()) {
+                    alert("⚠️ Access Denied: Invalid Lounge Code");
+                    btn.innerHTML = `<span>INITIALIZE SESSION</span><i class="fas fa-arrow-right"></i>`;
+                    return;
+                }
 
-                document.getElementById('main-ui').classList.add('hidden');
-                document.getElementById('knocking-ui').classList.remove('hidden');
+                document.getElementById('auth-ui').classList.add('hidden');
+                document.getElementById('knocking-screen').classList.remove('hidden');
 
-                const reqRef = doc(db, "rooms", code, "requests", uid);
-                await setDoc(reqRef, { name, uid });
-                onSnapshot(reqRef, s => { if(!s.exists()) location.href = `page.html?code=${code}&uid=${uid}&name=${name}`; });
+                const reqRef = doc(db, "rooms", roomCode, "requests", sessionUID);
+                await setDoc(reqRef, { name, uid: sessionUID });
+
+                onSnapshot(reqRef, (snap) => {
+                    if(!snap.exists()) {
+                        location.href = `page.html?code=${roomCode}&uid=${sessionUID}&name=${encodeURIComponent(name)}`;
+                    }
+                });
             }
         };
     </script>
