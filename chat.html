@@ -3,147 +3,148 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Aether Pro | Secure Student Network</title>
+    <title>Aether Pro | Ultimate Edition</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root { 
-            --bg-dark: #0b141a; --bg-nav: #202c33; --bg-input: #2a3942;
+            --wa-bg: #0b141a; --wa-nav: #202c33; --wa-input: #2a3942;
             --wa-green: #25d366; --wa-blue: #34b7f1; --wa-bubble-me: #005c4b;
-            --wa-bubble-them: #202c33; --text-primary: #e9edef; --text-secondary: #8696a0;
+            --wa-bubble-them: #202c33; --text-1: #e9edef; --text-2: #8696a0;
         }
         
-        body { background: var(--bg-dark); color: var(--text-primary); font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; overflow: hidden; height: 100vh; }
+        body { background: var(--wa-bg); color: var(--text-1); font-family: -apple-system, system-ui, sans-serif; height: 100vh; overflow: hidden; margin: 0; }
         
-        /* Layout */
-        .view-layer { position: fixed; inset: 0; display: none; flex-direction: column; background: var(--bg-dark); }
+        /* Unique Custom Doodle Background */
+        .chat-doodle { 
+            background-color: #0b141a;
+            background-image: url("https://www.transparenttextures.com/patterns/carbon-fibre.png"); /* Representative of a unique company doodle */
+            background-blend-mode: soft-light;
+        }
+
+        .view-layer { position: fixed; inset: 0; display: none; flex-direction: column; background: var(--wa-bg); z-index: 10; }
         .active-view { display: flex; }
         
-        /* Professional Alignment & Spacing */
-        .header { height: 64px; background: var(--bg-nav); display: flex; align-items: center; padding: 0 16px; gap: 12px; z-index: 50; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .chat-area { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 6px; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); background-blend-mode: overlay; background-size: 400px; }
+        /* Header & Spacing */
+        .header { height: 60px; background: var(--wa-nav); display: flex; align-items: center; padding: 0 12px; gap: 10px; flex-shrink: 0; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .chat-area { flex-grow: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 4px; }
         
-        /* WhatsApp Bubble Physics */
-        .bubble { max-width: 85%; padding: 8px 12px; border-radius: 8px; font-size: 14.5px; position: relative; box-shadow: 0 1px 0.5px rgba(0,0,0,0.2); line-height: 1.4; }
+        /* Bubble Physics */
+        .bubble { max-width: 82%; padding: 8px 12px; border-radius: 8px; font-size: 14.5px; position: relative; box-shadow: 0 1px 1px rgba(0,0,0,0.2); line-height: 1.4; user-select: none; -webkit-touch-callout: none; }
         .bubble-me { background: var(--wa-bubble-me); align-self: flex-end; border-top-right-radius: 0; }
         .bubble-them { background: var(--wa-bubble-them); align-self: flex-start; border-top-left-radius: 0; }
-        .bubble-name { font-size: 12px; font-weight: 700; color: var(--wa-blue); margin-bottom: 2px; }
+        .bubble-name { font-size: 11px; font-weight: 700; color: #ffbc38; margin-bottom: 2px; }
+        .msg-meta { font-size: 10px; color: rgba(255,255,255,0.5); text-align: right; margin-top: 2px; }
 
-        /* Request Notification Bar */
-        .admin-alert { background: #ff9800; color: #000; padding: 8px 16px; font-weight: 800; font-size: 12px; text-transform: uppercase; cursor: pointer; display: flex; justify-content: space-between; align-items: center; letter-spacing: 0.5px; }
+        /* Long Press Context Menu */
+        #context-menu { display: none; position: fixed; background: #233138; border-radius: 12px; z-index: 500; min-width: 180px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); }
+        .context-item { padding: 12px 16px; font-size: 14px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .context-item:last-child { border: none; }
+        .context-item:active { background: #182229; }
 
-        /* Form Styling */
-        input { background: var(--bg-input) !important; border: 1px solid transparent !important; color: white !important; transition: 0.2s; }
-        input:focus { border-color: var(--wa-blue) !important; outline: none; }
-        
-        .pfp-circle { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; background: #6b7280; display: flex; align-items: center; justify-content: center; font-weight: bold; overflow: hidden; }
+        /* Admin Notification */
+        .admin-alert { background: #ff9800; color: #000; padding: 10px 16px; font-weight: 800; font-size: 11px; text-transform: uppercase; cursor: pointer; z-index: 60; }
+
+        /* Input Bar - Locked */
+        .input-bar { background: var(--wa-nav); padding: 10px; display: flex; align-items: center; gap: 8px; position: relative; padding-bottom: max(10px, env(safe-area-inset-bottom)); }
+        .input-field { background: var(--wa-input); border-radius: 24px; flex: 1; padding: 10px 16px; color: white; border: none; outline: none; font-size: 15px; }
+
+        .pfp-img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background: #374151; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <!-- 1. DASHBOARD / LOGIN -->
-    <div id="view-login" class="view-layer active-view p-6 overflow-y-auto">
-        <div class="max-w-md mx-auto w-full space-y-8 py-10">
-            <div class="text-center">
-                <h1 class="text-5xl font-black text-blue-500 italic">AETHER</h1>
-                <p class="text-[10px] uppercase tracking-[0.3em] font-bold text-gray-500 mt-2">Enterprise Student Hub</p>
-            </div>
-
-            <div class="bg-[#111b21] p-6 rounded-2xl border border-white/5 space-y-4">
-                <input type="text" id="input-username" placeholder="Your Full Name" class="w-full p-4 rounded-xl font-bold">
-                
-                <div class="flex border-b border-white/10 mb-4">
-                    <button id="tab-create-btn" onclick="toggleTab('create')" class="flex-1 py-3 font-bold text-xs uppercase border-b-2 border-blue-500">Create</button>
-                    <button id="tab-join-btn" onclick="toggleTab('join')" class="flex-1 py-3 font-bold text-xs uppercase text-gray-500">Join</button>
+    <!-- 1. DASHBOARD -->
+    <div id="view-dashboard" class="view-layer active-view p-6 overflow-y-auto">
+        <div class="max-w-md mx-auto w-full pt-10">
+            <h1 class="text-4xl font-black text-blue-500 italic text-center">AETHER</h1>
+            
+            <div class="mt-8 bg-[#111b21] rounded-3xl border border-white/5 overflow-hidden">
+                <input type="text" id="user-name" placeholder="Full Name" class="w-full bg-[#2a3942] p-4 text-white border-none outline-none font-bold">
+                <div class="flex">
+                    <button onclick="switchTab('create')" id="t-c" class="flex-1 py-4 text-[11px] font-black uppercase border-b-2 border-blue-500">Create</button>
+                    <button onclick="switchTab('join')" id="t-j" class="flex-1 py-4 text-[11px] font-black uppercase text-gray-500">Join</button>
                 </div>
-
-                <div id="form-create" class="space-y-4">
-                    <input type="text" id="input-group-name" placeholder="New Group Name" class="w-full p-4 rounded-xl text-sm">
-                    <button onclick="handleCreate()" class="w-full bg-blue-600 p-4 rounded-xl font-black text-xs uppercase shadow-xl">Launch Organization</button>
+                <div id="pane-create" class="p-4 space-y-3">
+                    <input type="text" id="group-name" placeholder="Group Title" class="w-full bg-[#0b141a] p-3 rounded-xl border border-white/5">
+                    <button onclick="createLounge()" class="w-full bg-blue-600 p-4 rounded-xl font-black text-xs uppercase">Establish</button>
                 </div>
-
-                <div id="form-join" class="hidden space-y-4">
-                    <input type="text" id="input-join-code" placeholder="Enter 6-Digit Access Code" class="w-full p-4 rounded-xl text-center font-mono text-blue-400 tracking-widest uppercase">
-                    <button onclick="handleJoin()" class="w-full bg-green-600 p-4 rounded-xl font-black text-xs uppercase text-black">Request Entry</button>
+                <div id="pane-join" class="hidden p-4 space-y-3">
+                    <input type="text" id="join-code" placeholder="6-DIGIT CODE" class="w-full bg-[#0b141a] p-3 rounded-xl border border-white/5 text-center font-mono text-blue-400">
+                    <button onclick="requestJoin()" class="w-full bg-green-600 p-4 rounded-xl font-black text-xs uppercase text-black">Request Access</button>
                 </div>
             </div>
 
-            <div>
-                <h3 class="text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-4">Member Of</h3>
-                <div id="list-my-groups" class="space-y-3"></div>
-            </div>
+            <div id="my-rooms" class="mt-10 space-y-3"></div>
         </div>
     </div>
 
-    <!-- 2. CHAT WORKSPACE -->
-    <div id="view-chat" class="view-layer">
-        <div id="admin-notif-bar" onclick="showApprovals()" class="admin-alert hidden">
-            <span>PENDING ACCESS REQUESTS</span>
-            <span id="notif-count" class="bg-black text-white px-2 py-0.5 rounded text-[10px]">0</span>
+    <!-- 2. CHAT ROOM -->
+    <div id="view-chat" class="view-layer chat-doodle">
+        <div id="admin-notif" onclick="openApprovals()" class="admin-alert hidden flex justify-between">
+            <span>● Awaiting Authorization</span>
+            <span id="pending-count" class="bg-black text-white px-2 rounded">0</span>
         </div>
 
-        <div class="header" onclick="openGroupInfo()">
-            <div id="group-pfp" class="pfp-circle text-white">?</div>
-            <div class="flex-1">
-                <div id="display-group-name" class="font-bold text-[16px] leading-tight">...</div>
-                <div id="display-group-status" class="text-[12px] text-[#8696a0]">tap for info</div>
+        <div class="header">
+            <img id="room-pfp" src="" class="pfp-img" onclick="zoomPhoto()">
+            <div class="flex-1 overflow-hidden" onclick="showInfo()">
+                <div id="room-title" class="font-bold text-[16px] truncate">...</div>
+                <div class="text-[11px] text-[#8696a0]">tap for details</div>
             </div>
-            <div class="text-[11px] font-mono bg-white/5 px-2 py-1 rounded text-blue-400" id="display-code">------</div>
+            <div id="room-code-badge" class="text-[10px] font-mono bg-black/40 px-2 py-1 rounded text-blue-400">CODE</div>
         </div>
 
-        <div id="chat-box" class="chat-area"></div>
+        <div id="chat-messages" class="chat-area"></div>
 
-        <div class="p-2 bg-[#202c33] flex items-center gap-2">
-            <div class="flex-1 bg-[#2a3942] rounded-full px-4 py-2">
-                <input type="text" id="msg-input" placeholder="Type a message" class="bg-transparent w-full text-sm border-none focus:ring-0 p-0">
-            </div>
-            <button onclick="sendMessage()" class="w-10 h-10 bg-[#25d366] rounded-full flex items-center justify-center text-black">
-                <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M1.101 21.757L23.8 12.028 1.101 2.3l.011 7.912 13.623 1.816-13.623 1.817-.011 7.912z"></path></svg>
+        <div id="edit-indicator" class="hidden px-4 py-2 bg-blue-900/30 text-[11px] text-blue-300 border-l-4 border-blue-500">Editing Message... <button onclick="cancelEdit()" class="float-right font-bold">X</button></div>
+        
+        <div class="input-bar">
+            <input type="text" id="msg-input" placeholder="Message" class="input-field" autocomplete="off">
+            <button onclick="handleSend()" class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="black"><path d="M1.101 21.757L23.8 12.028 1.101 2.3l.011 7.912 13.623 1.816-13.623 1.817-.011 7.912z"></path></svg>
             </button>
         </div>
     </div>
 
-    <!-- 3. ADMIN / INFO MODAL -->
-    <div id="modal-info" class="view-layer" style="background: #0b141a;">
+    <!-- 3. CONTEXT MENU -->
+    <div id="context-menu">
+        <div class="context-item text-blue-400" id="ctx-edit" onclick="startEdit()">Edit Message</div>
+        <div class="context-item" onclick="deleteMsg('me')">Delete for Me</div>
+        <div class="context-item text-red-400" id="ctx-everyone" onclick="deleteMsg('everyone')">Delete for Everyone</div>
+    </div>
+
+    <!-- 4. INFO & SETTINGS -->
+    <div id="view-info" class="view-layer">
         <div class="header">
-            <button onclick="closeInfo()" class="text-blue-500 font-bold">Close</button>
-            <span class="flex-1 text-center font-bold">Group Settings</span>
-            <div class="w-10"></div>
+            <button onclick="closeInfo()" class="text-blue-500 font-bold">Back</button>
+            <span class="flex-1 text-center font-bold">Lounge Info</span>
         </div>
-        <div class="p-6 space-y-8 overflow-y-auto">
-            <div class="flex flex-col items-center">
-                <div id="info-pfp" class="w-32 h-32 rounded-full bg-gray-700 flex items-center justify-center text-5xl font-bold mb-4 overflow-hidden border-4 border-white/5">?</div>
-                
-                <div id="admin-controls" class="hidden w-full space-y-4">
-                    <div class="text-center">
-                        <label class="text-[10px] font-bold text-gray-500 uppercase">Change Group Icon (URL)</label>
-                        <input type="text" id="edit-pfp-url" onchange="updatePFP(this.value)" class="w-full mt-1 p-3 rounded-lg text-xs" placeholder="https://image-url.com">
-                    </div>
-                    <div>
-                        <label class="text-[10px] font-bold text-gray-500 uppercase">Rename Group</label>
-                        <div class="flex gap-2">
-                            <input type="text" id="edit-group-name" class="flex-1 p-3 rounded-lg text-sm">
-                            <button onclick="renameGroup()" class="bg-blue-600 px-4 rounded-lg font-bold text-xs">SAVE</button>
-                        </div>
-                    </div>
+        <div class="p-6 flex flex-col items-center">
+            <img id="info-pfp" class="w-32 h-32 rounded-full mb-6 border-4 border-white/5 object-cover">
+            
+            <div id="admin-tools" class="hidden w-full space-y-4">
+                <input type="text" id="change-pfp" class="w-full bg-[#111b21] p-3 rounded-lg text-xs" placeholder="Profile Photo URL (Admin Only)" onchange="updateGroupPFP(this.value)">
+                <div class="flex gap-2">
+                    <input type="text" id="change-name" class="flex-1 bg-[#111b21] p-3 rounded-lg text-sm">
+                    <button onclick="updateGroupName()" class="bg-blue-600 px-4 rounded-lg font-bold text-xs">RENAME</button>
                 </div>
             </div>
 
-            <div class="space-y-4">
-                <h3 class="text-xs font-bold text-gray-500 uppercase">Participants</h3>
-                <div id="list-participants" class="space-y-2"></div>
+            <div class="w-full mt-6 space-y-2">
+                <p class="text-[10px] font-bold text-gray-500 uppercase">Participants</p>
+                <div id="member-list" class="space-y-1"></div>
             </div>
 
-            <button id="btn-delete-group" onclick="deleteGroup()" class="hidden w-full py-4 bg-red-600/10 text-red-500 rounded-xl font-bold text-sm">Terminate Group Forever</button>
+            <div class="w-full mt-10 space-y-4">
+                <button onclick="leaveLounge()" class="w-full py-4 bg-white/5 rounded-xl font-bold text-sm">Leave Group</button>
+                <button id="admin-del-btn" onclick="terminateLounge()" class="hidden w-full py-4 bg-red-600/10 text-red-500 rounded-xl font-bold text-sm">Delete Group for Everyone</button>
+            </div>
         </div>
     </div>
 
-    <!-- 4. APPROVAL POPUP -->
-    <div id="modal-approvals" class="fixed inset-0 bg-black/90 z-[100] hidden flex-col items-center justify-center p-6">
-        <div class="bg-[#202c33] w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl">
-            <div class="p-4 bg-orange-500 text-black font-black text-center text-xs uppercase">Entry Requests</div>
-            <div id="list-approvals" class="max-h-80 overflow-y-auto p-4 space-y-3"></div>
-            <button onclick="closeApprovals()" class="w-full p-4 font-bold text-gray-500 text-xs border-t border-white/5">CLOSE</button>
-        </div>
+    <!-- PFP ZOOM POPUP -->
+    <div id="zoom-overlay" class="fixed inset-0 bg-black z-[1000] hidden items-center justify-center" onclick="this.classList.add('hidden')">
+        <img id="zoom-img" src="" class="max-w-full max-h-full">
     </div>
 
     <script type="module">
@@ -153,191 +154,213 @@
         const firebaseConfig = { apiKey: "AIzaSyDbfmd0zmv_mFV0CG2OrhKPPeU3zPYGOBg", authDomain: "unidesk-a70ac.firebaseapp.com", projectId: "unidesk-a70ac" };
         const db = getFirestore(initializeApp(firebaseConfig));
 
-        // State & Persistence
-        let myId = localStorage.getItem('ae_id') || "U"+Date.now();
-        localStorage.setItem('ae_id', myId);
-        let myName = localStorage.getItem('ae_name') || "";
-        let currentGroup = null;
-        let myJoinedGroups = JSON.parse(localStorage.getItem('ae_my_groups') || "[]");
+        let uId = localStorage.getItem('a_u') || "ID-"+Math.random().toString(36).substr(2,6).toUpperCase();
+        localStorage.setItem('a_u', uId);
+        let myGroups = JSON.parse(localStorage.getItem('a_g') || "[]");
+        let activeRoom = null;
+        let selectedMsgId = null;
+        let editMode = false;
+        let pressTimer;
 
-        // UI Tabs
-        window.toggleTab = (tab) => {
-            document.getElementById('form-create').classList.toggle('hidden', tab !== 'create');
-            document.getElementById('form-join').classList.toggle('hidden', tab !== 'join');
-            document.getElementById('tab-create-btn').className = `flex-1 py-3 font-bold text-xs uppercase ${tab === 'create' ? 'border-b-2 border-blue-500 text-white' : 'text-gray-500'}`;
-            document.getElementById('tab-join-btn').className = `flex-1 py-3 font-bold text-xs uppercase ${tab === 'join' ? 'border-b-2 border-blue-500 text-white' : 'text-gray-500'}`;
+        // TABS
+        window.switchTab = (t) => {
+            document.getElementById('pane-create').classList.toggle('hidden', t !== 'create');
+            document.getElementById('pane-join').classList.toggle('hidden', t !== 'join');
+            document.getElementById('t-c').className = `flex-1 py-4 text-[11px] font-black uppercase ${t === 'create' ? 'border-b-2 border-blue-500 text-white' : 'text-gray-500'}`;
+            document.getElementById('t-j').className = `flex-1 py-4 text-[11px] font-black uppercase ${t === 'join' ? 'border-b-2 border-blue-500 text-white' : 'text-gray-500'}`;
         };
 
-        // Create Real Group
-        window.handleCreate = async () => {
-            const name = document.getElementById('input-username').value.trim();
-            const gName = document.getElementById('input-group-name').value.trim();
-            if(!name || !gName) return alert("Fill all fields");
-            
-            const code = Math.random().toString(36).substring(2,8).toUpperCase();
-            const groupData = {
-                name: gName, code: code, admin: myId, pfp: "",
-                members: [{id: myId, name: name}], memberIds: [myId],
-                pending: [], messages: []
-            };
-            
-            localStorage.setItem('ae_name', name);
-            await setDoc(doc(db, "rooms", code), groupData);
-            saveGroupLocally(code);
-            enterChat(code);
-        };
-
-        // Join Real Group
-        window.handleJoin = async () => {
-            const name = document.getElementById('input-username').value.trim();
-            const code = document.getElementById('input-join-code').value.trim().toUpperCase();
-            if(!name || !code) return alert("Enter name and code");
-
-            const ref = doc(db, "rooms", code);
-            const snap = await getDoc(ref);
-            if(!snap.exists()) return alert("Group not found");
-
-            localStorage.setItem('ae_name', name);
-            await updateDoc(ref, { pending: arrayUnion({ id: myId, name: name }) });
-            alert("Request sent to Admin. You will enter automatically once approved.");
-            
-            // Listen for approval
-            onSnapshot(ref, (doc) => {
-                if(doc.exists() && doc.data().memberIds.includes(myId)) {
-                    saveGroupLocally(code);
-                    enterChat(code);
-                }
-            });
-        };
-
-        function saveGroupLocally(code) {
-            if(!myJoinedGroups.includes(code)) {
-                myJoinedGroups.push(code);
-                localStorage.setItem('ae_my_groups', JSON.stringify(myJoinedGroups));
-            }
-        }
-
-        // Load Personal Group List
-        function loadDash() {
-            const container = document.getElementById('list-my-groups');
+        // REAL-TIME DASHBOARD
+        function loadDashboard() {
+            const container = document.getElementById('my-rooms');
             container.innerHTML = "";
-            myJoinedGroups.forEach(code => {
+            myGroups.forEach(code => {
                 onSnapshot(doc(db, "rooms", code), (s) => {
                     if(!s.exists()) return;
-                    const data = s.data();
-                    let div = document.getElementById('item-'+code) || document.createElement('div');
-                    div.id = 'item-'+code;
-                    div.className = "flex items-center gap-4 bg-white/5 p-4 rounded-xl border border-white/5 cursor-pointer";
-                    div.onclick = () => enterChat(code);
-                    div.innerHTML = `
-                        <div class="pfp-circle">${data.pfp ? `<img src="${data.pfp}">` : data.name[0]}</div>
-                        <div class="flex-1"><div class="font-bold">${data.name}</div><div class="text-[10px] text-gray-500 uppercase tracking-tighter">${code}</div></div>
-                    `;
-                    container.appendChild(div);
+                    const d = s.data();
+                    let el = document.getElementById('card-'+code) || document.createElement('div');
+                    el.id = 'card-'+code;
+                    el.className = "flex items-center gap-4 bg-[#111b21] p-4 rounded-2xl border border-white/5 cursor-pointer";
+                    el.onclick = () => openLounge(code);
+                    el.innerHTML = `<div class="w-12 h-12 rounded-full overflow-hidden bg-gray-800 flex items-center justify-center font-bold">
+                        ${d.pfp ? `<img src="${d.pfp}" class="w-full h-full object-cover">` : d.name[0]}
+                    </div>
+                    <div><div class="font-bold">${d.name}</div><div class="text-[10px] text-blue-500 font-mono">${code}</div></div>`;
+                    container.appendChild(el);
                 });
             });
         }
-        loadDash();
+        loadDashboard();
 
-        // Chat View & RBAC
-        function enterChat(code) {
-            currentGroup = code;
-            document.querySelectorAll('.view-layer').forEach(v => v.classList.remove('active-view'));
+        // CREATE
+        window.createLounge = async () => {
+            const u = document.getElementById('user-name').value.trim();
+            const g = document.getElementById('group-name').value.trim();
+            if(!u || !g) return alert("Fill Name and Title");
+            const code = Math.random().toString(36).substr(2,6).toUpperCase();
+            localStorage.setItem('a_n', u);
+            await setDoc(doc(db, "rooms", code), {
+                id: code, name: g, admin: uId, pfp: "",
+                members: [{id: uId, name: u}], memberIds: [uId],
+                pending: [], msgs: []
+            });
+            saveGroup(code);
+            openLounge(code);
+        };
+
+        // JOIN
+        window.requestJoin = async () => {
+            const u = document.getElementById('user-name').value.trim();
+            const c = document.getElementById('join-code').value.trim().toUpperCase();
+            if(!u || !c) return alert("Fill all");
+            localStorage.setItem('a_n', u);
+            await updateDoc(doc(db, "rooms", c), { pending: arrayUnion({ id: uId, name: u }) });
+            alert("Awaiting admin approval...");
+            onSnapshot(doc(db, "rooms", c), (s) => { if(s.exists() && s.data().memberIds.includes(uId)) { saveGroup(c); openLounge(c); } });
+        };
+
+        function saveGroup(c) { if(!myGroups.includes(c)) { myGroups.push(c); localStorage.setItem('a_g', JSON.stringify(myGroups)); } }
+
+        // LOUNGE LOGIC
+        function openLounge(code) {
+            activeRoom = code;
+            document.getElementById('view-dashboard').classList.remove('active-view');
             document.getElementById('view-chat').classList.add('active-view');
             
             onSnapshot(doc(db, "rooms", code), (s) => {
-                if(!s.exists()) return location.reload();
-                const data = s.data();
-                const isAdmin = data.admin === myId;
+                if(!s.exists()) {
+                    myGroups = myGroups.filter(x => x !== code);
+                    localStorage.setItem('a_g', JSON.stringify(myGroups));
+                    alert("Lounge Deleted by Admin.");
+                    location.reload();
+                    return;
+                }
+                const d = s.data();
+                const isAdmin = d.admin === uId;
+                
+                document.getElementById('room-title').innerText = d.name;
+                document.getElementById('room-code-badge').innerText = code;
+                document.getElementById('room-pfp').src = d.pfp || `https://ui-avatars.com/api/?name=${d.name}`;
+                document.getElementById('info-pfp').src = d.pfp || `https://ui-avatars.com/api/?name=${d.name}`;
+                document.getElementById('change-name').value = d.name;
 
-                // UI Updates
-                document.getElementById('display-group-name').innerText = data.name;
-                document.getElementById('display-code').innerText = code;
-                document.getElementById('group-pfp').innerHTML = data.pfp ? `<img src="${data.pfp}">` : data.name[0];
-                document.getElementById('edit-group-name').value = data.name;
-
-                // Admin Header Logic (Requirement 4)
-                if(isAdmin && data.pending?.length > 0) {
-                    document.getElementById('admin-notif-bar').classList.remove('hidden');
-                    document.getElementById('notif-count').innerText = data.pending.length;
-                    renderApprovals(data.pending);
+                if(isAdmin && d.pending.length > 0) {
+                    document.getElementById('admin-notif').classList.remove('hidden');
+                    document.getElementById('pending-count').innerText = d.pending.length;
                 } else {
-                    document.getElementById('admin-notif-bar').classList.add('hidden');
+                    document.getElementById('admin-notif').classList.add('hidden');
                 }
 
-                // Chat Rendering
-                const box = document.getElementById('chat-box');
-                box.innerHTML = data.messages.map(m => `
-                    <div class="bubble ${m.uid === myId ? 'bubble-me' : 'bubble-them'}">
-                        ${m.uid !== myId ? `<div class="bubble-name">${m.uName}</div>` : ''}
-                        ${m.text}
-                    </div>
-                `).join('');
-                box.scrollTop = box.scrollHeight;
+                renderMessages(d.msgs);
+                
+                document.getElementById('member-list').innerHTML = d.members.map(m => `
+                    <div class="flex items-center gap-3 p-2 bg-white/5 rounded-lg text-sm">
+                        <div class="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center font-bold text-[10px]">${m.name[0]}</div>
+                        ${m.name} ${m.id === d.admin ? '<span class="text-[9px] text-blue-400 ml-auto">ADMIN</span>' : ''}
+                    </div>`).join('');
 
-                // Member List
-                document.getElementById('list-participants').innerHTML = data.members.map(m => `
-                    <div class="flex items-center gap-3 p-3 bg-white/5 rounded-xl">
-                        <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center font-bold text-xs">${m.name[0]}</div>
-                        <span class="text-sm font-semibold">${m.name} ${m.id === data.admin ? '<span class="text-[10px] text-blue-400 ml-2">ADMIN</span>' : ''}</span>
-                    </div>
-                `).join('');
-
-                // Toggle Admin UI (Requirement 3)
-                document.getElementById('admin-controls').classList.toggle('hidden', !isAdmin);
-                document.getElementById('btn-delete-group').classList.toggle('hidden', !isAdmin);
+                document.getElementById('admin-tools').classList.toggle('hidden', !isAdmin);
+                document.getElementById('admin-del-btn').classList.toggle('hidden', !isAdmin);
             });
         }
 
-        // Admin Core Actions
-        window.approveUser = async (user) => {
-            await updateDoc(doc(db, "rooms", currentGroup), {
-                pending: arrayRemove(user),
-                members: arrayUnion(user),
-                memberIds: arrayUnion(user.id)
-            });
-        };
-
-        window.renameGroup = async () => {
-            const newName = document.getElementById('edit-group-name').value.trim();
-            if(newName) await updateDoc(doc(db, "rooms", currentGroup), { name: newName });
-        };
-
-        window.updatePFP = async (url) => {
-            await updateDoc(doc(db, "rooms", currentGroup), { pfp: url });
-        };
-
-        window.deleteGroup = async () => {
-            if(confirm("DANGER: This will delete everything. Proceed?")) {
-                await deleteDoc(doc(db, "rooms", currentGroup));
-            }
-        };
-
-        window.sendMessage = async () => {
-            const input = document.getElementById('msg-input');
-            const name = localStorage.getItem('ae_name');
-            if(!input.value.trim()) return;
-            await updateDoc(doc(db, "rooms", currentGroup), {
-                messages: arrayUnion({ uid: myId, uName: name, text: input.value.trim() })
-            });
-            input.value = "";
-        };
-
-        // UI Helpers
-        function renderApprovals(list) {
-            document.getElementById('list-approvals').innerHTML = list.map(u => `
-                <div class="flex items-center justify-between bg-white/5 p-3 rounded-xl">
-                    <span class="font-bold text-sm">${u.name}</span>
-                    <button onclick='approveUser(${JSON.stringify(u)})' class="bg-blue-600 px-4 py-1.5 rounded-lg text-[10px] font-black">ACCEPT</button>
+        function renderMessages(msgs) {
+            const box = document.getElementById('chat-messages');
+            box.innerHTML = msgs.filter(m => !m.deletedFor?.includes(uId)).map(m => `
+                <div class="bubble ${m.uid === uId ? 'bubble-me' : 'bubble-them'}" 
+                     onmousedown="startPress('${m.id}')" onmouseup="endPress()" 
+                     ontouchstart="startPress('${m.id}')" ontouchend="endPress()">
+                    ${m.uid !== uId ? `<div class="bubble-name">${m.uName}</div>` : ''}
+                    <div class="msg-text">${m.text}</div>
+                    <div class="msg-meta">${m.edited ? 'edited' : ''}</div>
                 </div>
             `).join('');
+            box.scrollTop = box.scrollHeight;
         }
 
-        window.showApprovals = () => document.getElementById('modal-approvals').classList.remove('hidden');
-        window.closeApprovals = () => document.getElementById('modal-approvals').classList.add('hidden');
-        window.openGroupInfo = () => document.getElementById('modal-info').classList.add('active-view');
-        window.closeInfo = () => document.getElementById('modal-info').classList.remove('active-view');
-        document.getElementById('msg-input').onkeypress = (e) => { if(e.key === 'Enter') sendMessage(); };
-    </script>
-</body>
-</html>
+        // LONG PRESS SYSTEM
+        window.startPress = (id) => {
+            selectedMsgId = id;
+            pressTimer = window.setTimeout(() => showContext(), 600);
+        };
+        window.endPress = () => clearTimeout(pressTimer);
+
+        function showContext() {
+            const menu = document.getElementById('context-menu');
+            const msg = (JSON.parse(localStorage.getItem('temp_msgs') || "[]")).find(m => m.id === selectedMsgId);
+            
+            // Logic for edit/delete for everyone (Only your own messages)
+            const isMine = selectedMsgId.startsWith(uId);
+            document.getElementById('ctx-edit').style.display = isMine ? 'block' : 'none';
+            document.getElementById('ctx-everyone').style.display = isMine ? 'block' : 'none';
+
+            menu.style.display = 'block';
+            menu.style.left = '50%';
+            menu.style.top = '50%';
+            menu.style.transform = 'translate(-50%, -50%)';
+        }
+
+        document.addEventListener('click', (e) => { if(!e.target.closest('#context-menu')) document.getElementById('context-menu').style.display = 'none'; });
+
+        // MESSAGE ACTIONS
+        window.handleSend = async () => {
+            const f = document.getElementById('msg-input');
+            const name = localStorage.getItem('a_n');
+            if(!f.value.trim()) return;
+
+            const snap = await getDoc(doc(db, "rooms", activeRoom));
+            let msgs = snap.data().msgs;
+
+            if(editMode) {
+                msgs = msgs.map(m => m.id === selectedMsgId ? {...m, text: f.value, edited: true} : m);
+                editMode = false;
+                document.getElementById('edit-indicator').classList.add('hidden');
+            } else {
+                msgs.push({ id: uId + Date.now(), uid: uId, uName: name, text: f.value, deletedFor: [] });
+            }
+
+            await updateDoc(doc(db, "rooms", activeRoom), { msgs });
+            f.value = "";
+        };
+
+        window.startEdit = () => {
+            editMode = true;
+            document.getElementById('context-menu').style.display = 'none';
+            document.getElementById('edit-indicator').classList.remove('hidden');
+            const box = document.getElementById('msg-input');
+            box.focus();
+        };
+
+        window.deleteMsg = async (type) => {
+            const snap = await getDoc(doc(db, "rooms", activeRoom));
+            let msgs = snap.data().msgs;
+
+            if(type === 'everyone') {
+                msgs = msgs.filter(m => m.id !== selectedMsgId);
+            } else {
+                msgs = msgs.map(m => m.id === selectedMsgId ? {...m, deletedFor: [...(m.deletedFor || []), uId]} : m);
+            }
+
+            await updateDoc(doc(db, "rooms", activeRoom), { msgs });
+            document.getElementById('context-menu').style.display = 'none';
+        };
+
+        // GROUP ADMIN
+        window.updateGroupName = async () => {
+            const n = document.getElementById('change-name').value;
+            await updateDoc(doc(db, "rooms", activeRoom), { name: n });
+        };
+
+        window.updateGroupPFP = async (v) => {
+            await updateDoc(doc(db, "rooms", activeRoom), { pfp: v });
+        };
+
+        window.terminateLounge = async () => {
+            if(confirm("DELETE FOREVER?")) await deleteDoc(doc(db, "rooms", activeRoom));
+        };
+
+        window.leaveLounge = async () => {
+            if(confirm("Leave?")) {
+                const snap = await getDoc(doc(db, "rooms", activeRoom));
+                const me = snap.data().members.find(m => m.id === uId);
+                await updateDoc(
