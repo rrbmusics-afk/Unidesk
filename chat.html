@@ -1,14 +1,58 @@
-<!-- Join/Create Toggle Container -->
-<div class="max-w-md mx-auto p-8 bg-white shadow-2xl rounded-2xl border border-gray-100">
-  <h1 class="text-2xl font-bold text-gray-900 mb-6">Student Lounge</h1>
-  
-  <!-- Fields for Create (Show if state is 'create') -->
-  <div class="space-y-4">
-    <input type="text" placeholder="Your Name" class="w-full p-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-black outline-none transition">
-    <input type="text" placeholder="Lounge Name" class="w-full p-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-black outline-none transition">
-    
-    <button disabled class="w-full py-3 bg-black text-white rounded-lg font-semibold disabled:opacity-30 disabled:cursor-not-allowed">
-      Create Lounge
-    </button>
-  </div>
-</div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Lounge</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- 1. ENTRY SCREEN -->
+    <div id="entry-screen" class="container">
+        <h1 class="logo">Student Lounge</h1>
+        <div class="tab-buttons">
+            <button id="tab-create" onclick="showTab('create')">Create</button>
+            <button id="tab-join" onclick="showTab('join')">Join</button>
+        </div>
+
+        <div id="form-container">
+            <input type="text" id="user-name" placeholder="Your Name">
+            <input type="text" id="lounge-name" placeholder="Lounge Name" class="create-field">
+            <input type="text" id="lounge-code-input" placeholder="Lounge Code" class="join-field hidden">
+            <button id="action-btn" onclick="handleAction()">Start</button>
+        </div>
+    </div>
+
+    <!-- 2. WAITING SCREEN (KNOCKING) -->
+    <div id="waiting-screen" class="container hidden">
+        <div class="loader"></div>
+        <h2>Knocking...</h2>
+        <p>Waiting for Admin to approve your entry.</p>
+    </div>
+
+    <!-- 3. CHAT SCREEN -->
+    <div id="chat-screen" class="chat-container hidden">
+        <header>
+            <div class="lounge-info">
+                <h3 id="display-lounge-name">Lounge Name</h3>
+                <span id="display-lounge-code">Code: ####</span>
+            </div>
+            <div id="admin-controls" class="hidden">
+                <button onclick="toggleRequests()" id="req-count">Requests (0)</button>
+            </div>
+        </header>
+
+        <div id="request-panel" class="hidden"></div>
+        <div id="messages"></div>
+
+        <div class="input-area">
+            <input type="text" id="msg-input" placeholder="Type a message...">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script type="module" src="script.js"></script>
+</body>
+</html>
