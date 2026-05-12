@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Unidesk | Entrance</title>
+    <title>Student Lounge | Entrance</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
@@ -17,8 +17,7 @@
         }
         .glass-card {
             width: 92%; max-width: 380px; background: var(--card); border-radius: 42px;
-            padding: 35px; border: 1px solid var(--border);
-            box-shadow: 0 40px 100px rgba(0,0,0,0.7);
+            padding: 35px; border: 1px solid var(--border); box-shadow: 0 40px 100px rgba(0,0,0,0.7);
         }
         .tab-switcher {
             display: grid; grid-template-columns: 1fr 1fr; background: #000; 
@@ -26,10 +25,9 @@
         }
         .tab-btn {
             border: none; background: transparent; color: #444; padding: 12px; 
-            border-radius: 18px; font-size: 11px; font-weight: 800; cursor: pointer; 
-            transition: 0.4s; letter-spacing: 1.5px;
+            border-radius: 18px; font-size: 11px; font-weight: 800; cursor: pointer; transition: 0.4s;
         }
-        .tab-btn.active { background: var(--accent); color: #fff; box-shadow: 0 8px 20px rgba(45,127,249,0.25); }
+        .tab-btn.active { background: var(--accent); color: #fff; }
         .avatar-zone { width: 105px; height: 105px; margin: 0 auto 28px; position: relative; cursor: pointer; }
         .pfp-frame { 
             width: 100%; height: 100%; border-radius: 35px; border: 2px dashed var(--border); 
@@ -38,30 +36,25 @@
         .pfp-frame img { width: 100%; height: 100%; object-fit: cover; display: none; }
         .cam-badge {
             position: absolute; right: -5px; bottom: -5px; background: var(--accent);
-            width: 34px; height: 34px; border-radius: 12px; display: flex;
-            align-items: center; justify-content: center; border: 4px solid var(--card);
+            width: 34px; height: 34px; border-radius: 12px; display: flex; align-items: center; justify-content: center; border: 4px solid var(--card);
         }
         .input-stack input {
             width: 100%; background: rgba(0,0,0,0.4); border: 1px solid var(--border);
-            padding: 18px; border-radius: 20px; color: #fff; text-align: center;
-            margin-bottom: 12px; font-size: 15px; transition: 0.3s;
+            padding: 18px; border-radius: 20px; color: #fff; text-align: center; margin-bottom: 12px; font-size: 15px;
         }
-        .input-stack input:focus { border-color: var(--accent); background: rgba(45,127,249,0.04); }
         .action-btn {
-            width: 100%; padding: 20px; border-radius: 24px; border: none;
-            background: #14171C; color: #333; font-weight: 800; font-size: 14px;
-            margin-top: 15px; transition: 0.5s; cursor: not-allowed;
-            display: flex; align-items: center; justify-content: center; gap: 10px;
+            width: 100%; padding: 20px; border-radius: 24px; border: none; background: #14171C; color: #333; 
+            font-weight: 800; transition: 0.5s; cursor: not-allowed; display: flex; align-items: center; justify-content: center; gap: 10px;
         }
-        .action-btn.unlocked { background: #fff; color: #000; cursor: pointer; box-shadow: 0 15px 35px rgba(255,255,255,0.1); }
+        .action-btn.unlocked { background: #fff; color: #000; cursor: pointer; }
         .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
     <div class="text-center mb-10">
-        <h1 class="text-4xl font-black text-[#2D7FF9] italic tracking-tighter uppercase">Unidesk</h1>
-        <p class="text-[9px] text-gray-600 tracking-[0.5em] font-bold uppercase mt-2">Aethercore Interactive</p>
+        <h1 class="text-4xl font-black text-[#2D7FF9] italic tracking-tighter uppercase leading-none">Student Lounge</h1>
+        <p class="text-[9px] text-gray-600 tracking-[0.5em] font-bold uppercase mt-3">Secure Academic Hub</p>
     </div>
 
     <div class="glass-card">
@@ -85,7 +78,7 @@
             <input type="text" id="code" class="hidden" placeholder="6-DIGIT CODE" maxlength="6" oninput="v()">
         </div>
 
-        <button id="go-btn" class="action-btn" disabled onclick="location.href='message.html'">
+        <button id="go-btn" class="action-btn" disabled onclick="handleProceed()">
             <span id="btn-txt">INITIALIZE</span>
             <i class="fas fa-bolt-lightning"></i>
         </button>
@@ -93,6 +86,8 @@
 
     <script>
         let mode = 'create';
+        let imgData = "";
+
         function setMode(m, el) {
             mode = m;
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -103,18 +98,21 @@
             document.getElementById('btn-txt').innerText = m === 'create' ? 'INITIALIZE' : 'CONNECT';
             v();
         }
+
         function loadImg(i) {
             if (i.files && i.files[0]) {
                 const r = new FileReader();
                 r.onload = (e) => {
-                    const p = document.getElementById('preview');
-                    p.src = e.target.result; p.style.display = 'block';
+                    imgData = e.target.result;
+                    document.getElementById('preview').src = imgData;
+                    document.getElementById('preview').style.display = 'block';
                     document.getElementById('user-icon').style.display = 'none';
                     document.getElementById('frame').style.borderStyle = 'solid';
                 };
                 r.readAsDataURL(i.files[0]);
             }
         }
+
         function v() {
             const u = document.getElementById('user').value.trim();
             const l = document.getElementById('lounge').value.trim();
@@ -122,6 +120,14 @@
             const isOk = (mode === 'create') ? (u && l) : (u && c.length === 6);
             const b = document.getElementById('go-btn');
             b.disabled = !isOk; b.classList.toggle('unlocked', isOk);
+        }
+
+        function handleProceed() {
+            localStorage.setItem('user_pfp', imgData);
+            localStorage.setItem('user_name', document.getElementById('user').value);
+            // Defaulting to "Student Hub" if joining
+            localStorage.setItem('lounge_title', mode === 'create' ? document.getElementById('lounge').value : "Student Hub");
+            location.href = 'message.html';
         }
     </script>
 </body>
