@@ -144,33 +144,21 @@
 
         const startRec = async () => {
             try {
-                // Request stream
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                
-                // Mime types check for high compatibility
-                const types = ["audio/webm", "audio/ogg", "audio/mp4"];
-                const mimeType = types.find(t => MediaRecorder.isTypeSupported(t)) || "";
-                
-                mediaRecorder = new MediaRecorder(stream, { mimeType });
+                mediaRecorder = new MediaRecorder(stream);
                 audioChunks = [];
-                
-                mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
+                mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
                 mediaRecorder.onstop = () => {
-                    const blob = new Blob(audioChunks, { type: mimeType });
                     const reader = new FileReader();
-                    reader.onloadend = () => {
-                        if (reader.result.length > 500) uploadMedia(reader.result, 'audio');
-                    };
-                    reader.readAsDataURL(blob);
+                    reader.readAsDataURL(new Blob(audioChunks, { type: 'audio/mp4' }));
+                    reader.onloadend = () => uploadMedia(reader.result, 'audio');
                     stream.getTracks().forEach(t => t.stop());
                 };
-
                 mediaRecorder.start();
                 document.getElementById('recIndicator').classList.remove('hidden');
+                // Set opacity instead of display hidden to keep keyboard context
                 chatInput.style.opacity = "0";
-            } catch(e) { 
-                alert("Mic error: Reset site permissions in your browser settings."); 
-            }
+            } catch(e) { alert("Mic error: Check permissions."); }
         };
 
         const stopRec = () => {
