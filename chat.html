@@ -6,17 +6,18 @@
     <title>Student Lounge | Aethercore</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        :root { --accent: #007AFF; --wa-green: #25D366; --bg-main: #0b141a; --bubble-me: #005c4b; --bubble-them: #202c33; --danger: #ef4444; }
+        :root { --accent: #007AFF; --wa-green: #25D366; --bg-main: #0b141a; --bubble-me: #005c4b; --bubble-them: #202c33; }
         
         html, body { 
-            background: var(--bg-main); color: #e9edef; font-family: -apple-system, BlinkMacSystemFont, sans-serif; 
+            background: var(--bg-main); color: #e9edef; font-family: -apple-system, sans-serif; 
             margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; position: fixed;
         }
         
         #main-workspace { display: none; flex-direction: column; height: 100%; width: 100%; position: relative; }
 
+        /* Header Styles */
         .nav-bar { height: 60px; background: #202c33; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; z-index: 20; cursor: pointer; }
-        .status-bar { height: 40px; background: #111b21; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; border-bottom: 1px solid rgba(255,255,255,0.05); z-index: 10; }
+        .status-bar { height: 40px; background: #111b21; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; border-bottom: 1px solid rgba(255,255,255,0.05); }
 
         #chatBox { flex: 1; overflow-y: auto; padding: 20px 16px; display: flex; flex-direction: column; gap: 12px; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); background-blend-mode: overlay; background-color: #0b141a; }
         
@@ -43,35 +44,44 @@
             <span class="font-bold">Group Info</span>
             <div class="w-10"></div>
         </div>
-        <div class="flex-1 flex flex-col items-center p-8 space-y-6">
+        <div class="flex-1 flex flex-col items-center p-8 space-y-6 text-center">
             <div class="relative">
                 <img id="info-pic" src="" class="group-img-large" onerror="this.src='https://ui-avatars.com/api/?name=Group&background=007AFF&color=fff'">
-                <button id="edit-btn" onclick="triggerEdit()" class="hidden absolute bottom-0 right-0 bg-blue-600 p-2 rounded-full border-2 border-[#0b141a]">
+                <!-- Admin Only Pencil -->
+                <button id="admin-pencil" onclick="triggerEdit()" class="hidden absolute bottom-0 right-0 bg-blue-600 p-2 rounded-full border-2 border-[#0b141a]">
                     <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" stroke-width="2"/></svg>
                 </button>
             </div>
-            <div class="text-center w-full">
-                <h2 id="info-name" class="text-2xl font-black italic"></h2>
-                <p id="info-code" class="text-blue-500 font-mono tracking-widest mt-2"></p>
-            </div>
+            <h2 id="info-name" class="text-2xl font-black italic"></h2>
+            <p id="info-code" class="text-blue-500 font-mono tracking-widest text-sm"></p>
             
-            <div class="w-full pt-10 px-4">
+            <div class="w-full pt-10 px-4 space-y-3">
                 <button id="admin-delete-btn" onclick="deleteGroup()" class="hidden w-full bg-red-600/10 text-red-500 p-4 rounded-2xl font-bold uppercase text-xs border border-red-500/20">Delete Group</button>
                 <button id="member-leave-btn" onclick="leaveGroup()" class="hidden w-full bg-white/5 text-white/60 p-4 rounded-2xl font-bold uppercase text-xs border border-white/10">Leave Group</button>
             </div>
         </div>
     </div>
 
-    <!-- Requests Modal -->
+    <!-- Knocking/Waiting View -->
+    <div id="wait-view" class="overlay" style="display:none">
+        <div class="text-center space-y-6">
+            <div class="animate-bounce w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto text-3xl font-bold">!</div>
+            <h2 class="text-xl font-bold">Knocking...</h2>
+            <p class="text-gray-500 text-sm">The Admin needs to approve your entry.</p>
+            <button onclick="window.location.reload()" class="text-xs text-blue-500 font-bold uppercase">Cancel Request</button>
+        </div>
+    </div>
+
+    <!-- Requests Modal (Admin Only) -->
     <div id="req-modal" class="overlay" style="display:none; background: rgba(0,0,0,0.9);">
         <div class="bg-[#202c33] w-full max-w-xs rounded-2xl overflow-hidden">
-            <div class="p-4 border-b border-white/5 font-bold text-center">Pending Access</div>
+            <div class="p-4 border-b border-white/5 font-bold text-center">New Requests</div>
             <div id="req-list" class="max-h-60 overflow-y-auto"></div>
             <button onclick="document.getElementById('req-modal').style.display='none'" class="w-full p-4 text-xs text-gray-500 font-bold uppercase">Close</button>
         </div>
     </div>
 
-    <!-- Entry View -->
+    <!-- Home View -->
     <div id="home-view" class="overlay">
         <div class="w-full max-w-xs space-y-6 text-center">
             <h1 class="text-4xl font-black text-blue-500 tracking-tighter italic">Student Lounge</h1>
@@ -97,17 +107,17 @@
         </div>
     </div>
 
-    <!-- Workspace -->
+    <!-- Main Workspace -->
     <div id="main-workspace">
         <header class="nav-bar" onclick="openInfo()">
             <div class="flex items-center gap-3">
                 <img id="header-pic" src="" class="w-10 h-10 rounded-full bg-blue-600 object-cover" onerror="this.src='https://ui-avatars.com/api/?name=S&background=007AFF&color=fff'">
                 <div class="flex flex-col">
                     <span class="text-sm font-bold tracking-tight">Student Lounge</span>
-                    <span id="group-name-header" class="text-[10px] text-gray-400 font-bold uppercase truncate max-w-[120px]">...</span>
+                    <span id="header-group-sub" class="text-[10px] text-gray-400 font-bold uppercase truncate max-w-[120px]">...</span>
                 </div>
             </div>
-            <div id="admin-panel" onclick="event.stopPropagation(); document.getElementById('req-modal').style.display='flex'" class="hidden bg-orange-500 text-black px-3 py-1 rounded-full text-[9px] font-black">REQ (<span id="req-count">0</span>)</div>
+            <div id="admin-req-pill" onclick="event.stopPropagation(); document.getElementById('req-modal').style.display='flex'" class="hidden bg-orange-500 text-black px-3 py-1 rounded-full text-[9px] font-black animate-pulse">REQUESTS (<span id="req-count">0</span>)</div>
         </header>
 
         <div class="status-bar">
@@ -121,7 +131,7 @@
         <main id="chatBox"></main>
 
         <footer class="footer">
-            <div class="input-pill"><input type="text" id="chatInput" placeholder="Type a message..." autocomplete="off" class="w-full bg-transparent outline-none text-sm text-white"></div>
+            <div class="input-pill"><input type="text" id="chatInput" placeholder="Message..." autocomplete="off" class="w-full bg-transparent outline-none text-sm text-white"></div>
             <button onclick="sendMessage()" class="action-btn"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg></button>
         </footer>
     </div>
@@ -176,11 +186,12 @@
             if(!name) return;
             const code = Math.random().toString(36).substring(2, 8).toUpperCase();
             savedName = name;
-            localStorage.setItem('sl_userName', name); localStorage.setItem('sl_lastRoom', code);
+            localStorage.setItem('sl_userName', name);
+            localStorage.setItem('sl_lastRoom', code);
             localStorage.setItem('sl_lastGroupName', gname);
 
             await setDoc(doc(db, "rooms", code), { 
-                groupName: gname, messages: [], pendingRequests: [], approvedIds: [myId], adminId: myId 
+                groupName: gname, messages: [], pendingRequests: [], approvedIds: [myId], adminId: myId, groupPic: ""
             });
             openWorkspace(code);
         };
@@ -192,17 +203,28 @@
             const roomRef = doc(db, "rooms", code);
             const snap = await getDoc(roomRef);
             if(!snap.exists()) return alert("Room doesn't exist");
+            
             savedName = name;
-            localStorage.setItem('sl_userName', name); localStorage.setItem('sl_lastRoom', code);
+            localStorage.setItem('sl_userName', name);
+            localStorage.setItem('sl_lastRoom', code);
+
             if(snap.data().approvedIds.includes(myId)) return openWorkspace(code);
+
+            // Knocking Logic
             await updateDoc(roomRef, { pendingRequests: arrayUnion({ id: myId, name: savedName }) });
             document.getElementById('home-view').style.display = 'none';
-            onSnapshot(roomRef, (s) => { if(s.exists() && s.data().approvedIds.includes(myId)) openWorkspace(code); });
+            document.getElementById('wait-view').style.display = 'flex';
+
+            onSnapshot(roomRef, (s) => {
+                if(s.exists() && s.data().approvedIds.includes(myId)) openWorkspace(code);
+                if(!s.exists()) window.location.reload();
+            });
         };
 
         function openWorkspace(code) {
             currentRoom = code;
             document.getElementById('home-view').style.display = 'none';
+            document.getElementById('wait-view').style.display = 'none';
             document.getElementById('main-workspace').style.display = 'flex';
             document.getElementById('header-code-pill').innerText = code;
             
@@ -211,7 +233,8 @@
                 const data = s.data();
                 isAdmin = data.adminId === myId;
                 
-                document.getElementById('group-name-header').innerText = data.groupName;
+                // Group Info/Header Updates
+                document.getElementById('header-group-sub').innerText = data.groupName;
                 document.getElementById('full-group-display').innerText = data.groupName;
                 document.getElementById('info-name').innerText = data.groupName;
                 document.getElementById('info-code').innerText = "ROOM CODE: " + code;
@@ -220,38 +243,54 @@
                 document.getElementById('header-pic').src = pic;
                 document.getElementById('info-pic').src = pic;
 
-                document.getElementById('edit-btn').style.display = isAdmin ? 'block' : 'none';
+                // Permissions logic
+                document.getElementById('admin-pencil').style.display = isAdmin ? 'block' : 'none';
                 document.getElementById('admin-delete-btn').style.display = isAdmin ? 'block' : 'none';
                 document.getElementById('member-leave-btn').style.display = isAdmin ? 'none' : 'block';
-                document.getElementById('admin-panel').style.display = (isAdmin && data.pendingRequests.length > 0) ? 'block' : 'none';
                 
+                // Handle Pending Requests for Admin
                 if(isAdmin) {
-                    document.getElementById('req-count').innerText = data.pendingRequests.length;
-                    document.getElementById('req-list').innerHTML = data.pendingRequests.map(r => `
+                    const reqs = data.pendingRequests || [];
+                    document.getElementById('admin-req-pill').style.display = reqs.length > 0 ? 'block' : 'none';
+                    document.getElementById('req-count').innerText = reqs.length;
+                    document.getElementById('req-list').innerHTML = reqs.map(r => `
                         <div class="flex justify-between items-center p-4 border-b border-white/5">
                             <span class="text-xs font-bold">${r.name}</span>
                             <button onclick="approveUser('${r.id}', '${r.name}')" class="bg-green-500 text-black text-[10px] font-bold px-3 py-1 rounded">APPROVE</button>
                         </div>
                     `).join('');
+                } else if(!data.approvedIds.includes(myId)) {
+                    resetToHome(); // Kicked out
                 }
+                
                 renderChat(data.messages || []);
             });
         }
 
+        window.approveUser = async (uid, uname) => {
+            await updateDoc(doc(db, "rooms", currentRoom), { 
+                pendingRequests: arrayRemove({ id: uid, name: uname }),
+                approvedIds: arrayUnion(uid) 
+            });
+        };
+
         window.triggerEdit = async () => {
-            const newN = prompt("Group Name:", document.getElementById('info-name').innerText);
-            const newP = prompt("Icon URL:");
-            if(newN) await updateDoc(doc(db, "rooms", currentRoom), { groupName: newN, groupPic: newP || '' });
+            const newN = prompt("New Group Name:", document.getElementById('info-name').innerText);
+            const newP = prompt("New Icon URL (Optional):");
+            if(newN) {
+                await updateDoc(doc(db, "rooms", currentRoom), { groupName: newN, groupPic: newP || "" });
+                localStorage.setItem('sl_lastGroupName', newN);
+            }
         };
 
         window.deleteGroup = async () => {
-            if(confirm("Permanently delete this group for everyone?")) {
+            if(confirm("Permanently delete this group and kick all members?")) {
                 await deleteDoc(doc(db, "rooms", currentRoom));
             }
         };
 
         window.leaveGroup = async () => {
-            if(confirm("Leave this group?")) {
+            if(confirm("Are you sure you want to leave?")) {
                 await updateDoc(doc(db, "rooms", currentRoom), { approvedIds: arrayRemove(myId) });
                 resetToHome();
             }
@@ -262,12 +301,6 @@
             localStorage.removeItem('sl_lastGroupName');
             window.location.reload();
         }
-
-        window.approveUser = async (uid, uname) => {
-            await updateDoc(doc(db, "rooms", currentRoom), { 
-                pendingRequests: arrayRemove({ id: uid, name: uname }), approvedIds: arrayUnion(uid) 
-            });
-        };
 
         window.openInfo = () => document.getElementById('info-overlay').style.display = 'flex';
         window.closeInfo = () => document.getElementById('info-overlay').style.display = 'none';
