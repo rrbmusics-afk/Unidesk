@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Student Lounge | Entrance</title>
+    <title>Aethercore | Entrance</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
@@ -28,6 +28,8 @@
             border-radius: 18px; font-size: 11px; font-weight: 800; cursor: pointer; transition: 0.4s;
         }
         .tab-btn.active { background: var(--accent); color: #fff; }
+        
+        /* Avatar UI */
         .avatar-zone { width: 105px; height: 105px; margin: 0 auto 28px; position: relative; cursor: pointer; }
         .pfp-frame { 
             width: 100%; height: 100%; border-radius: 35px; border: 2px dashed var(--border); 
@@ -38,6 +40,8 @@
             position: absolute; right: -5px; bottom: -5px; background: var(--accent);
             width: 34px; height: 34px; border-radius: 12px; display: flex; align-items: center; justify-content: center; border: 4px solid var(--card);
         }
+
+        /* Inputs */
         .input-stack input {
             width: 100%; background: rgba(0,0,0,0.4); border: 1px solid var(--border);
             padding: 18px; border-radius: 20px; color: #fff; text-align: center; margin-bottom: 12px; font-size: 15px;
@@ -47,14 +51,14 @@
             font-weight: 800; transition: 0.5s; cursor: not-allowed; display: flex; align-items: center; justify-content: center; gap: 10px;
         }
         .action-btn.unlocked { background: #fff; color: #000; cursor: pointer; }
-        .hidden { display: none !important; }
-
-        /* Loader Animation */
+        
+        /* Loader */
         .loader {
             width: 80px; height: 80px; border: 4px solid rgba(45, 127, 249, 0.1);
             border-top: 4px solid var(--accent); border-radius: 50%; animation: spin 1s linear infinite;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
@@ -122,11 +126,13 @@
         let mode = 'create';
         let imgData = "";
 
+        // UI Management
         window.setMode = (m, el) => {
             mode = m;
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             el.classList.add('active');
-            document.getElementById('pfp-ui').classList.toggle('hidden', m==='join');
+            
+            // Toggle visibility based on mode
             document.getElementById('lounge').classList.toggle('hidden', m==='join');
             document.getElementById('code').classList.toggle('hidden', m==='create');
             document.getElementById('btn-txt').innerText = m === 'create' ? 'INITIALIZE' : 'CONNECT';
@@ -156,12 +162,13 @@
             b.disabled = !isOk; b.classList.toggle('unlocked', isOk);
         };
 
+        // Execution Logic
         document.getElementById('go-btn').onclick = async () => {
             const name = document.getElementById('user').value.trim();
             const lTitle = document.getElementById('lounge').value.trim();
             const lCode = mode === 'join' ? document.getElementById('code').value.trim() : Math.floor(100000 + Math.random() * 900000).toString();
 
-            // Store shared data
+            // Local Session Storage
             localStorage.setItem('user_pfp', imgData);
             localStorage.setItem('user_name', name);
             localStorage.setItem('lounge_title', mode === 'create' ? lTitle : "Student Lounge");
@@ -169,20 +176,19 @@
             localStorage.setItem('user_role', mode === 'create' ? 'admin' : 'joiner');
 
             if (mode === 'join') {
-                // Show the Knocking screen
                 document.getElementById('knocking-screen').classList.remove('hidden');
-
+                
+                // 1. Submit Request to Realtime Database
                 const requestPath = ref(db, `rooms/${lCode}/requests/${name}`);
                 
                 try {
-                    // 1. Send the knock request
                     await set(requestPath, {
                         name: name,
-                        pfp: imgData || "",
+                        pfp: imgData || "", // SYNC: Shared for Admin review
                         status: 'pending'
                     });
 
-                    // 2. Listen for 'approved' status change
+                    // 2. Wait for Admin to change status to 'approved'
                     onValue(requestPath, (snapshot) => {
                         const data = snapshot.val();
                         if (data && data.status === 'approved') {
@@ -190,11 +196,11 @@
                         }
                     });
                 } catch (e) {
-                    alert("Connection Failed. Check Code.");
+                    alert("Error reaching server.");
                     document.getElementById('knocking-screen').classList.add('hidden');
                 }
             } else {
-                // Admin creates room and goes in immediately
+                // Admin skips knocking
                 location.href = 'message.html';
             }
         };
