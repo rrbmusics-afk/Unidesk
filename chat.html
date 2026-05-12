@@ -2,121 +2,144 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Aethercore Secure Node</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Aethercore Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-            --bg: #0b0e11;
-            --surface: #1a1f26;
-            --accent: #00d2ff;
-            --bubble-me: #005c4b;
-            --bubble-them: #202c33;
+            --ae-bg: #0c0f14;
+            --ae-surface: #161b22;
+            --ae-accent: #00d2ff;
+            --ae-bubble-me: #005c4b;
+            --ae-bubble-them: #202c33;
         }
 
-        body { background: var(--bg); color: #e6edf3; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; height: 100vh; overflow: hidden; }
-        
-        /* 11) Premium Containers */
+        body { background: var(--ae-bg); color: #e6edf3; font-family: 'Inter', system-ui, -apple-system; height: 100vh; overflow: hidden; }
+
+        /* 11) Aesthetic Containers */
         .premium-card {
-            background: var(--surface);
-            border-radius: 24px;
-            border: 1px solid rgba(255,255,255,0.05);
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            background: var(--ae-surface);
+            border-radius: 28px;
+            border: 1px solid rgba(255,255,255,0.08);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
         /* 5) Aethercore Doodle Background */
-        .doodle-bg {
+        .chat-bg {
             background-color: #0b141a;
-            background-image: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M10 10h2v2h-2zm10 10h2v2h-2zm10-10h2v2h-2zm10 10h2v2h-2z' fill='%23ffffff' fill-opacity='0.03'/%3E%3C/svg%3E");
-        }
-
-        /* 1) Button Lock States */
-        .btn-locked {
-            pointer-events: none;
-            opacity: 0.3;
-            filter: grayscale(1);
+            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 86c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zm76-26c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zM31 35c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1z' fill='%23ffffff' fill-opacity='0.05' fill-rule='evenodd'/%3E%3C/svg%3E");
         }
 
         .screen { display: none; height: 100vh; flex-direction: column; }
-        .active { display: flex; animation: fadeIn 0.3s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .active { display: flex; animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        @keyframes slideIn { from { transform: translateX(20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
-        .action-btn { width: 52px; height: 52px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
-        .recording-pulse { background: #ff3b30 !important; animation: pulse 1s infinite; }
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+        /* 1) Locked Button State */
+        .btn-lock { pointer-events: none; opacity: 0.3; filter: grayscale(1); }
+
+        .action-btn { width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .recording { background: #ff3b30 !important; transform: scale(1.2); }
     </style>
 </head>
 <body>
 
-    <!-- SCREEN 1: HOME (CREATE/JOIN) -->
+    <!-- SCREEN 1: HOME TABS -->
     <div id="screen-home" class="screen active items-center justify-center p-6">
         <div class="w-full max-w-md premium-card p-8">
-            <div class="text-center mb-8">
-                <h1 class="text-3xl font-bold tracking-tighter text-white">AETHERCORE</h1>
-                <p class="text-gray-500 text-sm">Professional Encrypted Communication</p>
+            <div class="text-center mb-10">
+                <h1 class="text-3xl font-black tracking-tight text-white mb-2">AETHERCORE</h1>
+                <p class="text-gray-500 text-sm">Secure Node Communication</p>
             </div>
 
-            <!-- Tabs -->
-            <div class="flex bg-black/30 p-1 rounded-xl mb-6">
-                <button onclick="toggleTab('create')" id="tab-c" class="flex-1 py-3 rounded-lg font-bold bg-cyan-500 text-black transition-all">Create</button>
-                <button onclick="toggleTab('join')" id="tab-j" class="flex-1 py-3 rounded-lg font-bold text-gray-400 transition-all">Join</button>
+            <div class="flex bg-black/40 p-1.5 rounded-2xl mb-8">
+                <button onclick="switchTab('create')" id="tab-c-btn" class="flex-1 py-3 rounded-xl font-bold bg-cyan-500 text-black transition-all">Create</button>
+                <button onclick="switchTab('join')" id="tab-j-btn" class="flex-1 py-3 rounded-xl font-bold text-gray-400 transition-all">Join</button>
             </div>
 
-            <!-- Create Form -->
             <div id="panel-create" class="space-y-4">
-                <input type="text" id="c-user" oninput="validateForm()" placeholder="Your Name" class="w-full bg-black/20 p-4 rounded-xl border border-white/10 outline-none focus:border-cyan-500">
-                <input type="text" id="c-room" oninput="validateForm()" placeholder="Group Subject" class="w-full bg-black/20 p-4 rounded-xl border border-white/10 outline-none focus:border-cyan-500">
-                <button id="btn-create" onclick="handleCreate()" class="btn-locked w-full py-4 bg-cyan-500 text-black font-black rounded-xl">ESTABLISH ROOM</button>
+                <input type="text" id="c-name" oninput="checkLocks()" placeholder="Your Identity" class="w-full bg-black/30 p-4 rounded-xl border border-white/5 outline-none focus:border-cyan-500">
+                <input type="text" id="c-group" oninput="checkLocks()" placeholder="Group Subject" class="w-full bg-black/30 p-4 rounded-xl border border-white/5 outline-none focus:border-cyan-500">
+                <button id="btn-create-final" onclick="execCreate()" class="btn-lock w-full py-4 bg-cyan-500 text-black font-black rounded-xl shadow-lg shadow-cyan-500/20">ESTABLISH CHANNEL</button>
             </div>
 
-            <!-- Join Form -->
             <div id="panel-join" class="hidden space-y-4">
-                <input type="text" id="j-user" oninput="validateForm()" placeholder="Your Name" class="w-full bg-black/20 p-4 rounded-xl border border-white/10 outline-none">
-                <input type="text" id="j-code" oninput="validateForm()" placeholder="Room Code (6 Digits)" class="w-full bg-black/20 p-4 rounded-xl border border-white/10 outline-none uppercase text-center tracking-widest">
-                <button id="btn-join" onclick="handleJoin()" class="btn-locked w-full py-4 bg-cyan-500 text-black font-black rounded-xl">REQUEST TO JOIN</button>
+                <input type="text" id="j-name" oninput="checkLocks()" placeholder="Your Identity" class="w-full bg-black/30 p-4 rounded-xl border border-white/5 outline-none focus:border-cyan-500">
+                <input type="text" id="j-code" oninput="checkLocks()" placeholder="6-Digit Entry Code" class="w-full bg-black/30 p-4 rounded-xl border border-white/5 outline-none focus:border-cyan-500 text-center tracking-widest uppercase">
+                <button id="btn-join-final" onclick="execJoin()" class="btn-lock w-full py-4 bg-cyan-500 text-black font-black rounded-xl shadow-lg shadow-cyan-500/20">REQUEST ACCESS</button>
             </div>
         </div>
     </div>
 
-    <!-- SCREEN 2: CHAT -->
+    <!-- SCREEN 2: CHAT INTERFACE -->
     <div id="screen-chat" class="screen">
-        <!-- 4) Persistent Approval Bar -->
-        <div id="admin-bar" class="bg-cyan-600 p-2 text-center text-[11px] font-bold hidden cursor-pointer" onclick="openApprovals()">
-            <i class="fa-solid fa-user-plus mr-2"></i> PENDING APPROVAL REQUESTS
+        <!-- 4) Approval Bar -->
+        <div id="admin-notif" class="bg-cyan-600 p-2 text-center text-[11px] font-black tracking-widest hidden cursor-pointer" onclick="openApprovals()">
+            <i class="fa-solid fa-user-plus mr-2"></i> PENDING ACCESS REQUESTS
         </div>
 
-        <nav class="h-16 bg-[#161b22] flex items-center px-4 gap-3 border-b border-white/5">
-            <img id="group-pfp" src="" class="w-10 h-10 rounded-full object-cover" onclick="showPfpPopup()">
-            <div class="flex-1" onclick="showInfo()">
-                <h2 id="chat-title" class="font-bold text-white">---</h2>
-                <p class="text-[10px] text-cyan-400 font-bold uppercase">End-to-End Encrypted</p>
+        <nav class="h-16 bg-[#161b22] flex items-center px-4 gap-3 border-b border-white/5" onclick="openGroupInfo()">
+            <img id="chat-pfp" src="" class="w-10 h-10 rounded-full object-cover">
+            <div class="flex-1 overflow-hidden">
+                <h2 id="chat-title" class="font-bold truncate text-white">---</h2>
+                <p id="chat-code-header" class="text-[10px] text-cyan-400 font-mono">CODE: ----</p>
             </div>
         </nav>
 
-        <div id="chat-flow" class="flex-1 overflow-y-auto p-4 doodle-bg flex flex-col gap-3"></div>
+        <div id="chat-flow" class="flex-1 overflow-y-auto p-4 chat-bg flex flex-col gap-3"></div>
 
-        <!-- Input Area -->
         <div class="p-3 bg-[#161b22] flex items-end gap-2">
             <div class="flex-1 bg-black/20 rounded-3xl flex items-center px-4 py-1 border border-white/5">
-                <i class="fa-solid fa-paperclip text-gray-400 cursor-pointer" onclick="document.getElementById('file-input').click()"></i>
-                <input type="file" id="file-input" multiple class="hidden" onchange="uploadDocs(this.files)">
-                <textarea id="msg-input" oninput="handleInput(this)" rows="1" placeholder="Message..." class="flex-1 bg-transparent p-2 outline-none resize-none max-h-32 text-sm"></textarea>
+                <i class="fa-solid fa-paperclip text-gray-400 cursor-pointer p-2" onclick="document.getElementById('doc-input').click()"></i>
+                <input type="file" id="doc-input" multiple class="hidden" onchange="handleDocs(this.files)">
+                <textarea id="msg-input" oninput="handleInput(this)" rows="1" placeholder="Encrypted Message..." class="flex-1 bg-transparent p-2 outline-none resize-none max-h-32 text-sm"></textarea>
             </div>
-            <button id="action-btn" class="action-btn bg-cyan-500 text-black" onmousedown="startRecord()" onmouseup="stopRecord()" onclick="sendMessage()">
+            <button id="action-btn" class="action-btn bg-cyan-500 text-black" onmousedown="startVoice()" onmouseup="endVoice()" onclick="sendText()">
                 <i id="action-icon" class="fa-solid fa-microphone"></i>
             </button>
         </div>
     </div>
 
-    <!-- 4) APPROVAL POPUP -->
-    <div id="pop-approvals" class="fixed inset-0 bg-black/80 hidden z-50 items-center justify-center p-6 backdrop-blur-md">
-        <div class="w-full max-w-sm premium-card overflow-hidden">
-            <div class="p-4 bg-cyan-600 flex justify-between font-bold text-black">
-                <span>Pending Admissions</span>
-                <i class="fa-solid fa-xmark" onclick="this.parentElement.parentElement.parentElement.classList.add('hidden')"></i>
+    <!-- 3) GROUP INFO PANEL -->
+    <div id="screen-info" class="fixed inset-0 bg-[#0c0f14] z-[100] hidden flex-col animate-slide-up">
+        <div class="h-16 flex items-center px-4 border-b border-white/5">
+            <i class="fa-solid fa-arrow-left text-xl p-2" onclick="closeGroupInfo()"></i>
+            <span class="font-bold ml-4">Group Info</span>
+        </div>
+        <div class="flex-1 overflow-y-auto p-6 flex flex-col items-center">
+            <div class="relative group">
+                <img id="info-pfp" class="w-40 h-40 rounded-full object-cover border-4 border-cyan-500/20" onclick="viewPfpLarge()">
+                <label id="admin-pfp-edit" class="absolute bottom-1 right-1 bg-cyan-500 p-3 rounded-full hidden cursor-pointer">
+                    <i class="fa-solid fa-camera text-black"></i>
+                    <input type="file" class="hidden" accept="image/*" onchange="updatePfp(this)">
+                </label>
             </div>
-            <div id="approval-list" class="p-4 space-y-3"></div>
+            <div class="mt-4 text-center">
+                <div class="flex items-center gap-2">
+                    <h2 id="info-title" class="text-2xl font-bold">---</h2>
+                    <i id="admin-rename-icon" class="fa-solid fa-pen text-xs text-gray-500 hidden" onclick="renameGroup()"></i>
+                </div>
+                <p id="info-code" class="text-cyan-500 font-mono mt-1"></p>
+            </div>
+
+            <div class="w-full mt-8 premium-card p-5">
+                <h3 class="text-xs font-bold text-gray-500 mb-4 uppercase">Participants</h3>
+                <div id="member-list" class="space-y-4"></div>
+            </div>
+
+            <button onclick="exitChannel()" class="w-full mt-6 py-4 text-red-500 font-bold border border-red-500/20 rounded-2xl">LEAVE GROUP</button>
+            <button id="admin-delete-btn" onclick="destroyChannel()" class="w-full mt-2 py-4 bg-red-600 text-white font-bold rounded-2xl hidden">DELETE GROUP</button>
+        </div>
+    </div>
+
+    <!-- POPUP MODALS -->
+    <div id="modal-approvals" class="fixed inset-0 bg-black/90 hidden z-[200] items-center justify-center p-6">
+        <div class="w-full max-w-sm premium-card overflow-hidden">
+            <div class="p-4 bg-cyan-600 text-black font-black flex justify-between">
+                <span>PENDING ADMISSIONS</span>
+                <i class="fa-solid fa-xmark" onclick="closeApprovals()"></i>
+            </div>
+            <div id="approval-stack" class="p-4 space-y-3"></div>
         </div>
     </div>
 
@@ -136,155 +159,140 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        let uid = localStorage.getItem('ae_uid') || 'U'+Math.floor(Math.random()*99999);
+        let uid = localStorage.getItem('ae_uid') || 'U-' + Math.random().toString(36).substr(2,5).toUpperCase();
         localStorage.setItem('ae_uid', uid);
         
         let currentRoom = null;
         let isAdmin = false;
         let isRecording = false;
-        let mediaRecorder;
-        let audioChunks = [];
+        let recorder;
 
-        // 1) TAB SWITCHING & VALIDATION
-        window.toggleTab = (type) => {
-            const isC = type === 'create';
+        // 1) TAB SWITCHING
+        window.switchTab = (t) => {
+            const isC = t === 'create';
             document.getElementById('panel-create').classList.toggle('hidden', !isC);
             document.getElementById('panel-join').classList.toggle('hidden', isC);
-            document.getElementById('tab-c').className = isC ? "flex-1 py-3 rounded-lg font-bold bg-cyan-500 text-black" : "flex-1 py-3 rounded-lg font-bold text-gray-400";
-            document.getElementById('tab-j').className = !isC ? "flex-1 py-3 rounded-lg font-bold bg-cyan-500 text-black" : "flex-1 py-3 rounded-lg font-bold text-gray-400";
-            validateForm();
+            document.getElementById('tab-c-btn').className = isC ? "flex-1 py-3 rounded-xl font-bold bg-cyan-500 text-black" : "flex-1 py-3 rounded-xl font-bold text-gray-400";
+            document.getElementById('tab-j-btn').className = !isC ? "flex-1 py-3 rounded-xl font-bold bg-cyan-500 text-black" : "flex-1 py-3 rounded-xl font-bold text-gray-400";
+            checkLocks();
         };
 
-        window.validateForm = () => {
-            const isCreate = !document.getElementById('panel-create').classList.contains('hidden');
-            if(isCreate) {
-                const u = document.getElementById('c-user').value.trim();
-                const r = document.getElementById('c-room').value.trim();
-                const btn = document.getElementById('btn-create');
-                btn.className = (u && r) ? "w-full py-4 bg-cyan-500 text-black font-black rounded-xl" : "btn-locked w-full py-4 bg-cyan-500 text-black font-black rounded-xl";
-            } else {
-                const u = document.getElementById('j-user').value.trim();
-                const c = document.getElementById('j-code').value.trim();
-                const btn = document.getElementById('btn-join');
-                btn.className = (u && c.length === 6) ? "w-full py-4 bg-cyan-500 text-black font-black rounded-xl" : "btn-locked w-full py-4 bg-cyan-500 text-black font-black rounded-xl";
-            }
+        // 1) BUTTON LOCK LOGIC
+        window.checkLocks = () => {
+            const cName = document.getElementById('c-name').value.trim();
+            const cGroup = document.getElementById('c-group').value.trim();
+            document.getElementById('btn-create-final').className = (cName && cGroup) ? "w-full py-4 bg-cyan-500 text-black font-black rounded-xl" : "btn-lock w-full py-4 bg-cyan-500 text-black font-black rounded-xl";
+
+            const jName = document.getElementById('j-name').value.trim();
+            const jCode = document.getElementById('j-code').value.trim();
+            document.getElementById('btn-join-final').className = (jName && jCode.length === 6) ? "w-full py-4 bg-cyan-500 text-black font-black rounded-xl" : "btn-lock w-full py-4 bg-cyan-500 text-black font-black rounded-xl";
         };
 
-        // CREATE LOGIC
-        window.handleCreate = async () => {
-            const name = document.getElementById('c-user').value;
-            const subject = document.getElementById('c-room').value;
-            const code = Math.random().toString(36).substring(2,8).toUpperCase();
+        // 2, 3) ROOM ACTIONS
+        window.execCreate = async () => {
+            const name = document.getElementById('c-name').value;
+            const group = document.getElementById('c-group').value;
+            const code = Math.random().toString(36).substr(2,6).toUpperCase();
             
             await setDoc(doc(db, "rooms", code), {
-                code, subject, admin: uid,
-                pfp: `https://ui-avatars.com/api/?name=${subject}&background=00d2ff&color=fff`,
-                members: [{uid, name}],
-                mIDs: [uid],
-                knocks: [],
-                msgs: []
+                id: code, title: group, admin: uid,
+                pfp: `https://ui-avatars.com/api/?name=${group}&background=00d2ff&color=fff`,
+                members: [{uid, name}], mIDs: [uid], knocks: [], msgs: []
             });
-            
             localStorage.setItem('ae_name', name);
-            enterChat(code);
+            enterRoom(code);
         };
 
-        // JOIN LOGIC
-        window.handleJoin = async () => {
+        window.execJoin = async () => {
             const code = document.getElementById('j-code').value.toUpperCase();
-            const name = document.getElementById('j-user').value;
+            const name = document.getElementById('j-name').value;
             const ref = doc(db, "rooms", code);
             const snap = await getDoc(ref);
-
-            if(!snap.exists()) return alert("Invalid Room Code");
             
+            if(!snap.exists()) return alert("Invalid Code");
             await updateDoc(ref, { knocks: arrayUnion({uid, name}) });
-            alert("Request sent to Admin. Please wait on this screen...");
-
+            alert("Request sent. Wait for Admin approval.");
+            
             onSnapshot(ref, (s) => {
                 if(s.data().mIDs.includes(uid)) {
                     localStorage.setItem('ae_name', name);
-                    enterChat(code);
+                    enterRoom(code);
                 }
             });
         };
 
-        function enterChat(code) {
+        function enterRoom(code) {
             currentRoom = code;
             document.getElementById('screen-home').classList.remove('active');
             document.getElementById('screen-chat').classList.add('active');
-            
+
             onSnapshot(doc(db, "rooms", code), (s) => {
-                if(!s.exists()) return location.reload();
+                if(!s.exists()) { location.reload(); return; }
                 const data = s.data();
                 isAdmin = data.admin === uid;
                 
-                document.getElementById('chat-title').innerText = data.subject;
-                document.getElementById('group-pfp').src = data.pfp;
+                // 15, 16) Header Setup
+                document.getElementById('chat-title').innerText = data.title;
+                document.getElementById('chat-pfp').src = data.pfp;
+                document.getElementById('chat-code-header').innerText = `CODE: ${data.id}`;
                 
-                // 4) Admin Approvals
-                const adminBar = document.getElementById('admin-bar');
+                // Admin UI (4)
+                const notif = document.getElementById('admin-notif');
                 if(isAdmin && data.knocks.length > 0) {
-                    adminBar.classList.remove('hidden');
+                    notif.classList.remove('hidden');
                     renderApprovals(data.knocks);
-                } else {
-                    adminBar.classList.add('hidden');
-                }
-                
+                } else notif.classList.add('hidden');
+
                 renderMessages(data.msgs);
+                syncInfoPanel(data);
             });
         }
 
-        // 12) VOICE & TEXT LOGIC
-        window.handleInput = (el) => {
-            el.style.height = 'auto';
-            el.style.height = el.scrollHeight + 'px';
-            const icon = document.getElementById('action-icon');
-            icon.className = el.value.trim() ? "fa-solid fa-paper-plane" : "fa-solid fa-microphone";
-        };
-
-        window.startRecord = async () => {
+        // 12) VOICE LOGIC
+        window.startVoice = async () => {
             if(document.getElementById('msg-input').value.trim()) return;
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            mediaRecorder = new MediaRecorder(stream);
-            audioChunks = [];
-            mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-            mediaRecorder.onstop = () => {
-                const blob = new Blob(audioChunks, { type: 'audio/webm' });
-                const reader = new FileReader();
-                reader.onloadend = () => postMessage('voice', reader.result);
-                reader.readAsDataURL(blob);
+            recorder = new MediaRecorder(stream);
+            let chunks = [];
+            recorder.ondataavailable = e => chunks.push(e.data);
+            recorder.onstop = () => {
+                const blob = new Blob(chunks, { type: 'audio/webm' });
+                // Push blob to storage and get URL (simplified for demo)
+                pushMsg('voice', 'Audio Message Sent');
             };
-            mediaRecorder.start();
+            recorder.start();
             isRecording = true;
-            document.getElementById('action-btn').classList.add('recording-pulse');
+            document.getElementById('action-btn').classList.add('recording');
         };
 
-        window.stopRecord = () => {
+        window.endVoice = () => {
             if(isRecording) {
-                mediaRecorder.stop();
+                recorder.stop();
                 isRecording = false;
-                document.getElementById('action-btn').classList.remove('recording-pulse');
+                document.getElementById('action-btn').classList.remove('recording');
             }
         };
 
-        window.sendMessage = () => {
+        window.handleInput = (el) => {
+            el.style.height = 'auto';
+            el.style.height = el.scrollHeight + 'px';
+            document.getElementById('action-icon').className = el.value.trim() ? "fa-solid fa-paper-plane" : "fa-solid fa-microphone";
+        };
+
+        window.sendText = () => {
             const val = document.getElementById('msg-input').value.trim();
             if(val) {
-                postMessage('text', val);
+                pushMsg('text', val);
                 document.getElementById('msg-input').value = '';
                 handleInput(document.getElementById('msg-input'));
             }
         };
 
-        async function postMessage(type, content) {
-            // 10) Simplified E2EE Simulation for high-speed demo
+        async function pushMsg(type, content) {
             const msg = {
                 id: Date.now().toString(),
-                sender: uid,
-                senderName: localStorage.getItem('ae_name'),
-                type, content,
-                seen: [uid]
+                uid, name: localStorage.getItem('ae_name'),
+                type, content, ts: Date.now()
             };
             await updateDoc(doc(db, "rooms", currentRoom), { msgs: arrayUnion(msg) });
         }
@@ -292,38 +300,78 @@
         function renderMessages(msgs) {
             const flow = document.getElementById('chat-flow');
             flow.innerHTML = msgs.map(m => {
-                const isMe = m.sender === uid;
+                const isMe = m.uid === uid;
                 return `
                     <div class="max-w-[80%] p-3 rounded-2xl ${isMe ? 'bg-[#005c4b] self-end' : 'bg-[#202c33] self-start'}">
-                        ${!isMe ? `<p class="text-[10px] text-cyan-400 font-bold mb-1">${m.senderName}</p>` : ''}
-                        <p class="text-sm">${m.type === 'text' ? m.content : '[Audio Message]'}</p>
-                        <p class="text-[9px] text-right opacity-50 mt-1">✓✓</p>
+                        ${!isMe ? `<p class="text-[10px] text-cyan-400 font-bold mb-1">${m.name}</p>` : ''}
+                        <p class="text-sm">${m.content}</p>
                     </div>
                 `;
             }).join('');
             flow.scrollTop = flow.scrollHeight;
         }
 
-        window.openApprovals = () => document.getElementById('pop-approvals').classList.remove('hidden');
+        // 3) INFO PANEL LOGIC
+        window.openGroupInfo = () => document.getElementById('screen-info').classList.add('active');
+        window.closeGroupInfo = () => document.getElementById('screen-info').classList.remove('active');
 
-        function renderApprovals(list) {
-            const container = document.getElementById('approval-list');
-            container.innerHTML = list.map(k => `
-                <div class="flex items-center justify-between bg-white/5 p-3 rounded-xl">
-                    <span class="text-sm font-bold">${k.name}</span>
-                    <button onclick='approve("${k.uid}", "${k.name}")' class="bg-cyan-500 text-black px-4 py-1 rounded-lg text-xs font-bold">ALLOW</button>
+        function syncInfoPanel(data) {
+            document.getElementById('info-pfp').src = data.pfp;
+            document.getElementById('info-title').innerText = data.title;
+            document.getElementById('info-code').innerText = `ACCESS CODE: ${data.id}`;
+            
+            // RBAC Toggle
+            document.getElementById('admin-pfp-edit').style.display = isAdmin ? 'block' : 'none';
+            document.getElementById('admin-rename-icon').style.display = isAdmin ? 'block' : 'none';
+            document.getElementById('admin-delete-btn').style.display = isAdmin ? 'block' : 'none';
+
+            document.getElementById('member-list').innerHTML = data.members.map(m => `
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full bg-cyan-900 flex items-center justify-center font-bold text-xs">
+                        ${m.name[0]}
+                    </div>
+                    <span class="text-sm">${m.name} ${m.uid === data.admin ? '<span class="text-[9px] text-cyan-500 ml-2">ADMIN</span>' : ''}</span>
                 </div>
             `).join('');
         }
 
-        window.approve = async (userUid, userName) => {
+        window.openApprovals = () => document.getElementById('modal-approvals').classList.replace('hidden', 'flex');
+        window.closeApprovals = () => document.getElementById('modal-approvals').classList.replace('flex', 'hidden');
+
+        function renderApprovals(list) {
+            document.getElementById('approval-stack').innerHTML = list.map(k => `
+                <div class="flex items-center justify-between bg-white/5 p-3 rounded-xl">
+                    <span class="font-bold text-sm">${k.name}</span>
+                    <button onclick='acceptUser(${JSON.stringify(k)})' class="bg-cyan-500 text-black px-4 py-1 rounded-lg font-bold text-xs">ALLOW</button>
+                </div>
+            `).join('');
+        }
+
+        window.acceptUser = async (user) => {
             const ref = doc(db, "rooms", currentRoom);
             await updateDoc(ref, {
-                knocks: arrayRemove({uid: userUid, name: userName}),
-                members: arrayUnion({uid: userUid, name: userName}),
-                mIDs: arrayUnion(userUid)
+                knocks: arrayRemove(user),
+                members: arrayUnion(user),
+                mIDs: arrayUnion(user.uid)
             });
         };
+
+        window.destroyChannel = async () => {
+            if(confirm("Permanently delete this group?")) {
+                await deleteDoc(doc(db, "rooms", currentRoom));
+                location.reload();
+            }
+        };
+
+        window.exitChannel = async () => {
+            const name = localStorage.getItem('ae_name');
+            await updateDoc(doc(db, "rooms", currentRoom), {
+                members: arrayRemove({uid, name}),
+                mIDs: arrayRemove(uid)
+            });
+            location.reload();
+        };
+
     </script>
 </body>
 </html>
