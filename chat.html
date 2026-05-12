@@ -2,104 +2,62 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Aethercore Pro</title>
     <link rel="stylesheet" href="chat.css">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
 </head>
 <body>
 
-    <div id="wrapper">
-        <main id="auth-screen" class="view active">
-            <header class="brand">
+    <div id="app-viewport">
+        <section id="view-auth" class="screen active">
+            <div class="brand">
                 <h1>Aethercore</h1>
-                <p>PROTECTED BY AES-256</p>
-            </header>
-
-            <div class="card">
-                <nav class="tabs">
-                    <button id="t-c" class="active" onclick="ui.tab('create')">Create</button>
-                    <button id="t-j" onclick="ui.tab('join')">Join</button>
-                </nav>
-
-                <div id="p-create" class="panel active">
-                    <div class="group">
-                        <label>Admin Identity</label>
-                        <input type="text" id="a-name" placeholder="Full name" oninput="ui.check()">
-                    </div>
-                    <div class="group">
-                        <label>Group Name</label>
-                        <input type="text" id="g-name" placeholder="Group identity" oninput="ui.check()">
-                    </div>
-                    <button id="b-c" class="btn" disabled onclick="core.create()">Initialize Room</button>
-                </div>
-
-                <div id="p-join" class="panel">
-                    <div class="group">
-                        <label>Member Identity</label>
-                        <input type="text" id="j-name" placeholder="Full name" oninput="ui.check()">
-                    </div>
-                    <div class="group">
-                        <label>Access Code</label>
-                        <input type="text" id="j-code" placeholder="6-digit code" oninput="ui.check()">
-                    </div>
-                    <button id="b-j" class="btn" disabled onclick="core.join()">Knock to Join</button>
-                </div>
-            </div>
-        </main>
-
-        <main id="chat-screen" class="view">
-            <header class="chat-head" onclick="ui.overlay('info', true)">
-                <img id="h-pfp" src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png">
-                <div class="meta">
-                    <b id="h-name">Group</b>
-                    <small id="h-code">Code: ---</small>
-                </div>
-            </header>
-            
-            <div id="notif" class="banner hidden" onclick="ui.overlay('req', true)">
-                <span>Pending Requests</span>
-                <i class="material-icons-round">chevron_right</i>
+                <p>SECURE E2EE COMMUNICATION</p>
             </div>
 
-            <div id="feed" class="doodle"></div>
+            <div class="auth-card">
+                <div class="tabs">
+                    <button id="t-create" class="tab-btn active" onclick="ui.tab('create')">Create</button>
+                    <button id="t-join" class="tab-btn" onclick="ui.tab('join')">Join</button>
+                </div>
 
-            <footer class="bar">
-                <div class="pill">
-                    <i class="material-icons-round" onclick="ui.docs()">add</i>
-                    <textarea id="input" placeholder="Message..." rows="1"></textarea>
-                    <button id="mic" class="action"><i class="material-icons-round">mic</i></button>
-                    <button id="send" class="action hidden" onclick="core.send()"><i class="material-icons-round">send</i></button>
+                <div id="panel-create" class="panel active">
+                    <input type="text" id="in-admin" placeholder="Admin Name" oninput="ui.check()">
+                    <input type="text" id="in-group" placeholder="Group Name" oninput="ui.check()">
+                    <button id="btn-create" class="main-btn" disabled onclick="core.create()">Initialize Room</button>
+                </div>
+
+                <div id="panel-join" class="panel">
+                    <input type="text" id="in-user" placeholder="Your Name" oninput="ui.check()">
+                    <input type="text" id="in-code" placeholder="Room Code" oninput="ui.check()">
+                    <button id="btn-join" class="main-btn" disabled onclick="core.join()">Knock to Join</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="view-chat" class="screen">
+            <header class="header">
+                <div class="h-left">
+                    <img id="h-img" src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png">
+                    <div>
+                        <b id="h-name">Group</b>
+                        <small id="h-code">Code: ---</small>
+                    </div>
+                </div>
+            </header>
+            <div id="chat-flow" class="doodle-bg"></div>
+            <footer class="footer">
+                <div class="input-pill">
+                    <textarea id="msg-input" placeholder="Secure Message..." rows="1" oninput="ui.toggleSend()"></textarea>
+                    <button id="mic-btn" class="act-btn"><span class="material-icons-round">mic</span></button>
+                    <button id="send-btn" class="act-btn hidden" onclick="core.send()"><span class="material-icons-round">send</span></button>
                 </div>
             </footer>
-        </main>
-
-        <div id="info-ov" class="ov">
-            <div class="ov-content">
-                <nav class="ov-nav">
-                    <i class="material-icons-round" onclick="ui.overlay('info', false)">arrow_back</i>
-                    <span>Group Info</span>
-                </nav>
-                <div class="pfp-box">
-                    <img id="i-pfp" src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png">
-                    <button class="adm hidden" onclick="ui.pfp()"><i class="material-icons-round">camera_alt</i></button>
-                </div>
-                <h2 id="i-name">Name</h2>
-                <p id="i-code">Code</p>
-                <div class="menu">
-                    <button class="adm hidden" onclick="core.rename()">Rename Group</button>
-                    <button class="red" onclick="core.leave()">Leave Group</button>
-                    <button class="red adm hidden" onclick="core.delete()">Delete Group</button>
-                </div>
-            </div>
-        </div>
+        </section>
     </div>
-
-    <input type="file" id="f-pfp" hidden accept="image/*">
-    <input type="file" id="f-doc" hidden multiple>
 
     <script src="chat.js"></script>
 </body>
