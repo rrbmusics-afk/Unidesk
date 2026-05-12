@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Student Lounge</title>
+    <title>Student Lounge | Unidesk</title>
 </head>
 <body>
 
@@ -11,7 +11,9 @@
         <!-- VIEW 1: ENTRANCE -->
         <section id="entrance-view" class="view">
             <div class="card">
-                <h1>Student Lounge</h1>
+                <h1 class="brand">UNIDESK</h1>
+                <p class="subtitle">STUDENT LOUNGE</p>
+                
                 <div class="tabs">
                     <button id="tab-create" class="active" onclick="switchTab('create')">Create</button>
                     <button id="tab-join" onclick="switchTab('join')">Join</button>
@@ -21,7 +23,7 @@
                     <input type="text" id="username" placeholder="Your Name">
                     <input type="text" id="lounge-name" placeholder="Lounge Name">
                     <input type="text" id="lounge-code-input" placeholder="Lounge Code" class="hidden">
-                    <button id="main-action-btn" onclick="processEntry()">Continue</button>
+                    <button id="main-action-btn" onclick="processEntry()">START COMMUNICATION</button>
                 </div>
             </div>
         </section>
@@ -30,8 +32,8 @@
         <section id="knocking-view" class="view hidden">
             <div class="card text-center">
                 <div class="loader-circle"></div>
-                <h2>Knocking...</h2>
-                <p>Wait for the Admin to approve your request.</p>
+                <h2 style="color: #4A90E2;">KNOCKING...</h2>
+                <p style="opacity: 0.6; font-size: 12px; letter-spacing: 1px;">AWAITING ADMIN APPROVAL</p>
             </div>
         </section>
 
@@ -45,7 +47,7 @@
                     </div>
                     <div id="admin-tools" class="hidden">
                         <button onclick="toggleRequests()" class="req-toggle">
-                            Requests (<span id="req-count">0</span>)
+                            REQUESTS (<span id="req-count">0</span>)
                         </button>
                     </div>
                 </header>
@@ -54,8 +56,8 @@
                 <div id="chat-messages"></div>
 
                 <div class="bottom-bar">
-                    <input type="text" id="chat-input" placeholder="Message...">
-                    <button onclick="handleSend()">Send</button>
+                    <input type="text" id="chat-input" placeholder="Secure message...">
+                    <button onclick="handleSend()">SEND</button>
                 </div>
             </div>
         </section>
