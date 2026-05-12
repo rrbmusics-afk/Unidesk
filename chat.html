@@ -3,314 +3,111 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Aethercore | Secure Node</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Aethercore Pro</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        :root {
-            --ae-bg: #080a0c;
-            --ae-surface: #12161b;
-            --ae-accent: #00f2ff;
-            --ae-accent-dim: rgba(0, 242, 255, 0.15);
-            --ae-text: #e6edf3;
-            --ae-danger: #ff4b4b;
-        }
-
-        body {
-            background-color: var(--ae-bg);
-            color: var(--ae-text);
-            font-family: 'Inter', system-ui, -apple-system, sans-serif;
-            overflow: hidden; /* Prevents bounce, handles keyboard via flex */
-        }
-
-        /* V. Unique Doodle Background */
-        .chat-canvas {
-            background-color: #0b141a;
-            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3z' fill='%2300f2ff' fill-opacity='0.03' fill-rule='evenodd'/%3E%3C/svg%3E");
-        }
-
-        /* III. Professional Containers */
-        .ae-card {
-            background: var(--ae-surface);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 24px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-        }
-
-        .btn-locked {
-            opacity: 0.3;
-            filter: grayscale(1);
-            pointer-events: none;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        /* Smooth Animations (XIII) */
-        .slide-up { animation: slideUp 0.4s ease-out; }
-        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-
-        .recording-pulse {
-            animation: pulse 1.2s infinite;
-        }
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.15); box-shadow: 0 0 20px var(--ae-danger); } 100% { transform: scale(1); } }
-    </style>
+    <link rel="stylesheet" href="chat.css">
 </head>
-<body class="h-screen w-screen flex flex-col">
+<body>
 
-    <!-- IV. HOME SCREEN WITH TABS -->
-    <div id="home-screen" class="flex-1 flex flex-col p-6 items-center justify-center">
-        <div class="w-full max-w-md ae-card p-8">
-            <h1 class="text-3xl font-black mb-8 text-center tracking-tighter italic">AETHER<span class="text-cyan-400">CORE</span></h1>
-            
-            <div class="flex bg-black/30 p-1.5 rounded-2xl mb-8">
-                <button onclick="switchTab('create')" id="tab-create-btn" class="flex-1 py-3 rounded-xl font-bold transition-all bg-cyan-500 text-black">Create</button>
-                <button onclick="switchTab('join')" id="tab-join-btn" class="flex-1 py-3 rounded-xl font-bold transition-all text-gray-400">Join</button>
+    <!-- HOME SCREEN -->
+    <div id="screen-home" class="screen active">
+        <div class="ae-container">
+            <div class="brand">
+                <h1>AETHERCORE</h1>
+                <p>END-TO-END ENCRYPTED</p>
             </div>
 
-            <!-- Validation Forms (IV) -->
-            <div id="form-create" class="space-y-4">
-                <div class="group">
-                    <label class="text-[10px] uppercase tracking-widest text-gray-500 ml-2">Display Name</label>
-                    <input type="text" id="create-user-name" oninput="validateForm('create')" class="w-full bg-white/5 p-4 rounded-2xl border border-white/10 outline-none focus:border-cyan-500 transition-all">
-                </div>
-                <div class="group">
-                    <label class="text-[10px] uppercase tracking-widest text-gray-500 ml-2">Group Subject</label>
-                    <input type="text" id="create-group-name" oninput="validateForm('create')" class="w-full bg-white/5 p-4 rounded-2xl border border-white/10 outline-none focus:border-cyan-500 transition-all">
-                </div>
-                <button id="create-btn" onclick="executeCreate()" class="btn-locked w-full py-4 rounded-2xl bg-cyan-500 text-black font-black mt-4 shadow-lg shadow-cyan-500/20">ESTABLISH CHANNEL</button>
+            <div class="tabs">
+                <button onclick="switchTab('create')" id="tab-c" class="active">Create</button>
+                <button onclick="switchTab('join')" id="tab-j">Join</button>
             </div>
 
-            <div id="form-join" class="space-y-4 hidden">
-                <input type="text" id="join-user-name" oninput="validateForm('join')" placeholder="Your Identity" class="w-full bg-white/5 p-4 rounded-2xl border border-white/10 outline-none">
-                <input type="text" id="join-room-code" oninput="validateForm('join')" placeholder="Enter 6-Digit Code" class="w-full bg-white/5 p-4 rounded-2xl border border-white/10 outline-none text-center tracking-widest uppercase font-mono">
-                <button id="join-btn" onclick="executeJoin()" class="btn-locked w-full py-4 rounded-2xl bg-cyan-500 text-black font-black mt-4">REQUEST ACCESS</button>
+            <div id="panel-create" class="auth-panel">
+                <input type="text" id="c-user" placeholder="Your Name" oninput="validateAuth()">
+                <input type="text" id="c-group" placeholder="Group Name" oninput="validateAuth()">
+                <button id="btn-create" class="btn-locked" onclick="handleCreate()">CREATE ROOM</button>
+            </div>
+
+            <div id="panel-join" class="auth-panel hidden">
+                <input type="text" id="j-user" placeholder="Your Name" oninput="validateAuth()">
+                <input type="text" id="j-code" placeholder="6-Digit Code" oninput="validateAuth()">
+                <button id="btn-join" class="btn-locked" onclick="handleJoin()">JOIN ROOM</button>
             </div>
         </div>
     </div>
 
-    <!-- CHAT SCREEN INTERFACE -->
-    <div id="chat-screen" class="hidden flex-col h-full">
-        <!-- Approval Banner (Point V) -->
-        <div id="approval-banner" class="hidden bg-cyan-500/10 border-b border-cyan-500/20 p-3 flex justify-between items-center cursor-pointer" onclick="openApprovalPopup()">
-            <div class="flex items-center gap-3">
-                <div class="w-2 h-2 bg-cyan-500 rounded-full animate-pulse"></div>
-                <span class="text-xs font-bold text-cyan-500 uppercase tracking-tighter">Pending Admission Requests</span>
+    <!-- CHAT SCREEN -->
+    <div id="screen-chat" class="screen">
+        <header class="chat-header">
+            <div id="admin-banner" class="hidden" onclick="toggleApprovals(true)">
+                <i class="fa-solid fa-bell"></i> PENDING REQUESTS
             </div>
-            <i class="fa-solid fa-chevron-right text-xs text-cyan-500"></i>
-        </div>
-
-        <!-- Header (Point VII) -->
-        <header class="h-16 flex items-center px-4 gap-4 bg-[#12161b] border-b border-white/5" onclick="toggleGroupInfo()">
-            <div class="relative">
-                <img id="group-pfp-header" src="https://ui-avatars.com/api/?name=A" class="w-10 h-10 rounded-full object-cover border border-white/10">
-            </div>
-            <div class="flex-1 overflow-hidden">
-                <h2 id="display-group-name" class="font-bold truncate text-sm">Group Subject</h2>
-                <p id="display-group-code" class="text-[10px] text-cyan-400 font-mono tracking-widest">CODE: ------</p>
-            </div>
-            <div class="flex gap-4">
-                <i class="fa-solid fa-paperclip text-gray-400" onclick="document.getElementById('doc-input').click()"></i>
-                <i class="fa-solid fa-ellipsis-vertical text-gray-400"></i>
+            
+            <div class="header-main" onclick="openGroupInfo()">
+                <img id="header-pfp" src="" class="pfp-circle">
+                <div class="header-text">
+                    <h2 id="header-title">---</h2>
+                    <span id="header-code">CODE: ---</span>
+                </div>
+                <div class="header-actions">
+                    <i class="fa-solid fa-paperclip" onclick="document.getElementById('doc-input').click()"></i>
+                </div>
             </div>
         </header>
 
-        <!-- Message Flow (VI) -->
-        <main id="message-container" class="flex-1 chat-canvas overflow-y-auto p-4 flex flex-col gap-3"></main>
+        <div id="chat-flow" class="chat-bg">
+            <!-- Messages load here -->
+        </div>
 
-        <!-- Smart Input Logic (Point VI) -->
-        <footer class="p-3 bg-[#12161b] flex items-end gap-2">
-            <div class="flex-1 bg-white/5 rounded-[24px] border border-white/10 p-1 flex items-end">
-                <textarea id="msg-input" oninput="toggleInputMode()" placeholder="Secure message..." class="flex-1 bg-transparent border-none outline-none p-3 text-sm max-h-32 resize-none" rows="1"></textarea>
+        <footer class="input-area">
+            <div class="input-container">
+                <textarea id="msg-input" placeholder="Message..." rows="1" oninput="autoResize(this)"></textarea>
             </div>
-            <div id="action-trigger" class="w-12 h-12 rounded-full bg-cyan-500 text-black flex items-center justify-center transition-all cursor-pointer">
+            <button id="action-btn" class="action-circle">
                 <i id="action-icon" class="fa-solid fa-microphone"></i>
-            </div>
+            </button>
         </footer>
     </div>
 
-    <!-- Hidden Inputs -->
-    <input type="file" id="doc-input" class="hidden" multiple onchange="handleFileAttach(event)">
-    <input type="file" id="pfp-input" class="hidden" accept="image/*" onchange="handlePfpChange(event)">
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, doc, setDoc, getDoc, updateDoc, onSnapshot, arrayUnion, arrayRemove, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-        // Your Config
-        const firebaseConfig = {
-            apiKey: "AIzaSyDbfmd0zmv_mFV0CG2OrhKPPeU3zPYGOBg",
-            authDomain: "unidesk-a70ac.firebaseapp.com",
-            projectId: "unidesk-a70ac",
-            storageBucket: "unidesk-a70ac.firebasestorage.app",
-            messagingSenderId: "882535016432",
-            appId: "1:882535016432:web:6eca2645a47a827e779f35"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-
-        // --- SESSION STATE ---
-        let currentUser = { uid: null, name: null, role: 'member' };
-        let activeRoom = null;
-        let isRecording = false;
-        let mediaRecorder;
-        let audioChunks = [];
-
-        // --- IV. TAB NAVIGATION ---
-        window.switchTab = (tab) => {
-            const isCreate = tab === 'create';
-            document.getElementById('form-create').classList.toggle('hidden', !isCreate);
-            document.getElementById('form-join').classList.toggle('hidden', isCreate);
-            document.getElementById('tab-create-btn').className = isCreate ? 'flex-1 py-3 rounded-xl font-bold transition-all bg-cyan-500 text-black' : 'flex-1 py-3 rounded-xl font-bold transition-all text-gray-400';
-            document.getElementById('tab-join-btn').className = !isCreate ? 'flex-1 py-3 rounded-xl font-bold transition-all bg-cyan-500 text-black' : 'flex-1 py-3 rounded-xl font-bold transition-all text-gray-400';
-        };
-
-        // --- IV. VALIDATION LOGIC ---
-        window.validateForm = (type) => {
-            if(type === 'create'){
-                const name = document.getElementById('create-user-name').value.trim();
-                const subject = document.getElementById('create-group-name').value.trim();
-                document.getElementById('create-btn').classList.toggle('btn-locked', !(name && subject));
-            } else {
-                const name = document.getElementById('join-user-name').value.trim();
-                const code = document.getElementById('join-room-code').value.trim();
-                document.getElementById('join-btn').classList.toggle('btn-locked', !(name && code.length === 6));
-            }
-        };
-
-        // --- V. ROLE & ADMISSION LOGIC ---
-        window.executeCreate = async () => {
-            const name = document.getElementById('create-user-name').value;
-            const subject = document.getElementById('create-group-name').value;
-            const code = Math.random().toString(36).substring(2, 8).toUpperCase();
-            const uid = 'USR-' + Date.now();
-
-            const roomData = {
-                code: code,
-                subject: subject,
-                admin: uid,
-                pfp: `https://ui-avatars.com/api/?name=${subject}&background=random`,
-                members: [uid],
-                memberDetails: { [uid]: { name, role: 'admin' } },
-                requests: [],
-                msgs: []
-            };
-
-            await setDoc(doc(db, "rooms", code), roomData);
-            launchChat(code, uid, 'admin', name);
-        };
-
-        window.executeJoin = async () => {
-            const code = document.getElementById('join-room-code').value.toUpperCase();
-            const name = document.getElementById('join-user-name').value;
-            const uid = 'USR-' + Date.now();
+    <!-- MODAL: GROUP INFO -->
+    <div id="modal-info" class="full-modal hidden">
+        <div class="modal-header">
+            <i class="fa-solid fa-arrow-left" onclick="closeGroupInfo()"></i>
+            <span>Group Info</span>
+            <i id="admin-delete" class="fa-solid fa-trash hidden" onclick="deleteGroup()"></i>
+        </div>
+        <div class="modal-body">
+            <div class="pfp-section">
+                <img id="info-pfp" onclick="viewPfpLarge()">
+                <label id="admin-pfp-edit" class="hidden">
+                    <i class="fa-solid fa-camera"></i>
+                    <input type="file" id="pfp-input" accept="image/*" class="hidden" onchange="updatePfp(this)">
+                </label>
+            </div>
+            <h2 id="info-title">---</h2>
+            <p id="info-code-display">---</p>
             
-            const roomRef = doc(db, "rooms", code);
-            const snap = await getDoc(roomRef);
+            <div class="member-list-card">
+                <h3>PARTICIPANTS</h3>
+                <div id="member-list"></div>
+            </div>
             
-            if(snap.exists()){
-                await updateDoc(roomRef, {
-                    requests: arrayUnion({ uid, name })
-                });
-                alert("Knock sent! Wait for Admin approval.");
-                listenForApproval(code, uid, name);
-            }
-        };
+            <button class="btn-leave" onclick="leaveGroup()">Leave Group</button>
+        </div>
+    </div>
 
-        function listenForApproval(code, uid, name) {
-            onSnapshot(doc(db, "rooms", code), (doc) => {
-                const data = doc.data();
-                if(data.members.includes(uid)){
-                    launchChat(code, uid, 'member', name);
-                }
-            });
-        }
+    <!-- MODAL: APPROVALS -->
+    <div id="modal-approvals" class="popup-modal hidden">
+        <div class="popup-content">
+            <h3>Entry Requests</h3>
+            <div id="approval-items"></div>
+            <button onclick="toggleApprovals(false)">Close</button>
+        </div>
+    </div>
 
-        // --- VI. VOICE MESSAGING (REAL FUNCTIONALITY) ---
-        const trigger = document.getElementById('action-trigger');
-        let recordTimer;
+    <input type="file" id="doc-input" multiple class="hidden" onchange="handleFiles(this)">
 
-        trigger.addEventListener('mousedown', async () => {
-            if(document.getElementById('msg-input').value.length > 0) {
-                sendTextMessage();
-                return;
-            }
-            startRecording();
-        });
-
-        trigger.addEventListener('mouseup', stopRecording);
-        trigger.addEventListener('mouseleave', stopRecording);
-
-        async function startRecording() {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                mediaRecorder = new MediaRecorder(stream);
-                audioChunks = [];
-                mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-                mediaRecorder.onstop = uploadVoice;
-                mediaRecorder.start();
-                isRecording = true;
-                trigger.classList.add('recording-pulse', 'bg-red-500');
-            } catch (err) { alert("Microphone access required for voice notes."); }
-        }
-
-        function stopRecording() {
-            if(isRecording){
-                mediaRecorder.stop();
-                isRecording = false;
-                trigger.classList.remove('recording-pulse', 'bg-red-500');
-            }
-        }
-
-        function uploadVoice() {
-            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-            // Production: Upload blob to Firebase Storage and get URL
-            // Placeholder:
-            console.log("Audio Recorded, sending to E2EE channel...");
-        }
-
-        // --- UTILS ---
-        function launchChat(code, uid, role, name) {
-            currentUser = { uid, name, role };
-            activeRoom = code;
-            document.getElementById('home-screen').classList.add('hidden');
-            document.getElementById('chat-screen').classList.replace('hidden', 'flex');
-            
-            // Sync UI
-            document.getElementById('display-group-code').innerText = `CODE: ${code}`;
-            
-            onSnapshot(doc(db, "rooms", code), (doc) => {
-                if(!doc.exists()) {
-                    alert("Group has been deleted by Admin.");
-                    location.reload();
-                }
-                const data = doc.data();
-                renderChat(data);
-                if(role === 'admin' && data.requests.length > 0) {
-                    document.getElementById('approval-banner').classList.remove('hidden');
-                } else {
-                    document.getElementById('approval-banner').classList.add('hidden');
-                }
-            });
-        }
-
-        function renderChat(data) {
-            document.getElementById('display-group-name').innerText = data.subject;
-            document.getElementById('group-pfp-header').src = data.pfp;
-            // Message rendering logic would go here
-        }
-
-        window.toggleInputMode = () => {
-            const input = document.getElementById('msg-input');
-            const icon = document.getElementById('action-icon');
-            if(input.value.trim().length > 0) {
-                icon.className = "fa-solid fa-paper-plane";
-            } else {
-                icon.className = "fa-solid fa-microphone";
-            }
-            input.style.height = 'auto';
-            input.style.height = input.scrollHeight + 'px';
-        };
-
-    </script>
+    <!-- Firebase SDKs -->
+    <script type="module" src="chat.js"></script>
 </body>
 </html>
