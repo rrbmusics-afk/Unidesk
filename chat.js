@@ -1,121 +1,133 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, doc, setDoc, updateDoc, onSnapshot, getDoc, arrayUnion, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getDatabase, ref, set, push, onValue, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-const firebaseConfig = { apiKey: "AIzaSyDbfmd0zmv_mFV0CG2OrhKPPeU3zPYGOBg", authDomain: "unidesk-a70ac.firebaseapp.com", projectId: "unidesk-a70ac" };
-const db = getFirestore(initializeApp(firebaseConfig));
-
-let myId = "UID-" + Math.floor(Math.random()*10000);
-let currentRoom = null;
-let isAdmin = false;
-let myName = "";
-
-// Mode Toggle
-window.switchMode = (mode) => {
-    const isJoin = mode === 'join';
-    document.getElementById('loungeNameInput').classList.toggle('hidden', isJoin);
-    document.getElementById('codeInput').classList.toggle('hidden', !isJoin);
-    document.getElementById('tab-create').classList.toggle('active', !isJoin);
-    document.getElementById('tab-join').classList.toggle('active', isJoin);
-    validate();
+const firebaseConfig = {
+    apiKey: "AIzaSyDbfmd0zmv_mFV0CG2OrhKPPeU3zPYGOBg",
+    authDomain: "unidesk-a70ac.firebaseapp.com",
+    projectId: "unidesk-a70ac",
+    storageBucket: "unidesk-a70ac.firebasestorage.app",
+    databaseURL: "https://unidesk-a70ac-default-rtdb.firebaseio.com", // Ensure your URL is correct
+    messagingSenderId: "882535016432",
+    appId: "1:882535016432:web:6eca2645a47a827e779f35"
 };
 
-window.validate = () => {
-    const name = document.getElementById('nameInput').value.trim();
-    const isJoin = !document.getElementById('codeInput').classList.contains('hidden');
-    const btn = document.getElementById('actionBtn');
-    
-    if (isJoin) {
-        const code = document.getElementById('codeInput').value.trim();
-        btn.disabled = !(name && code);
-    } else {
-        const lounge = document.getElementById('loungeNameInput').value.trim();
-        btn.disabled = !(name && lounge);
-    }
-    btn.classList.toggle('locked', btn.disabled);
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+let currentMode = 'create';
+let myID = Math.random().toString(36).substr(2, 9);
+let currentLoungeCode = "";
+
+window.showTab = (type) => {
+    currentMode = type;
+    document.querySelectorAll('.create-field').forEach(el => el.classList.toggle('hidden', type !== 'create'));
+    document.querySelectorAll('.join-field').forEach(el => el.classList.toggle('hidden', type !== 'join'));
 };
 
-window.handleAction = async () => {
-    const isJoin = !document.getElementById('codeInput').classList.contains('hidden');
-    myName = document.getElementById('nameInput').value.trim();
+window.handleAction = () => {
+    const name = document.getElementById('user-name').value;
+    const lName = document.getElementById('lounge-name').value;
+    const lCode = document.getElementById('lounge-code-input').value;
 
-    if (isJoin) {
-        const code = document.getElementById('codeInput').value.toUpperCase();
-        // Send Approval Request (Knocking)
-        await updateDoc(doc(db, "rooms", code), { 
-            [`requests.${myId}`]: { name: myName, status: 'pending' } 
-        });
-        alert("Knocking... Wait for admin approval.");
-        listenForApproval(code);
+    if (!name) return alert("Enter your name");
+
+    if (currentMode === 'create') {
+        if (!lName) return alert("Enter Lounge Name");
+        currentLoungeCode = Math.floor(1000 + Math.random() * 9000);
+        createLounge(name, lName, currentLoungeCode);
     } else {
-        const code = Math.random().toString(36).substring(2, 8).toUpperCase();
-        const lName = document.getElementById('loungeNameInput').value;
-        isAdmin = true;
-        await setDoc(doc(db, "rooms", code), {
-            name: lName, admin: myId, requests: {}, messages: [], pfp: ""
-        });
-        openChat(code);
+        if (!lCode) return alert("Enter Lounge Code");
+        currentLoungeCode = lCode;
+        joinLounge(name, lCode);
     }
 };
 
-function listenForApproval(code) {
-    onSnapshot(doc(db, "rooms", code), (snap) => {
-        const data = snap.data();
-        if (data.requests[myId]?.status === 'approved') openChat(code);
+function createLounge(adminName, loungeName, code) {
+    set(ref(db, 'lounges/' + code), {
+        info: { name: loungeName, admin: myID },
+        members: { [myID]: { name: adminName, status: 'approved' } }
     });
+    startChat(loungeName, code, true);
 }
 
-function openChat(code) {
-    currentRoom = code;
-    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-    document.getElementById('chat-view').classList.add('active');
-    
-    onSnapshot(doc(db, "rooms", code), (snap) => {
-        const data = snap.data();
-        if (!data) { alert("Group Deleted"); location.reload(); return; }
-        document.getElementById('displayLoungeName').innerText = data.name;
-        document.getElementById('displayLoungeCode').innerText = "#" + code;
-        renderMessages(data.messages);
-        
-        if (isAdmin) {
-            const reqs = Object.entries(data.requests).filter(r => r[1].status === 'pending');
-            document.getElementById('reqBanner').classList.toggle('hidden', reqs.length === 0);
-            document.getElementById('reqCount').innerText = reqs.length;
-            window.pendingReqs = reqs;
+function joinLounge(userName, code) {
+    const userRef = ref(db, `lounges/${code}/members/${myID}`);
+    set(userRef, { name: userName, status: 'knocking' });
+
+    document.getElementById('entry-screen').classList.add('hidden');
+    document.getElementById('waiting-screen').classList.remove('hidden');
+
+    // Listen for Approval
+    onValue(userRef, (snapshot) => {
+        if (snapshot.val()?.status === 'approved') {
+            document.getElementById('waiting-screen').classList.add('hidden');
+            startChat("Student Lounge", code, false);
         }
     });
 }
 
-window.checkInput = () => {
-    const val = document.getElementById('msgInput').value;
-    const icon = document.getElementById('triggerIcon');
-    icon.className = val.trim() ? "fas fa-paper-plane" : "fas fa-microphone";
+function startChat(loungeName, code, isAdmin) {
+    document.getElementById('entry-screen').classList.add('hidden');
+    document.getElementById('chat-screen').classList.remove('hidden');
+    document.getElementById('display-lounge-name').innerText = loungeName;
+    document.getElementById('display-lounge-code').innerText = "Code: " + code;
+
+    if (isAdmin) {
+        document.getElementById('admin-controls').classList.remove('hidden');
+        listenForRequests(code);
+    }
+    listenForMessages(code);
+}
+
+function listenForRequests(code) {
+    onValue(ref(db, `lounges/${code}/members`), (snapshot) => {
+        const members = snapshot.val();
+        const panel = document.getElementById('request-panel');
+        panel.innerHTML = "";
+        let count = 0;
+
+        for (let id in members) {
+            if (members[id].status === 'knocking') {
+                count++;
+                panel.innerHTML += `<div class="req-item">${members[id].name} 
+                    <button onclick="approveUser('${id}', '${code}')">Approve</button></div>`;
+            }
+        }
+        document.getElementById('req-count').innerText = `Requests (${count})`;
+    });
+}
+
+window.approveUser = (uid, code) => {
+    update(ref(db, `lounges/${code}/members/${uid}`), { status: 'approved' });
 };
 
-// End-to-End Encryption Logic (Simulated for this demo)
-function encrypt(text) { return btoa(text); } // In production, use WebCrypto API
-function decrypt(text) { return atob(text); }
+function listenForMessages(code) {
+    onValue(ref(db, `lounges/${code}/messages`), (snapshot) => {
+        const container = document.getElementById('messages');
+        container.innerHTML = "";
+        snapshot.forEach(child => {
+            const data = child.val();
+            const div = document.createElement('div');
+            div.className = `msg ${data.senderId === myID ? 'sent' : 'received'}`;
+            div.innerText = `${data.senderName}: ${data.text}`;
+            container.appendChild(div);
+        });
+        container.scrollTop = container.scrollHeight;
+    });
+}
 
-async function sendMessage() {
-    const inp = document.getElementById('msgInput');
-    const text = inp.value.trim();
+window.sendMessage = () => {
+    const text = document.getElementById('msg-input').value;
+    const name = document.getElementById('user-name').value;
     if (!text) return;
-    inp.value = "";
-    checkInput();
-    
-    await updateDoc(doc(db, "rooms", currentRoom), {
-        messages: arrayUnion({ sender: myId, name: myName, text: encrypt(text), time: Date.now() })
+    push(ref(db, `lounges/${currentLoungeCode}/messages`), {
+        senderId: myID,
+        senderName: name,
+        text: text
     });
-}
+    document.getElementById('msg-input').value = "";
+};
 
-function renderMessages(msgs) {
-    const box = document.getElementById('chatBox');
-    box.innerHTML = '<div class="e2ee-tag">End-to-End Encrypted</div>';
-    msgs.forEach(m => {
-        const isMe = m.sender === myId;
-        const div = document.createElement('div');
-        div.className = `bubble ${isMe ? 'me' : 'them'}`;
-        div.innerHTML = `<b>${m.name}</b><p>${decrypt(m.text)}</p>`;
-        box.appendChild(div);
-    });
-    box.scrollTop = box.scrollHeight;
-}
+window.toggleRequests = () => {
+    document.getElementById('request-panel').classList.toggle('hidden');
+};
