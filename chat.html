@@ -12,20 +12,21 @@
             background: var(--bg-main); 
             color: #e9edef; 
             font-family: -apple-system, BlinkMacSystemFont, sans-serif; 
-            margin: 0; 
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden; 
-            position: fixed;
+            margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; position: fixed;
         }
         
         #main-workspace { display: none; flex-direction: column; height: 100%; width: 100%; position: relative; }
 
-        .header { 
-            height: 70px; background: #202c33; display: flex; align-items: center; 
-            justify-content: space-between; padding: 0 16px; border-bottom: 1px solid rgba(255,255,255,0.05); 
-            z-index: 10; flex-shrink: 0; 
+        /* Separated Header Logic */
+        .nav-bar { 
+            height: 60px; background: #202c33; display: flex; align-items: center; 
+            justify-content: space-between; padding: 0 16px; z-index: 20; flex-shrink: 0; 
+        }
+
+        .status-bar {
+            height: 40px; background: #111b21; display: flex; align-items: center;
+            justify-content: space-between; padding: 0 16px; border-bottom: 1px solid rgba(255,255,255,0.05);
+            z-index: 10; flex-shrink: 0;
         }
 
         #chatBox { 
@@ -55,29 +56,23 @@
 
         #req-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 6000; align-items: center; justify-content: center; padding: 20px; }
         .modal-content { background: #202c33; width: 100%; max-width: 300px; border-radius: 16px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); }
-        .modal-header { padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); font-weight: bold; text-align: center; font-size: 14px; }
-        .req-list { max-height: 300px; overflow-y: auto; }
-        .req-item { padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .approve-btn { background: var(--wa-green); color: #0b141a; padding: 6px 12px; border-radius: 8px; font-size: 11px; font-weight: bold; }
-
+        
         .input-field { width: 100%; background: #2a3942; padding: 15px; border-radius: 12px; text-align: center; outline: none; border: 1px solid rgba(255,255,255,0.05); color: #007AFF; font-weight: bold; }
-        
-        .recent-card { background: linear-gradient(145deg, #1e293b, #0f172a); border: 1px solid rgba(59, 130, 246, 0.3); padding: 20px; border-radius: 20px; text-align: left; position: relative; overflow: hidden; }
-        
-        .code-pill { background: rgba(0, 122, 255, 0.15); color: #007AFF; font-family: monospace; font-weight: 800; padding: 2px 8px; border-radius: 6px; font-size: 10px; border: 1px solid rgba(0, 122, 255, 0.3); letter-spacing: 1px; }
+        .code-display { color: #007AFF; font-family: 'Courier New', Courier, monospace; font-weight: 900; letter-spacing: 2px; font-size: 14px; }
     </style>
 </head>
 <body>
 
+    <!-- Admin Request Modal -->
     <div id="req-modal">
         <div class="modal-content">
-            <div class="modal-header">Pending Requests</div>
-            <div id="req-list" class="req-list"></div>
-            <button onclick="closeModal()" class="w-full p-3 text-xs text-gray-400 font-bold uppercase">Close</button>
+            <div class="p-4 border-bottom border-white/10 font-bold text-center text-sm">Waiting Room</div>
+            <div id="req-list" class="max-h-60 overflow-y-auto"></div>
+            <button onclick="closeModal()" class="w-full p-4 text-[10px] text-gray-500 font-bold uppercase">Close</button>
         </div>
     </div>
 
-    <!-- Home View -->
+    <!-- Home / Entry View -->
     <div id="home-view" class="overlay">
         <div class="w-full max-w-xs space-y-6 text-center">
             <h1 class="text-4xl font-black text-blue-500 tracking-tighter italic">Student Lounge</h1>
@@ -86,64 +81,66 @@
                 <button onclick="showNamingView('create')" class="w-full bg-white/5 border border-white/10 p-5 rounded-2xl font-bold uppercase text-xs text-white/70">New Session</button>
                 <button onclick="showNamingView('join')" class="w-full bg-blue-600/10 border border-blue-500/20 p-5 rounded-2xl font-bold uppercase text-xs text-blue-500">Connect to Room</button>
                 
-                <div id="recent-session-area" class="hidden pt-4">
-                    <div class="py-2 text-gray-600 text-[10px] font-bold uppercase tracking-[0.2em] mb-2">Resume Recent</div>
-                    <div class="recent-card cursor-pointer" onclick="resumeRecent()">
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <div id="recent-group-name" class="text-white font-bold text-lg">Group</div>
-                                <div id="recent-code-display" class="text-blue-400 text-xs font-mono tracking-widest mt-1">CODE: -----</div>
-                            </div>
-                            <div class="bg-blue-500/20 p-2 rounded-lg">
-                                <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"/></svg>
-                            </div>
-                        </div>
+                <div id="recent-session-area" class="hidden pt-4 text-left">
+                    <div class="py-2 text-gray-600 text-[10px] font-bold uppercase tracking-widest mb-1">Previous Session</div>
+                    <div onclick="resumeRecent()" class="bg-gradient-to-br from-gray-800 to-gray-900 border border-blue-500/30 p-5 rounded-2xl cursor-pointer">
+                        <div id="recent-group-name" class="text-white font-bold text-lg">Group</div>
+                        <div id="recent-code-display" class="text-blue-400 text-xs font-mono mt-1">CODE: -----</div>
                     </div>
                 </div>
             </div>
 
             <div id="naming-view" class="space-y-3 hidden">
-                <input type="text" id="userNameInput" placeholder="Enter your name" class="input-field">
-                <input type="text" id="groupNameInput" placeholder="Group Name (e.g. CS-202)" class="input-field hidden">
+                <input type="text" id="userNameInput" placeholder="Your Name" class="input-field">
+                <input type="text" id="groupNameInput" placeholder="Group Name" class="input-field hidden">
                 <input type="text" id="roomCodeInput" placeholder="ROOM CODE" class="input-field uppercase hidden">
                 <div class="flex gap-2">
-                    <button onclick="cancelNaming()" class="w-1/3 bg-white/5 p-4 rounded-2xl text-[10px] font-bold uppercase text-white/50">Back</button>
-                    <button id="confirmBtn" class="flex-1 bg-blue-600 p-4 rounded-2xl text-[10px] font-bold uppercase shadow-lg">Proceed</button>
+                    <button onclick="cancelNaming()" class="w-1/3 bg-white/5 p-4 rounded-2xl text-[10px] font-bold uppercase">Back</button>
+                    <button id="confirmBtn" class="flex-1 bg-blue-600 p-4 rounded-2xl text-[10px] font-bold uppercase">Confirm</button>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Waiting Screen -->
     <div id="wait-view" class="overlay" style="display:none">
-        <div class="text-center space-y-6">
-            <div class="relative animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
-            <h2 class="text-xl font-bold text-white">Knocking...</h2>
-            <p class="text-gray-400 text-sm">The creator needs to let you in.</p>
+        <div class="text-center space-y-4">
+            <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-blue-500 mx-auto"></div>
+            <h2 class="text-lg font-bold">Request Sent</h2>
+            <p class="text-gray-500 text-xs">Waiting for the admin to approve...</p>
         </div>
     </div>
 
+    <!-- Main App Workspace -->
     <div id="main-workspace">
-        <header class="header">
+        <header class="nav-bar">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center font-bold text-sm shadow-inner">S</div>
-                <div class="flex flex-col">
-                    <span class="text-[15px] font-bold leading-tight">Student Lounge</span>
-                    <div class="flex items-center gap-2 mt-0.5">
-                        <span id="group-name-display" class="text-[10px] text-gray-400 font-bold uppercase truncate max-w-[100px]">Loading...</span>
-                        <span id="header-code-pill" class="code-pill">------</span>
-                    </div>
-                </div>
+                <div class="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center font-black text-xs">SL</div>
+                <span class="text-sm font-bold tracking-tight">Student Lounge</span>
             </div>
-            <div id="admin-panel" onclick="openModal()">REQ: <span id="req-count">0</span></div>
+            <div id="admin-panel" onclick="openModal()">REQUESTS (<span id="req-count">0</span>)</div>
         </header>
+
+        <!-- Sub-header for Room Details -->
+        <div class="status-bar">
+            <span id="group-name-display" class="text-[10px] font-bold text-gray-400 uppercase tracking-wider truncate mr-4">Loading Group...</span>
+            <div class="flex items-center gap-2">
+                <span class="text-[9px] text-gray-600 font-bold uppercase">Room Code:</span>
+                <span id="header-code-pill" class="code-display">------</span>
+            </div>
+        </div>
+
         <main id="chatBox">
-            <div id="e2ee-banner" class="self-center bg-[#182229] text-[#ffd700] text-[10px] px-4 py-1.5 rounded-lg mb-4 border border-[#ffd700]/10 tracking-widest uppercase">End-to-End Encrypted</div>
+            <div id="e2ee-banner" class="self-center bg-[#182229] text-[#ffd700] text-[9px] px-4 py-1.5 rounded-full mb-4 border border-[#ffd700]/10 tracking-widest uppercase font-bold">End-to-End Encrypted</div>
         </main>
+
         <footer class="footer">
             <div class="input-pill">
-                <input type="text" id="chatInput" placeholder="Message" autocomplete="off" class="w-full bg-transparent outline-none text-sm py-2 text-white">
+                <input type="text" id="chatInput" placeholder="Type a message..." autocomplete="off" class="w-full bg-transparent outline-none text-sm text-white">
             </div>
-            <button onclick="sendMessage()" class="action-btn"><svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg></button>
+            <button onclick="sendMessage()" class="action-btn">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+            </button>
         </footer>
     </div>
 
@@ -154,7 +151,7 @@
         const firebaseConfig = { apiKey: "AIzaSyDbfmd0zmv_mFV0CG2OrhKPPeU3zPYGOBg", authDomain: "unidesk-a70ac.firebaseapp.com", projectId: "unidesk-a70ac" };
         const db = getFirestore(initializeApp(firebaseConfig));
         
-        let myId = localStorage.getItem('sl_myId') || "TAB-" + Date.now() + "-" + Math.floor(Math.random()*999);
+        let myId = localStorage.getItem('sl_myId') || "USER-" + Math.random().toString(36).substr(2, 9);
         localStorage.setItem('sl_myId', myId);
 
         let savedName = localStorage.getItem('sl_userName') || "";
@@ -166,7 +163,7 @@
             const lastGroup = localStorage.getItem('sl_lastGroupName');
             if(lastRoom && savedName) {
                 document.getElementById('recent-session-area').classList.remove('hidden');
-                document.getElementById('recent-group-name').innerText = lastGroup || "Recent Group";
+                document.getElementById('recent-group-name').innerText = lastGroup || "Untitled Group";
                 document.getElementById('recent-code-display').innerText = "CODE: " + lastRoom;
             }
         };
@@ -176,15 +173,6 @@
             isAdmin = localStorage.getItem('sl_isAdmin') === 'true';
             openWorkspace(lastRoom);
         };
-
-        const workspace = document.getElementById('main-workspace');
-        if (window.visualViewport) {
-            window.visualViewport.addEventListener('resize', () => {
-                workspace.style.height = window.visualViewport.height + 'px';
-                document.getElementById('chatBox').scrollTop = document.getElementById('chatBox').scrollHeight;
-                window.scrollTo(0, 0);
-            });
-        }
 
         window.showNamingView = (mode) => {
             document.getElementById('initial-options').classList.add('hidden');
@@ -207,22 +195,19 @@
 
         window.createRoom = async () => {
             const name = document.getElementById('userNameInput').value.trim();
-            const gname = document.getElementById('groupNameInput').value.trim() || "Chat Room";
+            const gname = document.getElementById('groupNameInput').value.trim() || "New Lounge";
             if(!name) return;
-            savedName = name; isAdmin = true;
             const code = Math.random().toString(36).substring(2, 8).toUpperCase();
             
+            isAdmin = true;
+            savedName = name;
             localStorage.setItem('sl_userName', name);
             localStorage.setItem('sl_lastRoom', code);
             localStorage.setItem('sl_lastGroupName', gname);
             localStorage.setItem('sl_isAdmin', 'true');
 
             await setDoc(doc(db, "rooms", code), { 
-                groupName: gname,
-                messages: [], 
-                status: 'active', 
-                pendingRequests: [], 
-                approvedIds: [myId] 
+                groupName: gname, messages: [], pendingRequests: [], approvedIds: [myId] 
             });
             openWorkspace(code);
         };
@@ -231,20 +216,18 @@
             const name = document.getElementById('userNameInput').value.trim();
             const code = document.getElementById('roomCodeInput').value.toUpperCase().trim();
             if(!name || !code) return;
-            savedName = name;
             
+            const roomRef = doc(db, "rooms", code);
+            const snap = await getDoc(roomRef);
+            if(!snap.exists()) { alert("Invalid Room Code"); return; }
+
+            savedName = name;
             localStorage.setItem('sl_userName', name);
             localStorage.setItem('sl_lastRoom', code);
             localStorage.setItem('sl_isAdmin', 'false');
+            localStorage.setItem('sl_lastGroupName', snap.data().groupName);
 
-            const roomRef = doc(db, "rooms", code);
-            const snap = await getDoc(roomRef);
-            if(!snap.exists()) { alert("Room not found"); return; }
-
-            const data = snap.data();
-            localStorage.setItem('sl_lastGroupName', data.groupName || "Chat Room");
-
-            if(data.approvedIds.includes(myId)) {
+            if(snap.data().approvedIds.includes(myId)) {
                 openWorkspace(code);
                 return;
             }
@@ -253,18 +236,8 @@
             document.getElementById('home-view').style.display = 'none';
             document.getElementById('wait-view').style.display = 'flex';
 
-            const unsub = onSnapshot(roomRef, (s) => {
-                if (s.data().approvedIds.includes(myId)) { unsub(); openWorkspace(code); }
-            });
-        };
-
-        window.openModal = () => { document.getElementById('req-modal').style.display = 'flex'; };
-        window.closeModal = () => { document.getElementById('req-modal').style.display = 'none'; };
-
-        window.approveUser = async (userId, userName) => {
-            await updateDoc(doc(db, "rooms", currentRoom), { 
-                pendingRequests: arrayRemove({ id: userId, name: userName }),
-                approvedIds: arrayUnion(userId)
+            onSnapshot(roomRef, (s) => {
+                if (s.data().approvedIds.includes(myId)) openWorkspace(code);
             });
         };
 
@@ -275,35 +248,39 @@
             document.getElementById('main-workspace').style.display = 'flex';
             document.getElementById('header-code-pill').innerText = code;
             
-            if (window.visualViewport) workspace.style.height = window.visualViewport.height + 'px';
-
             onSnapshot(doc(db, "rooms", code), s => {
                 const data = s.data();
                 if(!data) return;
-                document.getElementById('group-name-display').innerText = data.groupName || "Chat Room";
+                document.getElementById('group-name-display').innerText = data.groupName;
                 
                 if(isAdmin) {
                     const reqs = data.pendingRequests || [];
                     const panel = document.getElementById('admin-panel');
-                    const list = document.getElementById('req-list');
-                    if(reqs.length > 0) {
-                        panel.style.display = 'block';
-                        document.getElementById('req-count').innerText = reqs.length;
-                        list.innerHTML = reqs.map(r => `<div class="req-item"><span class="text-xs font-bold">${r.name}</span><button onclick="approveUser('${r.id}', '${r.name}')" class="approve-btn">LET IN</button></div>`).join('');
-                    } else {
-                        panel.style.display = 'none';
-                        closeModal();
-                    }
+                    panel.style.display = reqs.length > 0 ? 'block' : 'none';
+                    document.getElementById('req-count').innerText = reqs.length;
+                    document.getElementById('req-list').innerHTML = reqs.map(r => `
+                        <div class="flex justify-between items-center p-4 border-b border-white/5">
+                            <span class="text-xs font-bold">${r.name}</span>
+                            <button onclick="approveUser('${r.id}', '${r.name}')" class="bg-green-500 text-black text-[10px] font-bold px-3 py-1.5 rounded-lg">APPROVE</button>
+                        </div>
+                    `).join('');
                 }
                 renderChat(data.messages || []);
             });
         }
 
+        window.approveUser = async (userId, userName) => {
+            await updateDoc(doc(db, "rooms", currentRoom), { 
+                pendingRequests: arrayRemove({ id: userId, name: userName }),
+                approvedIds: arrayUnion(userId)
+            });
+        };
+
         window.sendMessage = async () => {
-            const chatInput = document.getElementById('chatInput');
-            const text = chatInput.value.trim();
+            const input = document.getElementById('chatInput');
+            const text = input.value.trim();
             if(!text) return;
-            chatInput.value = ""; chatInput.focus();
+            input.value = "";
             await updateDoc(doc(db, "rooms", currentRoom), { 
                 messages: arrayUnion({ user: myId, senderName: savedName, text: text, time: Date.now() }) 
             });
@@ -317,14 +294,14 @@
                 const isMe = m.user === myId;
                 const row = document.createElement('div');
                 row.className = `msg-row ${isMe ? 'row-me' : 'row-them'}`;
-                let html = isMe ? "" : `<span class="sender-tag">${m.senderName}</span>`;
-                html += `<div class="bubble ${isMe ? 'bubble-me' : 'bubble-them'}">${m.text}</div>`;
-                row.innerHTML = html;
+                row.innerHTML = `${!isMe ? `<span class="sender-tag">${m.senderName}</span>` : ''}<div class="bubble ${isMe ? 'bubble-me' : 'bubble-them'}">${m.text}</div>`;
                 box.appendChild(row);
             });
             box.scrollTop = box.scrollHeight;
         }
 
+        window.openModal = () => document.getElementById('req-modal').style.display = 'flex';
+        window.closeModal = () => document.getElementById('req-modal').style.display = 'none';
         document.getElementById('chatInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
     </script>
 </body>
