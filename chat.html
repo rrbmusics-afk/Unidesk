@@ -1,85 +1,37 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Student Lounge | Aethercore</title>
-    <link rel="stylesheet" href="chat.css">
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/9.x.x/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.x.x/firebase-database.js"></script>
-</head>
-<body>
+<div id="chat-screen" class="screen active">
+    <!-- Corporate Header -->
+    <div class="chat-header">
+        <div class="header-avatar" id="lounge-avatar"></div>
+        <div class="header-info" onclick="openLoungeInfo()">
+            <h4 id="active-lounge-name">Strategy Hub</h4>
+            <span id="active-lounge-status">Tap for lounge info</span>
+        </div>
+        <div class="admin-badge">Admin</div>
+    </div>
 
-    <!-- Stage 1: Entrance -->
-    <div id="entrance-screen" class="screen active">
-        <header class="premium-header">
-            <h1>Student Lounge</h1>
-            <p>Aethercore Interactive</p>
-        </header>
-        <div class="action-cards">
-            <button onclick="showFlow('create')" class="card-btn primary">
-                <span>Create Lounge</span>
-                <small>Start a new private hub</small>
-            </button>
-            <button onclick="showFlow('join')" class="card-btn secondary">
-                <span>Join Lounge</span>
-                <small>Enter existing code</small>
-            </button>
+    <!-- Scrollable Chat Area -->
+    <div id="message-container" class="message-feed">
+        <!-- Example Received Message -->
+        <div class="msg received">
+            <strong>Alex (Admin)</strong><br>
+            Welcome to the Student Lounge! All project files are pinned.
+            <span class="msg-time">10:45 AM</span>
+        </div>
+
+        <!-- Example Sent Message -->
+        <div class="msg sent">
+            Got it, thanks!
+            <span class="msg-time">10:46 AM</span>
         </div>
     </div>
 
-    <!-- Stage 2: Forms -->
-    <div id="form-screen" class="screen">
-        <div class="glass-form">
-            <h2 id="form-title">Lounge Setup</h2>
-            <div class="input-group">
-                <input type="text" id="user-name" placeholder="Your Name" required>
-                <input type="text" id="lounge-name" class="create-only" placeholder="Lounge Name">
-                <input type="text" id="lounge-code-input" class="join-only" placeholder="Lounge Code">
-            </div>
-            <button id="submit-btn" class="submit-btn">Continue</button>
-        </div>
+    <!-- WhatsApp Style Input -->
+    <div class="input-area">
+        <input type="text" id="msg-input" placeholder="Type a message">
+        <button id="send-btn">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+                <path d="M1.101 21.757L23.8 12.028 1.101 2.3l.011 7.912 13.623 1.816-13.623 1.817-.011 7.912z"></path>
+            </svg>
+        </button>
     </div>
-
-    <!-- Stage 3: Waiting Area -->
-    <div id="waiting-screen" class="screen">
-        <div class="loader-content">
-            <div class="pulse-ring"></div>
-            <h3>Knocking...</h3>
-            <p>Waiting for admin approval</p>
-        </div>
-    </div>
-
-    <!-- Stage 4: Chat Module -->
-    <div id="chat-screen" class="screen">
-        <div class="chat-header" onclick="openLoungeInfo()">
-            <div class="header-info">
-                <h4 id="active-lounge-name">Lounge Name</h4>
-                <span id="active-lounge-code">#CODE123</span>
-            </div>
-            <div class="admin-badge" id="admin-indicator">Admin</div>
-        </div>
-
-        <div id="message-container" class="message-feed"></div>
-
-        <div id="typing-indicator" class="hidden">Someone is typing...</div>
-
-        <div class="input-area">
-            <input type="text" id="msg-input" placeholder="Write a message...">
-            <button id="send-btn">Send</button>
-        </div>
-
-        <!-- Admin Request Panel -->
-        <div id="request-panel" class="request-popup hidden">
-            <p><span id="requester-name">User</span> wants to join</p>
-            <div class="req-actions">
-                <button class="accept" onclick="respondToRequest(true)">Accept</button>
-                <button class="reject" onclick="respondToRequest(false)">Reject</button>
-            </div>
-        </div>
-    </div>
-
-    <script src="chat.js"></script>
-</body>
-</html>
+</div>
