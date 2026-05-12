@@ -1,120 +1,226 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, doc, setDoc, getDoc, updateDoc, onSnapshot, arrayUnion, arrayRemove, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+// --- CONFIGURATION & INITIALIZATION ---
+// (Firebase SDK already imported in chat.html)
+const db = firebase.firestore();
+const storage = firebase.storage();
 
-const firebaseConfig = {
-    apiKey: "AIzaSyDbfmd0zmv_mFV0CG2OrhKPPeU3zPYGOBg",
-    authDomain: "unidesk-a70ac.firebaseapp.com",
-    projectId: "unidesk-a70ac",
-    storageBucket: "unidesk-a70ac.firebasestorage.app",
-    messagingSenderId: "882535016432",
-    appId: "1:882535016432:web:6eca2645a47a827e779f35"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-let currentUID = localStorage.getItem('ae_uid') || 'U' + Date.now();
-localStorage.setItem('ae_uid', currentUID);
-
-let activeRoom = null;
-let isAdmin = false;
-let recorder = null;
+let currentUser = { name: '', role: 'member', id: '' };
+let currentRoom = { id: '', name: '', adminId: '' };
+let mediaRecorder;
 let audioChunks = [];
 
-// 1. TABS & VALIDATION
-window.switchTab = (type) => {
-    document.getElementById('panel-create').classList.toggle('hidden', type !== 'create');
-    document.getElementById('panel-join').classList.toggle('hidden', type !== 'join');
-    document.getElementById('tab-c').className = type === 'create' ? 'active' : '';
-    document.getElementById('tab-j').className = type === 'join' ? 'active' : '';
-};
-
-window.validateAuth = () => {
-    const isCreate = !document.getElementById('panel-create').classList.contains('hidden');
-    if(isCreate) {
-        const u = document.getElementById('c-user').value.trim();
-        const g = document.getElementById('c-group').value.trim();
-        document.getElementById('btn-create').classList.toggle('btn-locked', !u || !g);
-    } else {
-        const u = document.getElementById('j-user').value.trim();
-        const c = document.getElementById('j-code').value.trim();
-        document.getElementById('btn-join').classList.toggle('btn-locked', !u || c.length < 6);
-    }
-};
-
-// 12. SMART INPUT & VOICE (WhatsApp Logic)
+// --- UI ELEMENT SELECTORS ---
+const authScreen = document.getElementById('auth-screen');
+const chatScreen = document.getElementById('chat-screen');
 const msgInput = document.getElementById('msg-input');
-const actionBtn = document.getElementById('action-btn');
-const actionIcon = document.getElementById('action-icon');
+const sendBtn = document.getElementById('send-btn');
+const voiceBtn = document.getElementById('voice-btn');
+const createBtn = document.getElementById('btn-create');
+const joinBtn = document.getElementById('btn-join');
 
-window.autoResize = (el) => {
-    el.style.height = 'auto';
-    el.style.height = el.scrollHeight + 'px';
-    actionIcon.className = el.value.trim() ? "fa-solid fa-paper-plane" : "fa-solid fa-microphone";
+// --- 1. AUTH & ROOM LOGIC ---
+
+// Form Validation Logic (Unlocks buttons only when valid)
+const validateInputs = (formId) => {
+    const form = document.getElementById(formId);
+    const btn = formId === 'create-form' ? createBtn : joinBtn;
+    const inputs = form.querySelectorAll('input[required]');
+    let isValid = true;
+    inputs.forEach(input => { if (!input.value.trim()) isValid = false; });
+    btn.disabled = !isValid;
 };
 
-// Long Press for Voice (Point 12)
-actionBtn.addEventListener('mousedown', startVoice);
-actionBtn.addEventListener('mouseup', stopVoice);
-actionBtn.addEventListener('touchstart', (e) => { e.preventDefault(); startVoice(); });
-actionBtn.addEventListener('touchend', stopVoice);
+document.querySelectorAll('input').forEach(input => {
+    input.addEventListener('input', () => {
+        validateInputs('create-form');
+        validateInputs('join-form');
+    });
+});
 
-async function startVoice() {
-    if(msgInput.value.trim()) { sendText(); return; }
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    recorder = new MediaRecorder(stream);
-    audioChunks = [];
-    recorder.ondataavailable = e => audioChunks.push(e.data);
-    recorder.onstop = () => {
-        console.log("Audio sent automatically upon release");
-        // Firebase Storage Upload logic here
-    };
-    recorder.start();
-    actionBtn.style.background = "#ff4b4b";
+function switchTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
+    event.target.classList.add('active');
+    document.getElementById(`${tab}-form`).classList.add('active');
 }
 
-function stopVoice() {
-    if(recorder && recorder.state === "recording") {
-        recorder.stop();
-        actionBtn.style.background = "var(--accent)";
-    }
-}
+// Create Room
+document.getElementById('create-form').onsubmit = async (e) => {
+    e.preventDefault();
+    const adminName = document.getElementById('admin-name').value;
+    const groupName = document.getElementById('group-name').value;
+    const roomCode = Math.random().toString(36).substring(2, 8).toUpperCase();
 
-// 2 & 3. ADMIN / MEMBER LOGIC
-async function handleCreate() {
-    const name = document.getElementById('c-user').value;
-    const group = document.getElementById('c-group').value;
-    const code = Math.random().toString(36).substr(2,6).toUpperCase();
+    const roomRef = await db.collection('rooms').add({
+        name: groupName,
+        code: roomCode,
+        adminId: adminName + Date.now(),
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        photoURL: 'default-group.png'
+    });
+
+    setupUser(adminName, 'admin', roomRef.id);
+};
+
+// Join Room (Knock/Approval Logic)
+document.getElementById('join-form').onsubmit = async (e) => {
+    e.preventDefault();
+    const userName = document.getElementById('user-name').value;
+    const code = document.getElementById('room-code-input').value.toUpperCase();
+
+    const snapshot = await db.collection('rooms').where('code', '==', code).get();
+    if (snapshot.empty) return alert("Room not found");
+
+    const roomId = snapshot.docs[0].id;
     
-    await setDoc(doc(db, "rooms", code), {
-        id: code, subject: group, admin: currentUID,
-        members: [{uid: currentUID, name}],
-        mIDs: [currentUID], requests: [], msgs: [],
-        pfp: `https://ui-avatars.com/api/?name=${group}&background=00f2ff&color=000`
+    // Create Join Request
+    await db.collection('rooms').doc(roomId).collection('requests').add({
+        name: userName,
+        uid: userName + Date.now(),
+        status: 'pending'
     });
-    enterChat(code, name);
+
+    alert("Request sent to Admin. Please wait for approval.");
+};
+
+// --- 2. CHAT FUNCTIONALITY ---
+
+function setupUser(name, role, roomId) {
+    currentUser = { name, role, id: name + Date.now() };
+    enterChat(roomId);
 }
 
-function enterChat(code, userName) {
-    activeRoom = code;
-    localStorage.setItem('ae_name', userName);
-    document.getElementById('screen-home').classList.remove('active');
-    document.getElementById('screen-chat').classList.add('active');
-
-    onSnapshot(doc(db, "rooms", code), (s) => {
-        if(!s.exists()) { location.reload(); return; }
-        const data = s.data();
-        isAdmin = data.admin === currentUID;
-        
-        document.getElementById('header-title').innerText = data.subject;
-        document.getElementById('header-code').innerText = `CODE: ${data.id}`;
-        document.getElementById('header-pfp').src = data.pfp;
-        
-        // 4. Approval Visibility
-        if(isAdmin && data.requests.length > 0) {
-            document.getElementById('admin-banner').classList.remove('hidden');
-        } else {
-            document.getElementById('admin-banner').classList.add('hidden');
-        }
-    });
+function enterChat(roomId) {
+    authScreen.classList.remove('active');
+    chatScreen.classList.add('active');
+    loadMessages(roomId);
+    listenForApprovals(roomId);
 }
+
+// WhatsApp-style Input Toggle
+msgInput.addEventListener('input', () => {
+    if (msgInput.value.trim().length > 0) {
+        voiceBtn.classList.add('hidden');
+        sendBtn.classList.remove('hidden');
+    } else {
+        voiceBtn.classList.remove('hidden');
+        sendBtn.classList.add('hidden');
+    }
+});
+
+// --- 3. ENCRYPTION & SECURITY ---
+
+function encryptData(text) {
+    // In a real ₹10L project, use SubtleCrypto API. 
+    // This is a placeholder for the E2EE bridge.
+    return btoa(unescape(encodeURIComponent(text))); 
+}
+
+function decryptData(encoded) {
+    return decodeURIComponent(escape(atob(encoded)));
+}
+
+// --- 4. VOICE RECORDING (WhatsApp Style) ---
+
+voiceBtn.onmousedown = async () => {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    mediaRecorder = new MediaRecorder(stream);
+    audioChunks = [];
+    mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+    mediaRecorder.onstop = uploadAudio;
+    mediaRecorder.start();
+    voiceBtn.style.color = "red";
+};
+
+voiceBtn.onmouseup = () => {
+    mediaRecorder.stop();
+    voiceBtn.style.color = "var(--accent-color)";
+};
+
+async function uploadAudio() {
+    const audioBlob = new Blob(audioChunks, { type: 'audio/mpeg' });
+    const fileRef = storage.ref(`audio/${Date.now()}.mp3`);
+    await fileRef.put(audioBlob);
+    const url = await fileRef.getDownloadURL();
+    sendMessage(url, 'audio');
+}
+
+// --- 5. DOCUMENT ATTACHMENT ---
+
+document.getElementById('attach-btn').onclick = () => document.getElementById('doc-upload').click();
+
+document.getElementById('doc-upload').onchange = async (e) => {
+    const files = Array.from(e.target.files).slice(0, 10);
+    for (const file of files) {
+        const ref = storage.ref(`docs/${file.name}`);
+        await ref.put(file);
+        const url = await ref.getDownloadURL();
+        sendMessage(url, 'document', file.name);
+    }
+};
+
+// --- 6. ADMIN OPERATIONS ---
+
+function listenForApprovals(roomId) {
+    if (currentUser.role !== 'admin') return;
+    
+    db.collection('rooms').doc(roomId).collection('requests')
+        .where('status', '==', 'pending')
+        .onSnapshot(snap => {
+            const bar = document.getElementById('admin-approval-bar');
+            const count = document.getElementById('request-count');
+            if (snap.size > 0) {
+                bar.classList.remove('hidden');
+                count.innerText = snap.size;
+            } else {
+                bar.classList.add('hidden');
+            }
+        });
+}
+
+async function approveMember(requestId, userId) {
+    await db.collection('rooms').doc(currentRoom.id).collection('requests').doc(requestId).update({
+        status: 'approved'
+    });
+    // Further logic to add user to 'members' sub-collection
+}
+
+// Profile Photo Logic (1:1 Ratio WhatsApp style)
+document.getElementById('change-photo-btn').onclick = () => {
+    if (currentUser.role === 'admin') document.getElementById('photo-upload').click();
+};
+
+document.getElementById('photo-upload').onchange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    const ref = storage.ref(`profiles/${currentRoom.id}`);
+    await ref.put(file);
+    const url = await ref.getDownloadURL();
+    await db.collection('rooms').doc(currentRoom.id).update({ photoURL: url });
+};
+
+// --- 7. UI UTILS ---
+
+function openGroupInfo() {
+    document.getElementById('group-info-overlay').classList.add('active');
+}
+
+function closeOverlay(id) {
+    document.getElementById(id).classList.remove('active');
+}
+
+function viewLargeImage(src) {
+    const viewer = document.getElementById('media-viewer');
+    document.getElementById('large-view-img').src = src;
+    viewer.classList.add('active');
+}
+
+// Keyboard handling for Android (Prevent auto-hide)
+window.addEventListener('resize', () => {
+    // If the window height decreases significantly, we assume keyboard is out.
+    // We maintain the scroll position of the chat area.
+    const activeElement = document.activeElement;
+    if (activeElement.tagName === "TEXTAREA" || activeElement.tagName === "INPUT") {
+        activeElement.scrollIntoView({ behavior: 'smooth' });
+    }
+});
