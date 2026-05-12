@@ -34,7 +34,7 @@
 
         .input-field { width: 100%; background: #2a3942; padding: 15px; border-radius: 12px; text-align: center; outline: none; border: 1px solid rgba(255,255,255,0.05); color: #007AFF; font-weight: bold; }
         .input-field::placeholder { color: #5e727e; font-weight: normal; }
-        .sender-name { font-size: 11px; font-weight: 600; margin-bottom: 2px; color: #34b7f1; }
+        .sender-tag { font-size: 11px; font-weight: 600; margin-bottom: 2px; color: #34b7f1; }
     </style>
 </head>
 <body>
@@ -267,6 +267,7 @@
         };
 
         window.openImage = (src) => {
+            const vImg = document.getElementById('viewer-img');
             vImg.src = src; document.getElementById('download-link').href = src;
             const v = document.getElementById('photo-viewer');
             v.style.display = 'flex'; setTimeout(() => v.classList.add('active'), 10);
@@ -277,8 +278,6 @@
             v.classList.remove('active'); setTimeout(() => v.style.display = 'none', 300);
         };
 
-        const vImg = document.getElementById('viewer-img');
-
         function renderChat(messages) {
             const box = document.getElementById('chatBox');
             const banner = document.getElementById('e2ee-banner');
@@ -286,16 +285,21 @@
             messages.forEach(m => {
                 const isMe = m.user === myId;
                 const div = document.createElement('div');
-                div.className = `flex flex-col ${isMe ? 'items-end' : 'items-start'} mb-2`;
+                div.className = `flex flex-col ${isMe ? 'items-end' : 'items-start'} mb-3`;
                 
-                // Professional Name Tag above bubble
-                let nameTag = !isMe ? `<span class="sender-name ml-1">${m.senderName || 'Student'}</span>` : "";
+                // Show Name Tag only for others
+                let nameTag = !isMe ? `<span class="sender-tag ml-1">${m.senderName || 'Student'}</span>` : "";
                 
                 let inner = nameTag;
-                if(m.type === 'text') inner += `<div class="bubble ${isMe ? 'bubble-me' : 'bubble-them'}">${m.text}</div>`;
-                else if(m.type === 'audio') inner += `<div class="bubble ${isMe ? 'bubble-me' : 'bubble-them'}"><audio controls class="h-8 w-44 brightness-90 invert"><source src="${m.data}"></audio></div>`;
-                else if(m.type === 'image') inner += `<img src="${m.data}" class="chat-img shadow-xl border border-white/10" onclick="openImage('${m.data}')">`;
-                else if(m.type === 'doc') inner += `<div class="bubble ${isMe ? 'bubble-me' : 'bubble-them'} flex flex-col gap-2"><span class="text-[11px] opacity-70 truncate max-w-[100px]">${m.fileName}</span><a href="${m.data}" download="${m.fileName}" class="bg-blue-600 px-3 py-1.5 rounded text-[10px] font-bold text-center uppercase">Download</a></div>`;
+                if(m.type === 'text') {
+                    inner += `<div class="bubble ${isMe ? 'bubble-me' : 'bubble-them'}">${m.text}</div>`;
+                } else if(m.type === 'audio') {
+                    inner += `<div class="bubble ${isMe ? 'bubble-me' : 'bubble-them'}"><audio controls class="h-8 w-44 brightness-90 invert"><source src="${m.data}"></audio></div>`;
+                } else if(m.type === 'image') {
+                    inner += `<img src="${m.data}" class="chat-img shadow-xl border border-white/10" onclick="openImage('${m.data}')">`;
+                } else if(m.type === 'doc') {
+                    inner += `<div class="bubble ${isMe ? 'bubble-me' : 'bubble-them'} flex flex-col gap-2"><span class="text-[11px] opacity-70 truncate max-w-[100px]">${m.fileName}</span><a href="${m.data}" download="${m.fileName}" class="bg-blue-600 px-3 py-1.5 rounded text-[10px] font-bold text-center uppercase">Download</a></div>`;
+                }
                 
                 div.innerHTML = inner;
                 box.appendChild(div);
