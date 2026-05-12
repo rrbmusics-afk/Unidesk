@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Aethercore | Secure Hub</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Aethercore Pro</title>
     <link rel="stylesheet" href="chat.css">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -12,124 +12,94 @@
 </head>
 <body>
 
-    <div id="app-stage">
-        
-        <section id="view-auth" class="stage-view active">
-            <div class="auth-wrapper">
-                <header class="brand-identity">
-                    <div class="logo-orb"></div>
-                    <h1>Aethercore</h1>
-                    <span>PROTECTED BY AES-256</span>
-                </header>
-
-                <div class="logic-card">
-                    <nav class="tab-nav">
-                        <button id="tab-create" class="tab-trigger active" onclick="logic.switchTab('create')">Create</button>
-                        <button id="tab-join" class="tab-trigger" onclick="logic.switchTab('join')">Join</button>
-                    </nav>
-
-                    <div class="tab-panels">
-                        <div id="panel-create" class="panel active">
-                            <div class="field">
-                                <label>Admin Identity</label>
-                                <input type="text" id="admin-name" placeholder="Your full name" required>
-                            </div>
-                            <div class="field">
-                                <label>Group Name</label>
-                                <input type="text" id="group-name" placeholder="Official group name" required>
-                            </div>
-                            <button id="btn-create" class="prime-btn" disabled onclick="engine.initRoom()">Initialize Room</button>
-                        </div>
-
-                        <div id="panel-join" class="panel">
-                            <div class="field">
-                                <label>Member Identity</label>
-                                <input type="text" id="join-name" placeholder="Your full name" required>
-                            </div>
-                            <div class="field">
-                                <label>Access Code</label>
-                                <input type="text" id="join-code" placeholder="6-digit secure code" required>
-                            </div>
-                            <button id="btn-join" class="prime-btn" disabled onclick="engine.requestEntry()">Knock to Join</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section id="view-hub" class="stage-view">
-            <header class="hub-header" onclick="logic.showInfo()">
-                <div class="header-left">
-                    <div class="avatar-frame">
-                        <img id="hub-pfp" src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png">
-                    </div>
-                    <div class="header-meta">
-                        <h2 id="hub-title">Loading...</h2>
-                        <small id="hub-code-sub">Code: ------</small>
-                    </div>
-                </div>
-                <div class="header-right">
-                    <span class="material-icons-round">shield</span>
-                </div>
+    <div id="wrapper">
+        <main id="auth-screen" class="view active">
+            <header class="brand">
+                <h1>Aethercore</h1>
+                <p>PROTECTED BY AES-256</p>
             </header>
 
-            <div id="approval-banner" class="approval-banner hidden" onclick="logic.showRequests()">
-                <p><span id="req-count">0</span> Join Requests Pending</p>
-                <span class="material-icons-round">chevron_right</span>
+            <div class="card">
+                <nav class="tabs">
+                    <button id="t-c" class="active" onclick="ui.tab('create')">Create</button>
+                    <button id="t-j" onclick="ui.tab('join')">Join</button>
+                </nav>
+
+                <div id="p-create" class="panel active">
+                    <div class="group">
+                        <label>Admin Identity</label>
+                        <input type="text" id="a-name" placeholder="Full name" oninput="ui.check()">
+                    </div>
+                    <div class="group">
+                        <label>Group Name</label>
+                        <input type="text" id="g-name" placeholder="Group identity" oninput="ui.check()">
+                    </div>
+                    <button id="b-c" class="btn" disabled onclick="core.create()">Initialize Room</button>
+                </div>
+
+                <div id="p-join" class="panel">
+                    <div class="group">
+                        <label>Member Identity</label>
+                        <input type="text" id="j-name" placeholder="Full name" oninput="ui.check()">
+                    </div>
+                    <div class="group">
+                        <label>Access Code</label>
+                        <input type="text" id="j-code" placeholder="6-digit code" oninput="ui.check()">
+                    </div>
+                    <button id="b-j" class="btn" disabled onclick="core.join()">Knock to Join</button>
+                </div>
+            </div>
+        </main>
+
+        <main id="chat-screen" class="view">
+            <header class="chat-head" onclick="ui.overlay('info', true)">
+                <img id="h-pfp" src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png">
+                <div class="meta">
+                    <b id="h-name">Group</b>
+                    <small id="h-code">Code: ---</small>
+                </div>
+            </header>
+            
+            <div id="notif" class="banner hidden" onclick="ui.overlay('req', true)">
+                <span>Pending Requests</span>
+                <i class="material-icons-round">chevron_right</i>
             </div>
 
-            <main id="chat-scroller" class="doodle-surface">
-                </main>
+            <div id="feed" class="doodle"></div>
 
-            <footer class="hub-footer">
-                <div class="input-architect">
-                    <button class="tool-btn" onclick="logic.pickDocs()">
-                        <span class="material-icons-round">add</span>
-                    </button>
-                    <textarea id="msg-input" placeholder="Secure Message..." rows="1"></textarea>
-                    <div id="media-trigger">
-                        <button id="mic-btn" class="mic-btn"><span class="material-icons-round">mic</span></button>
-                        <button id="send-btn" class="send-btn hidden" onclick="engine.broadcast()"><span class="material-icons-round">send</span></button>
-                    </div>
+            <footer class="bar">
+                <div class="pill">
+                    <i class="material-icons-round" onclick="ui.docs()">add</i>
+                    <textarea id="input" placeholder="Message..." rows="1"></textarea>
+                    <button id="mic" class="action"><i class="material-icons-round">mic</i></button>
+                    <button id="send" class="action hidden" onclick="core.send()"><i class="material-icons-round">send</i></button>
                 </div>
             </footer>
-        </section>
+        </main>
 
-        <div id="overlay-info" class="modal-view">
-            <div class="modal-content full">
-                <nav class="modal-nav">
-                    <span class="material-icons-round" onclick="logic.hideInfo()">arrow_back</span>
+        <div id="info-ov" class="ov">
+            <div class="ov-content">
+                <nav class="ov-nav">
+                    <i class="material-icons-round" onclick="ui.overlay('info', false)">arrow_back</i>
                     <span>Group Info</span>
                 </nav>
-                <div class="modal-body">
-                    <div class="pfp-large">
-                        <img id="info-pfp" src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" onclick="logic.zoom(this.src)">
-                        <button class="admin-only hidden" onclick="logic.pickPhoto()">
-                            <span class="material-icons-round">camera_alt</span>
-                        </button>
-                    </div>
-                    <h2 id="info-title">Group Name</h2>
-                    <div class="code-badge">Room Code: <b id="info-code">------</b></div>
-                    
-                    <div class="menu-list">
-                        <button class="menu-item admin-only hidden" onclick="engine.rename()">Rename</button>
-                        <button class="menu-item text-danger" onclick="engine.leave()">Leave Group</button>
-                        <button class="menu-item text-danger admin-only hidden" onclick="engine.destroy()">Delete Group</button>
-                    </div>
+                <div class="pfp-box">
+                    <img id="i-pfp" src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png">
+                    <button class="adm hidden" onclick="ui.pfp()"><i class="material-icons-round">camera_alt</i></button>
                 </div>
-            </div>
-        </div>
-
-        <div id="overlay-zoom" class="modal-view zoom-mode" onclick="this.classList.remove('active')">
-            <img id="zoom-img">
-            <div class="zoom-tools">
-                <button onclick="logic.downloadMedia()">Download</button>
+                <h2 id="i-name">Name</h2>
+                <p id="i-code">Code</p>
+                <div class="menu">
+                    <button class="adm hidden" onclick="core.rename()">Rename Group</button>
+                    <button class="red" onclick="core.leave()">Leave Group</button>
+                    <button class="red adm hidden" onclick="core.delete()">Delete Group</button>
+                </div>
             </div>
         </div>
     </div>
 
-    <input type="file" id="pfp-gate" accept="image/*" hidden>
-    <input type="file" id="doc-gate" multiple hidden>
+    <input type="file" id="f-pfp" hidden accept="image/*">
+    <input type="file" id="f-doc" hidden multiple>
 
     <script src="chat.js"></script>
 </body>
