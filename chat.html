@@ -3,297 +3,286 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Aether Pro Messenger | Enterprise 10L Edition</title>
+    <title>Aether Pro | Secure Enterprise Messaging</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root {
             --wa-bg: #0b141a;
             --wa-nav: #202c33;
             --wa-green: #00a884;
-            --wa-teal: #128c7e;
             --wa-bubble-me: #005c4b;
             --wa-bubble-them: #233138;
             --wa-accent: #00a884;
-            --anim-speed: 0.3s;
+            --wa-text: #e9edef;
         }
 
         body { 
-            background: var(--wa-bg); color: #e9edef; height: 100vh; overflow: hidden;
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin: 0;
+            background: var(--wa-bg); color: var(--wa-text); height: 100vh; 
+            overflow: hidden; margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
-
-        /* 17) Perfect Animations */
-        .slide-up { animation: slideUp var(--anim-speed) cubic-bezier(0.4, 0, 0.2, 1); }
-        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        
-        .fade-in { animation: fadeIn var(--anim-speed) ease; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
         /* 5) Unique Corporate Doodle Background */
-        .chat-wallpaper {
+        .chat-canvas {
             background-color: #0b141a;
-            background-image: url("https://www.transparenttextures.com/patterns/carbon-fibre.png");
+            background-image: url("https://www.transparenttextures.com/patterns/circuit-board.png");
             background-blend-mode: soft-light;
-            flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 4px;
-            scrollbar-width: thin; scrollbar-color: #374151 transparent;
+            flex: 1; overflow-y: auto; display: flex; flex-direction: column; padding: 15px; gap: 4px;
         }
 
-        /* 15) Professional Aesthetic Boxes */
+        /* 15) Aesthetic Boxes */
         .premium-card {
-            background: #1c272e; border-radius: 28px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.05);
+            background: #1c272e; border-radius: 24px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.05);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .screen { position: fixed; inset: 0; display: none; flex-direction: column; background: var(--wa-bg); z-index: 10; }
-        .screen-active { display: flex; }
+        .screen-active { display: flex; animation: wa-fade 0.3s ease; }
+        @keyframes wa-fade { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* 9) Static Keyboard Logic */
-        .input-area { 
-            background: var(--wa-nav); padding: 10px 12px; display: flex; align-items: flex-end; gap: 8px;
-            position: sticky; bottom: 0; z-index: 50;
+        /* 9) Static Keyboard Persistence */
+        .input-bar { 
+            background: var(--wa-nav); padding: 10px 14px; display: flex; align-items: flex-end; gap: 8px;
+            position: sticky; bottom: 0; padding-bottom: max(10px, env(safe-area-inset-bottom));
         }
 
         .bubble { 
-            max-width: 82%; padding: 8px 12px; border-radius: 14px; font-size: 15.5px; 
-            line-height: 1.4; position: relative; transition: transform 0.1s ease;
+            max-width: 80%; padding: 8px 12px; border-radius: 14px; font-size: 15px; 
+            line-height: 1.4; position: relative; box-shadow: 0 1px 0.5px rgba(0,0,0,0.2);
         }
         .bubble-me { background: var(--wa-bubble-me); align-self: flex-end; border-top-right-radius: 2px; }
         .bubble-them { background: var(--wa-bubble-them); align-self: flex-start; border-top-left-radius: 2px; }
 
-        /* 16) Voice & Action Button */
-        .action-circle { 
-            width: 50px; height: 50px; border-radius: 50%; background: var(--wa-green); 
-            display: flex; justify-content: center; align-items: center; cursor: pointer; flex-shrink: 0;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        /* 16) Action Circle (Mic/Send) */
+        .action-btn { 
+            width: 48px; height: 48px; border-radius: 50%; background: var(--wa-green); 
+            display: flex; justify-content: center; align-items: center; flex-shrink: 0; cursor: pointer;
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        .recording-pulse { background: #ea0038; animation: pulse 1.2s infinite; }
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+        .action-btn:active { transform: scale(0.9); }
+        .recording { background: #ea0038; animation: pulse 1s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
 
-        /* Media */
-        .chat-img { width: 240px; border-radius: 10px; cursor: pointer; object-fit: cover; margin: 4px 0; }
-        
-        /* Context Menu */
+        .thumb { width: 220px; border-radius: 10px; margin: 4px 0; cursor: pointer; object-fit: cover; }
+
         #ctx-menu { 
-            display: none; position: fixed; background: #233138; border-radius: 14px; 
-            z-index: 9999; min-width: 200px; box-shadow: 0 10px 30px rgba(0,0,0,0.7);
-            overflow: hidden; border: 1px solid rgba(255,255,255,0.08);
+            display: none; position: fixed; background: #233138; border-radius: 12px; 
+            z-index: 1000; min-width: 180px; box-shadow: 0 8px 24px rgba(0,0,0,0.6); overflow: hidden;
         }
-        .ctx-item { padding: 14px 20px; font-size: 15px; cursor: pointer; transition: 0.2s; }
+        .ctx-item { padding: 12px 16px; cursor: pointer; font-size: 14px; border-bottom: 1px solid rgba(255,255,255,0.03); }
         .ctx-item:hover { background: #1c272e; }
 
     </style>
 </head>
 <body>
 
-    <!-- HOME / TAB SCREEN -->
-    <div id="screen-home" class="screen screen-active justify-center items-center p-6 fade-in">
-        <div class="w-full max-w-md premium-card p-8 slide-up">
-            <h1 class="text-3xl font-bold text-center mb-2 text-white">Aether Hub</h1>
-            <p class="text-center text-gray-500 text-sm mb-8">Secure Corporate Communications</p>
+    <!-- 1) HOME SCREEN (TABBED) -->
+    <div id="screen-home" class="screen screen-active justify-center items-center p-6">
+        <div class="w-full max-w-sm premium-card p-8">
+            <h1 class="text-2xl font-bold text-center mb-8">Aether Hub</h1>
             
-            <div class="flex bg-black/30 p-1.5 rounded-2xl mb-8">
-                <button id="tab-create" onclick="toggleTab('create')" class="flex-1 py-3 rounded-xl font-bold bg-emerald-600 text-white transition-all">Create Room</button>
-                <button id="tab-join" onclick="toggleTab('join')" class="flex-1 py-3 rounded-xl font-bold text-gray-400 transition-all">Join Room</button>
+            <div class="flex bg-black/30 p-1 rounded-2xl mb-8">
+                <button id="tab-create" onclick="setTab('create')" class="flex-1 py-3 rounded-xl font-bold bg-emerald-600 text-white transition-all">Create</button>
+                <button id="tab-join" onclick="setTab('join')" class="flex-1 py-3 rounded-xl font-bold text-gray-500 transition-all">Join</button>
             </div>
 
             <div id="panel-create" class="space-y-4">
-                <input type="text" id="c-admin" oninput="validate()" placeholder="Admin Display Name" class="w-full bg-[#2a3942] p-4 rounded-2xl outline-none border border-white/5 focus:border-emerald-500/50 transition">
-                <input type="text" id="c-title" oninput="validate()" placeholder="Group Heading" class="w-full bg-[#2a3942] p-4 rounded-2xl outline-none border border-white/5 focus:border-emerald-500/50 transition">
-                <button id="btn-create" onclick="handleCreate()" class="w-full py-4 bg-emerald-600 rounded-2xl font-bold opacity-20 pointer-events-none shadow-lg">INITIALIZE SECURE CHAT</button>
+                <input type="text" id="c-admin" oninput="validateHome()" placeholder="Admin Display Name" class="w-full bg-[#2a3942] p-4 rounded-2xl outline-none focus:ring-2 ring-emerald-500/50">
+                <input type="text" id="c-title" oninput="validateHome()" placeholder="Group Subject" class="w-full bg-[#2a3942] p-4 rounded-2xl outline-none focus:ring-2 ring-emerald-500/50">
+                <button id="btn-create" onclick="initCreate()" class="w-full py-4 bg-emerald-600 rounded-2xl font-bold opacity-30 pointer-events-none">INITIALIZE ROOM</button>
             </div>
 
             <div id="panel-join" class="hidden space-y-4">
-                <input type="text" id="j-name" oninput="validate()" placeholder="Your Name" class="w-full bg-[#2a3942] p-4 rounded-2xl outline-none border border-white/5 focus:border-blue-500/50 transition">
-                <input type="text" id="j-code" oninput="validate()" placeholder="6-Digit Access Code" class="w-full bg-[#2a3942] p-4 rounded-2xl outline-none text-center font-mono tracking-widest">
-                <button id="btn-join" onclick="handleKnock()" class="w-full py-4 bg-blue-600 rounded-2xl font-bold opacity-20 pointer-events-none shadow-lg">KNOCK TO JOIN</button>
+                <input type="text" id="j-name" oninput="validateHome()" placeholder="Enter Your Name" class="w-full bg-[#2a3942] p-4 rounded-2xl outline-none">
+                <input type="text" id="j-code" oninput="validateHome()" placeholder="Group Code (6-Digits)" class="w-full bg-[#2a3942] p-4 rounded-2xl outline-none text-center font-mono tracking-widest">
+                <button id="btn-join" onclick="initKnock()" class="w-full py-4 bg-blue-600 rounded-2xl font-bold opacity-30 pointer-events-none">KNOCK TO JOIN</button>
             </div>
         </div>
     </div>
 
     <!-- CHAT INTERFACE -->
     <div id="screen-chat" class="screen">
-        <!-- 4) Persistent Approval Bar -->
-        <div id="admin-notify" class="bg-[#e67e22] p-3 text-center text-xs font-bold hidden cursor-pointer fade-in" onclick="showKnockModal()">
-            PENDING APPROVALS • TAP TO MANAGE REQUESTS
+        <!-- 4) Approval Top Notification -->
+        <div id="admin-notif" class="bg-orange-600 p-3 text-center text-[11px] font-bold hidden cursor-pointer" onclick="showKnockPopup()">
+            PENDING JOIN REQUESTS • TAP TO MANAGE
         </div>
 
-        <div class="h-[64px] bg-[#202c33] flex items-center px-4 gap-3 border-b border-white/5">
-            <img id="header-pfp" src="" class="w-10 h-10 rounded-full cursor-pointer object-cover shadow-md" onclick="zoomImage(this.src)">
-            <div class="flex-1" onclick="viewGroupInfo()">
-                <div id="header-title" class="font-bold text-[16px] text-white truncate">...</div>
-                <div class="text-[11px] text-emerald-500 font-bold tracking-widest uppercase">End-to-End Encrypted</div>
+        <div class="h-16 bg-[#202c33] flex items-center px-4 gap-3 shadow-md">
+            <img id="chat-pfp" src="" class="w-10 h-10 rounded-full cursor-pointer object-cover" onclick="viewPfpFull()">
+            <div class="flex-1" onclick="openInfo()">
+                <div id="chat-title" class="font-bold text-[16px] truncate">...</div>
+                <div class="text-[10px] text-emerald-500 font-bold uppercase tracking-tighter">End-to-End Encrypted</div>
             </div>
-            <div id="header-code" class="text-[10px] bg-black/40 px-3 py-1.5 rounded-full text-emerald-400 font-mono font-bold">------</div>
+            <div id="display-code" class="text-[10px] bg-black/40 px-3 py-1.5 rounded-full font-mono text-emerald-400">CODE</div>
         </div>
 
-        <div id="chat-stream" class="chat-wallpaper"></div>
+        <div id="chat-flow" class="chat-canvas"></div>
 
-        <div class="input-area">
+        <div class="input-bar">
+            <!-- 16) Attach Button -->
             <div class="flex-1 bg-[#2a3942] rounded-[24px] flex items-end p-2 gap-2 shadow-inner">
-                <button onclick="document.getElementById('attach-input').click()" class="p-2 text-gray-400 hover:text-white transition">
+                <button onclick="document.getElementById('file-input').click()" class="p-2 text-gray-400 hover:text-white">
                     <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5c0-1.38 1.12-2.5 2.5-2.5s2.5 1.12 2.5 2.5v10.5c0 .55-.45 1-1 1s-1-.45-1-1V6H10v9.5c0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5V5c0-2.21-1.79-4-4-4s-4 1.79-4 4v12.5c0 3.31 2.69 6 6 6s6-2.69 6-6V6h-1.5z"></path></svg>
                 </button>
-                <input type="file" id="attach-input" multiple onchange="processAttachments(this.files)" class="hidden">
+                <input type="file" id="file-input" multiple onchange="handleFiles(this.files)" class="hidden">
                 
-                <textarea id="main-input" rows="1" oninput="autoResize(this)" placeholder="Message" class="flex-1 bg-transparent py-2 outline-none text-[16px] resize-none max-h-32 text-white"></textarea>
+                <textarea id="msg-input" rows="1" oninput="adjustInput(this)" placeholder="Message" class="flex-1 bg-transparent py-2 outline-none text-[16px] resize-none max-h-32"></textarea>
             </div>
             
-            <button id="main-action-btn" onclick="executePrimaryAction()" class="action-circle">
-                <svg id="icon-mic" viewBox="0 0 24 24" width="26" height="26" fill="white"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"></path><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"></path></svg>
-                <svg id="icon-send" class="hidden" viewBox="0 0 24 24" width="26" height="26" fill="white"><path d="M1.101 21.757L23.8 12.028 1.101 2.3l.011 7.912 13.623 1.816-13.623 1.817-.011 7.912z"></path></svg>
+            <button id="action-btn" onclick="handleAction()" class="action-btn">
+                <svg id="svg-mic" viewBox="0 0 24 24" width="24" height="24" fill="white"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"></path><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"></path></svg>
+                <svg id="svg-send" class="hidden" viewBox="0 0 24 24" width="24" height="24" fill="white"><path d="M1.101 21.757L23.8 12.028 1.101 2.3l.011 7.912 13.623 1.816-13.623 1.817-.011 7.912z"></path></svg>
             </button>
         </div>
     </div>
 
     <!-- 7) GROUP INFO SCREEN -->
     <div id="screen-info" class="screen overflow-y-auto">
-        <div class="h-16 flex items-center px-4 bg-[#202c33] border-b border-white/5">
-            <button onclick="hideGroupInfo()" class="text-emerald-500 font-bold p-2">Back</button>
-            <div class="flex-1 text-center font-bold text-white">Group Details</div>
+        <div class="h-16 flex items-center px-4 bg-[#202c33] sticky top-0 z-50">
+            <button onclick="closeInfo()" class="text-emerald-500 font-bold">Back</button>
+            <div class="flex-1 text-center font-bold">Group Details</div>
         </div>
         <div class="p-8 flex flex-col items-center">
-            <img id="info-pfp" class="w-48 h-48 rounded-full mb-6 object-cover border-4 border-white/10 shadow-2xl slide-up">
+            <img id="info-pfp" class="w-48 h-48 rounded-full mb-6 object-cover border-4 border-white/5 shadow-2xl">
             
-            <div id="admin-panel" class="w-full hidden space-y-5 slide-up">
+            <!-- 3) Admin Only Settings -->
+            <div id="admin-settings" class="w-full hidden space-y-5">
                 <div class="flex gap-2">
-                    <input type="text" id="rename-val" class="flex-1 bg-[#2a3942] p-4 rounded-2xl outline-none focus:border-emerald-500 border border-transparent transition">
-                    <button onclick="commitRename()" class="bg-emerald-600 px-6 rounded-2xl font-bold text-sm">UPDATE</button>
+                    <input type="text" id="rename-input" class="flex-1 bg-[#2a3942] p-4 rounded-2xl outline-none">
+                    <button onclick="updateName()" class="bg-emerald-600 px-6 rounded-2xl font-bold">RENAME</button>
                 </div>
-                <input type="text" id="pfp-url-val" placeholder="New Profile Image URL" class="w-full bg-[#2a3942] p-4 rounded-2xl outline-none text-xs" onchange="commitPfp(this.value)">
-                <button onclick="destroyGroup()" class="w-full py-4 bg-red-600/10 text-red-500 font-bold rounded-2xl border border-red-600/20 hover:bg-red-600/20 transition">DELETE GROUP PERMANENTLY</button>
+                <input type="text" id="pfp-url-input" onchange="updatePfp(this.value)" placeholder="New Profile Image URL" class="w-full bg-[#2a3942] p-4 rounded-2xl outline-none text-xs">
+                <button onclick="killGroup()" class="w-full py-4 bg-red-600/10 text-red-500 font-bold rounded-2xl border border-red-500/20">DELETE GROUP FOREVER</button>
             </div>
 
             <div class="w-full mt-10">
-                <h3 class="text-xs text-gray-500 font-bold uppercase tracking-widest mb-4">Group Members</h3>
-                <div id="member-ui" class="space-y-3"></div>
+                <p class="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-4">Members</p>
+                <div id="member-list" class="space-y-3"></div>
             </div>
 
-            <button onclick="exitGroup()" class="w-full mt-12 py-4 bg-white/5 text-red-400 font-bold rounded-2xl hover:bg-white/10 transition">Leave Group</button>
+            <button onclick="leaveGroup()" class="w-full mt-12 py-4 bg-white/5 text-red-400 font-bold rounded-2xl border border-white/5">Exit Group</button>
         </div>
     </div>
 
     <!-- MODALS -->
-    <div id="modal-knocks" class="fixed inset-0 bg-black/90 z-[3000] hidden items-center justify-center p-6 fade-in">
+    <div id="modal-knocks" class="fixed inset-0 bg-black/90 z-[3000] hidden items-center justify-center p-6">
         <div class="bg-[#202c33] w-full max-w-sm rounded-[32px] overflow-hidden premium-card">
-            <div class="p-5 bg-emerald-800 text-center font-bold text-lg">Join Requests</div>
-            <div id="knock-ui" class="p-6 space-y-4 max-h-96 overflow-y-auto"></div>
-            <button onclick="document.getElementById('modal-knocks').classList.add('hidden')" class="w-full py-4 text-gray-400 font-bold border-t border-white/5 uppercase text-sm">Dismiss</button>
+            <div class="p-5 bg-emerald-800 text-center font-bold">Knock Requests</div>
+            <div id="knock-list" class="p-6 space-y-4 max-h-96 overflow-y-auto"></div>
+            <button onclick="document.getElementById('modal-knocks').classList.add('hidden')" class="w-full py-4 text-gray-400 font-bold border-t border-white/5 uppercase text-xs">Close</button>
         </div>
     </div>
 
     <div id="ctx-menu">
-        <div class="ctx-item" id="ctx-edit" onclick="triggerEdit()">Edit Message</div>
-        <div class="ctx-item" onclick="msgOp('me')">Delete for me</div>
-        <div class="ctx-item text-red-500 font-bold" id="ctx-all" onclick="msgOp('all')">Delete for everyone</div>
+        <div class="ctx-item" id="ctx-edit" onclick="startEdit()">Edit Message</div>
+        <div class="ctx-item" onclick="deleteMsg('me')">Delete for me</div>
+        <div class="ctx-item text-red-500 font-bold" id="ctx-all" onclick="deleteMsg('all')">Delete for everyone</div>
     </div>
 
-    <!-- 16) IMAGE VIEWER / GALLERY -->
-    <div id="gallery-mode" class="fixed inset-0 bg-black z-[99999] hidden flex-col items-center justify-center p-4 fade-in">
-        <div class="absolute top-0 left-0 right-0 p-6 flex justify-between bg-gradient-to-b from-black/50 to-transparent">
-            <button onclick="this.parentElement.parentElement.classList.add('hidden')" class="text-white text-3xl font-light">✕</button>
-            <a id="img-download" href="" download class="bg-emerald-600 px-6 py-2 rounded-full text-white font-bold text-sm">Download</a>
+    <div id="viewer-full" class="fixed inset-0 bg-black z-[5000] hidden flex-col items-center justify-center p-4" onclick="this.style.display='none'">
+        <div class="absolute top-8 right-8 flex gap-6">
+            <a id="viewer-dl" href="" download class="text-emerald-500 font-bold">Download</a>
         </div>
-        <img id="gallery-img" class="max-w-full max-h-[85vh] rounded-xl shadow-2xl">
+        <img id="viewer-img" class="max-w-full max-h-[80vh] rounded-lg">
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, doc, setDoc, updateDoc, onSnapshot, arrayUnion, arrayRemove, getDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // CONFIG (Production Grade Firestore)
+        // CONFIG (Production Database)
         const firebaseConfig = { apiKey: "AIzaSyDbfmd0zmv_mFV0CG2OrhKPPeU3zPYGOBg", projectId: "unidesk-a70ac" };
         const db = getFirestore(initializeApp(firebaseConfig));
 
-        let localID = localStorage.getItem('ax_uid') || "UID_"+Math.random().toString(36).substr(2,7).toUpperCase();
-        localStorage.setItem('ax_uid', localID);
+        let uID = localStorage.getItem('ae_uID') || "U-"+Math.random().toString(36).substr(2,7).toUpperCase();
+        localStorage.setItem('ae_uID', uID);
 
-        let activeRoom = null;
+        let activeCode = null;
         let selectedMsg = null;
-        let isEdit = false;
-        let recorder, audioChunks = [];
+        let editMode = false;
+        let mediaRecorder, audioChunks = [];
 
-        // 14) End-to-End Encryption Engine
-        async function secure(text, key, op = 'enc') {
-            try {
-                const encoder = new TextEncoder();
-                const hash = await crypto.subtle.digest('SHA-256', encoder.encode(key));
-                const cKey = await crypto.subtle.importKey('raw', hash, {name: 'AES-GCM'}, false, [op === 'enc' ? 'encrypt' : 'decrypt']);
-                if (op === 'enc') {
-                    const iv = crypto.getRandomValues(new Uint8Array(12));
-                    const data = await crypto.subtle.encrypt({name: 'AES-GCM', iv}, cKey, encoder.encode(text));
-                    return { d: btoa(String.fromCharCode(...new Uint8Array(data))), i: btoa(String.fromCharCode(...iv)) };
-                } else {
-                    const iv = new Uint8Array(atob(text.i).split("").map(c => c.charCodeAt(0)));
-                    const d = new Uint8Array(atob(text.d).split("").map(c => c.charCodeAt(0)));
-                    const res = await crypto.subtle.decrypt({name: 'AES-GCM', iv}, cKey, d);
-                    return new TextDecoder().decode(res);
-                }
-            } catch(e) { return "[Security: Data Unreadable]"; }
+        // 14) CRYPTO ENGINE (E2EE)
+        async function cryptoTool(text, key, op = 'enc') {
+            const enc = new TextEncoder();
+            const hash = await crypto.subtle.digest('SHA-256', enc.encode(key));
+            const cKey = await crypto.subtle.importKey('raw', hash, {name: 'AES-GCM'}, false, [op === 'enc' ? 'encrypt' : 'decrypt']);
+            if (op === 'enc') {
+                const iv = crypto.getRandomValues(new Uint8Array(12));
+                const res = await crypto.subtle.encrypt({name: 'AES-GCM', iv}, cKey, enc.encode(text));
+                return { d: btoa(String.fromCharCode(...new Uint8Array(res))), i: btoa(String.fromCharCode(...iv)) };
+            } else {
+                const iv = new Uint8Array(atob(text.i).split("").map(c => c.charCodeAt(0)));
+                const d = new Uint8Array(atob(text.d).split("").map(c => c.charCodeAt(0)));
+                const res = await crypto.subtle.decrypt({name: 'AES-GCM', iv}, cKey, d);
+                return new TextDecoder().decode(res);
+            }
         }
 
-        // HOME UI
-        window.toggleTab = (t) => {
+        // HOME NAVIGATION
+        window.setTab = (t) => {
             document.getElementById('panel-create').classList.toggle('hidden', t !== 'create');
             document.getElementById('panel-join').classList.toggle('hidden', t !== 'join');
-            document.getElementById('tab-create').className = `flex-1 py-3 rounded-xl font-bold ${t==='create'?'bg-emerald-600 text-white':'text-gray-400'}`;
-            document.getElementById('tab-join').className = `flex-1 py-3 rounded-xl font-bold ${t==='join'?'bg-blue-600 text-white':'text-gray-400'}`;
-            validate();
+            document.getElementById('tab-create').className = `flex-1 py-3 rounded-xl font-bold transition-all ${t==='create'?'bg-emerald-600 text-white':'text-gray-500'}`;
+            document.getElementById('tab-join').className = `flex-1 py-3 rounded-xl font-bold transition-all ${t==='join'?'bg-blue-600 text-white':'text-gray-500'}`;
+            validateHome();
         };
 
-        window.validate = () => {
+        window.validateHome = () => {
             const c = !!(document.getElementById('c-admin').value && document.getElementById('c-title').value);
-            document.getElementById('btn-create').className = `w-full py-4 bg-emerald-600 rounded-2xl font-bold transition shadow-lg ${c?'':'opacity-20 pointer-events-none'}`;
+            document.getElementById('btn-create').className = `w-full py-4 bg-emerald-600 rounded-2xl font-bold transition-all ${c?'shadow-lg shadow-emerald-900/40':'opacity-30 pointer-events-none'}`;
             const j = !!(document.getElementById('j-name').value && document.getElementById('j-code').value);
-            document.getElementById('btn-join').className = `w-full py-4 bg-blue-600 rounded-2xl font-bold transition shadow-lg ${j?'':'opacity-20 pointer-events-none'}`;
+            document.getElementById('btn-join').className = `w-full py-4 bg-blue-600 rounded-2xl font-bold transition-all ${j?'shadow-lg shadow-blue-900/40':'opacity-30 pointer-events-none'}`;
         };
 
-        // ROOM OPERATIONS
-        window.handleCreate = async () => {
+        // ROOM LOGIC
+        window.initCreate = async () => {
             const code = Math.random().toString(36).substr(2,6).toUpperCase();
-            const name = document.getElementById('c-admin').value;
+            const adminName = document.getElementById('c-admin').value;
             const title = document.getElementById('c-title').value;
-            localStorage.setItem('ax_name', name);
-            await setDoc(doc(db, "x_rooms", code), {
-                id: code, title, admin: localID, pfp: `https://ui-avatars.com/api/?name=${title}&background=random&color=fff`,
-                members: [{id: localID, name}], mIDs: [localID], knocks: [], msgs: []
+            localStorage.setItem('ae_name', adminName);
+            
+            await setDoc(doc(db, "aether_rooms", code), {
+                id: code, title, admin: uID, 
+                pfp: `https://ui-avatars.com/api/?name=${title}&background=random&color=fff`,
+                members: [{id: uID, name: adminName}], mIDs: [uID], knocks: [], msgs: []
             });
-            initChat(code);
+            launch(code);
         };
 
-        window.handleKnock = async () => {
+        window.initKnock = async () => {
             const code = document.getElementById('j-code').value.toUpperCase();
             const name = document.getElementById('j-name').value;
-            const ref = doc(db, "x_rooms", code);
+            const ref = doc(db, "aether_rooms", code);
             const snap = await getDoc(ref);
-            if(!snap.exists()) return alert("Room Not Found.");
-            localStorage.setItem('ax_name', name);
-            await updateDoc(ref, { knocks: arrayUnion({id: localID, name}) });
-            alert("Knock Request Sent! Wait for Admin.");
-            onSnapshot(ref, (s) => { if(s.exists() && s.data().mIDs.includes(localID)) initChat(code); });
+            if(!snap.exists()) return alert("Room not found.");
+            localStorage.setItem('ae_name', name);
+            await updateDoc(ref, { knocks: arrayUnion({id: uID, name}) });
+            alert("Knock sent. Waiting for Admin approval.");
+            onSnapshot(ref, (s) => { if(s.exists() && s.data().mIDs.includes(uID)) launch(code); });
         };
 
-        // CHAT ENGINE
-        async function initChat(code) {
-            activeRoom = code;
+        async function launch(code) {
+            activeCode = code;
             document.getElementById('screen-home').classList.remove('screen-active');
             document.getElementById('screen-chat').classList.add('screen-active');
 
-            onSnapshot(doc(db, "x_rooms", code), (s) => {
-                if(!s.exists()) { alert("This group has been deleted by Admin."); location.reload(); return; }
+            onSnapshot(doc(db, "aether_rooms", code), (s) => {
+                if(!s.exists()) { alert("Admin deleted this group."); location.reload(); return; }
                 const d = s.data();
-                const isAdmin = d.admin === localID;
+                const isAdmin = d.admin === uID;
 
-                document.getElementById('header-title').innerText = d.title;
-                document.getElementById('header-pfp').src = d.pfp;
+                document.getElementById('chat-title').innerText = d.title;
+                document.getElementById('chat-pfp').src = d.pfp;
                 document.getElementById('info-pfp').src = d.pfp;
-                document.getElementById('header-code').innerText = code;
-                document.getElementById('admin-panel').classList.toggle('hidden', !isAdmin);
+                document.getElementById('display-code').innerText = code;
+                document.getElementById('admin-settings').classList.toggle('hidden', !isAdmin);
 
                 if(isAdmin && d.knocks.length > 0) {
-                    document.getElementById('admin-notify').classList.remove('hidden');
+                    document.getElementById('admin-notif').classList.remove('hidden');
                     drawKnocks(d.knocks);
                 } else {
-                    document.getElementById('admin-notify').classList.add('hidden');
+                    document.getElementById('admin-notif').classList.add('hidden');
                 }
 
                 drawMessages(d.msgs);
@@ -301,44 +290,68 @@
             });
         }
 
-        // 16) VOICE / SEND UI SWITCH
-        window.autoResize = (t) => {
-            t.style.height = "auto";
-            t.style.height = t.scrollHeight + "px";
+        // 16) DYNAMIC INPUT & VOICE
+        window.adjustInput = (t) => {
+            t.style.height = "auto"; t.style.height = t.scrollHeight + "px";
             const val = t.value.trim();
-            document.getElementById('icon-mic').classList.toggle('hidden', val.length > 0);
-            document.getElementById('icon-send').classList.toggle('hidden', val.length === 0);
+            document.getElementById('svg-mic').classList.toggle('hidden', val.length > 0);
+            document.getElementById('svg-send').classList.toggle('hidden', val.length === 0);
         };
 
-        window.executePrimaryAction = () => {
-            const val = document.getElementById('main-input').value.trim();
-            if(val) commit('text');
-            else toggleVoice();
+        window.handleAction = () => {
+            const val = document.getElementById('msg-input').value.trim();
+            if(val) pushMsg('text');
+            else toggleMic();
         };
 
-        async function toggleVoice() {
-            const btn = document.getElementById('main-action-btn');
-            if(!recorder || recorder.state === 'inactive') {
+        async function toggleMic() {
+            const btn = document.getElementById('action-btn');
+            if(!mediaRecorder || mediaRecorder.state === 'inactive') {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                recorder = new MediaRecorder(stream);
+                mediaRecorder = new MediaRecorder(stream);
                 audioChunks = [];
-                recorder.ondataavailable = e => audioChunks.push(e.data);
-                recorder.onstop = async () => {
+                mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+                mediaRecorder.onstop = async () => {
                     const blob = new Blob(audioChunks, { type: 'audio/webm' });
                     const reader = new FileReader();
                     reader.readAsDataURL(blob);
-                    reader.onloadend = () => commit('voice', reader.result);
+                    reader.onloadend = () => pushMsg('voice', reader.result);
                 };
-                recorder.start();
-                btn.classList.add('recording-pulse');
+                mediaRecorder.start();
+                btn.classList.add('recording');
             } else {
-                recorder.stop();
-                btn.classList.remove('recording-pulse');
+                mediaRecorder.stop();
+                btn.classList.remove('recording');
             }
         }
 
-        async function commit(type, payload) {
-            const inp = document.getElementById('main-input');
-            const ref = doc(db, "x_rooms", activeRoom);
+        async function pushMsg(type, rawData) {
+            const inp = document.getElementById('msg-input');
+            const ref = doc(db, "aether_rooms", activeCode);
             const snap = await getDoc(ref);
-            let msgs = s
+            let msgs = snap.data().msgs;
+
+            const payload = type === 'text' ? inp.value : rawData;
+            const encrypted = await cryptoTool(payload, activeCode);
+
+            if(editMode) {
+                msgs = msgs.map(m => m.id === selectedMsg.id ? {...m, encrypted, edited: true} : m);
+                editMode = false;
+            } else {
+                msgs.push({ id: uID+Date.now(), uID, sender: localStorage.getItem('ae_name'), type, encrypted, hide: [] });
+            }
+            await updateDoc(ref, { msgs });
+            inp.value = ""; adjustInput(inp);
+        }
+
+        // 16) FILE BULK HANDLER
+        window.handleFiles = async (files) => {
+            if(files.length > 10) return alert("Select up to 10 files max.");
+            for(let f of files) {
+                const reader = new FileReader();
+                reader.readAsDataURL(f);
+                reader.onload = () => {
+                    const type = f.type.startsWith('image/') ? 'image' : 'doc';
+                    pushMsg(type, reader.result);
+                };
+            
