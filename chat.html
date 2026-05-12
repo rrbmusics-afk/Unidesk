@@ -7,15 +7,52 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root { --accent: #007AFF; --wa-green: #25D366; --bg-main: #0b141a; --bubble-me: #005c4b; --bubble-them: #202c33; }
-        body { background: var(--bg-main); color: #e9edef; font-family: -apple-system, BlinkMacSystemFont, sans-serif; position: fixed; inset: 0; margin: 0; display: flex; flex-direction: column; overflow: hidden; width: 100%; height: 100%; }
         
-        #main-workspace { display: none; flex-direction: column; height: 100%; width: 100%; position: relative; }
+        /* Fixed height to 100% of the visual space */
+        html, body { 
+            background: var(--bg-main); 
+            color: #e9edef; 
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif; 
+            margin: 0; 
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden; 
+            position: fixed;
+        }
         
-        /* Fixed header to prevent scrolling away */
-        .header { position: fixed; top: 0; left: 0; right: 0; height: 64px; background: #202c33; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; border-bottom: 1px solid rgba(255,255,255,0.05); z-index: 100; }
-        
-        /* Adjusted padding to account for fixed header and footer */
-        #chatBox { flex: 1; overflow-y: auto; padding: 84px 16px 80px 16px; display: flex; flex-direction: column; gap: 12px; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); background-blend-mode: overlay; background-color: #0b141a; }
+        #main-workspace { 
+            display: none; 
+            flex-direction: column; 
+            height: 100%; 
+            width: 100%; 
+            position: relative;
+        }
+
+        .header { 
+            height: 64px; 
+            background: #202c33; 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+            padding: 0 16px; 
+            border-bottom: 1px solid rgba(255,255,255,0.05); 
+            z-index: 10; 
+            flex-shrink: 0;
+        }
+
+        #chatBox { 
+            flex: 1; 
+            overflow-y: auto; 
+            padding: 20px 16px; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 12px; 
+            background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); 
+            background-blend-mode: overlay; 
+            background-color: #0b141a; 
+            -webkit-overflow-scrolling: touch;
+        }
         
         .msg-row { display: flex; flex-direction: column; width: 100%; }
         .row-me { align-items: flex-end; }
@@ -27,9 +64,16 @@
         
         .sender-tag { font-size: 11px; font-weight: 700; margin-bottom: 2px; color: #34b7f1; padding-left: 4px; }
         
-        /* Fixed footer to stay visible above keyboard */
-        .footer { position: fixed; bottom: 0; left: 0; right: 0; background: #202c33; padding: 10px 12px; display: flex; align-items: center; gap: 8px; z-index: 100; padding-bottom: env(safe-area-inset-bottom, 10px); }
-        
+        .footer { 
+            background: #202c33; 
+            padding: 10px 12px; 
+            display: flex; 
+            align-items: center; 
+            gap: 8px; 
+            z-index: 10; 
+            flex-shrink: 0;
+        }
+
         .input-pill { background: #2a3942; border-radius: 24px; flex: 1; display: flex; align-items: center; padding: 0 14px; height: 44px; position: relative; }
         .action-btn { background: var(--wa-green); color: #0b141a; width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; shrink: 0; border: none; }
         
@@ -111,6 +155,20 @@
         let savedName = "";
         let currentRoom, isAdmin = false;
 
+        // --- KEYBOARD & MOBILE OPTIMIZATION ---
+        const workspace = document.getElementById('main-workspace');
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', () => {
+                // Resize the entire workspace to match the viewable area (above the keyboard)
+                workspace.style.height = window.visualViewport.height + 'px';
+                // Scroll to bottom of chat when keyboard opens
+                const box = document.getElementById('chatBox');
+                box.scrollTop = box.scrollHeight;
+                // Force layout recalculation to keep header at top
+                window.scrollTo(0, 0);
+            });
+        }
+
         window.showNamingView = (mode) => {
             document.getElementById('initial-options').classList.add('hidden');
             document.getElementById('naming-view').classList.remove('hidden');
@@ -170,6 +228,9 @@
             document.getElementById('main-workspace').style.display = 'flex';
             document.getElementById('status-text').innerText = "CODE: " + code;
             
+            // Set initial viewport height
+            if (window.visualViewport) workspace.style.height = window.visualViewport.height + 'px';
+
             onSnapshot(doc(db, "rooms", code), s => {
                 const data = s.data();
                 if(isAdmin && data.pendingId && !data.pendingId.startsWith("APPROVED_")) {
@@ -187,7 +248,7 @@
             if(!text) return;
             chatInput.value = "";
             
-            // KEYBOARD FIX: Refocus input immediately to keep keyboard active
+            // Keep keyboard open
             chatInput.focus();
 
             await updateDoc(doc(db, "rooms", currentRoom), { 
@@ -216,14 +277,6 @@
         }
 
         document.getElementById('chatInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
-        
-        // VIEWPORT FIX: Adjust body height for mobile keyboard and prevent header shift
-        if (window.visualViewport) {
-            window.visualViewport.addEventListener('resize', () => {
-                document.body.style.height = window.visualViewport.height + 'px';
-                window.scrollTo(0, 0);
-            });
-        }
     </script>
 </body>
 </html>
