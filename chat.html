@@ -13,96 +13,110 @@
             --u-obsidian: #0B0E11;
             --u-glass: rgba(255, 255, 255, 0.03);
             --u-border: rgba(255, 255, 255, 0.08);
-            /* WhatsApp Pro Palette */
             --wa-bg: #0B141A;
             --wa-panel: #202C33;
+            --wa-input: #2A3942;
             --wa-bubble-me: #005C4B;
             --wa-bubble-them: #202C33;
             --wa-text: #E9EDEF;
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
-        body, html { margin: 0; padding: 0; height: 100%; width: 100%; font-family: 'Inter', sans-serif; background: var(--u-obsidian); color: white; overflow: hidden; }
+        body, html { 
+            margin: 0; padding: 0; height: 100%; width: 100%; 
+            font-family: 'Inter', sans-serif; background: var(--u-obsidian); 
+            color: white; overflow: hidden; position: fixed; /* Prevents elastic scroll */
+        }
+
         .hidden { display: none !important; }
 
-        /* --- SCREEN 1: THE GATE (AUTH) --- */
+        /* --- AUTH SCREEN --- */
         #view-auth {
-            height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 25px;
+            height: 100vh; display: flex; flex-direction: column; 
+            align-items: center; justify-content: center; padding: 25px;
             background: radial-gradient(circle at top, #1a1f24 0%, #0b0e11 100%);
         }
-        .brand-header { text-align: center; margin-bottom: 50px; }
-        .brand-logo { font-weight: 800; font-size: 54px; font-style: italic; color: var(--u-blue); margin: 0; letter-spacing: -3px; filter: drop-shadow(0 0 15px rgba(45,127,249,0.3)); }
-        
+        .brand-logo { font-weight: 800; font-size: 52px; font-style: italic; color: var(--u-blue); margin: 0; letter-spacing: -3px; }
+
         .glass-card {
             background: rgba(25, 29, 33, 0.95); width: 100%; max-width: 400px;
-            padding: 40px 30px; border-radius: 40px; border: 1px solid var(--u-border);
+            padding: 35px; border-radius: 40px; border: 1px solid var(--u-border);
             box-shadow: 0 40px 100px rgba(0,0,0,0.6); backdrop-filter: blur(20px);
         }
 
-        .pfp-uploader { width: 120px; height: 120px; margin: -100px auto 30px; position: relative; }
-        #pfp-preview { width: 100%; height: 100%; border-radius: 42px; object-fit: cover; border: 4px solid var(--u-obsidian); background: #1c2126; box-shadow: 0 15px 35px rgba(0,0,0,0.5); }
-        .cam-icon { position: absolute; bottom: -5px; right: -5px; background: var(--u-blue); width: 38px; height: 38px; border-radius: 14px; display: flex; align-items: center; justify-content: center; border: 3px solid var(--u-obsidian); cursor: pointer; }
+        .pfp-wrap { width: 110px; height: 110px; margin: -90px auto 30px; position: relative; }
+        #pfp-preview { width: 100%; height: 100%; border-radius: 40px; object-fit: cover; border: 4px solid var(--u-obsidian); background: #1c2126; }
+        .cam-badge { position: absolute; bottom: -2px; right: -2px; background: var(--u-blue); width: 34px; height: 34px; border-radius: 12px; display: flex; align-items: center; justify-content: center; border: 3px solid var(--u-obsidian); }
 
-        .u-input { width: 100%; background: var(--u-glass); border: 1px solid var(--u-border); padding: 20px; border-radius: 20px; color: white; font-size: 16px; margin-bottom: 12px; transition: 0.3s; }
-        .u-input:focus { border-color: var(--u-blue); background: rgba(255,255,255,0.06); }
-        .btn-exec { width: 100%; padding: 22px; border-radius: 20px; background: #fff; color: #000; font-weight: 800; font-size: 16px; margin-top: 20px; border: none; cursor: pointer; letter-spacing: 0.5px; }
+        .u-input { width: 100%; background: var(--u-glass); border: 1px solid var(--u-border); padding: 18px 20px; border-radius: 18px; color: white; font-size: 16px; margin-bottom: 12px; }
+        .btn-exec { width: 100%; padding: 20px; border-radius: 20px; background: #fff; color: #000; font-weight: 800; font-size: 15px; margin-top: 15px; border: none; cursor: pointer; }
 
-        /* --- SCREEN 2: THE LOUNGE (CHAT) --- */
-        #view-chat { height: 100vh; display: flex; flex-direction: column; background: var(--wa-bg); position: relative; }
+        /* --- CHAT SCREEN (MOBILE OPTIMIZED) --- */
+        #view-chat { 
+            height: 100dvh; /* Dynamic viewport height for mobile keyboards */
+            display: flex; flex-direction: column; background: var(--wa-bg); position: relative; 
+        }
+        
         .wa-doodle { 
-            position: absolute; inset: 0; opacity: 0.06; pointer-events: none;
+            position: absolute; inset: 0; opacity: 0.05; pointer-events: none;
             background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png');
             filter: invert(1); z-index: 1;
         }
 
-        header { background: var(--wa-panel); padding: 10px 16px; display: flex; align-items: center; z-index: 10; gap: 12px; height: 65px; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .header-pfp { width: 42px; height: 42px; border-radius: 50%; object-fit: cover; background: #2a3942; }
-        .header-info { flex: 1; }
+        header { 
+            background: var(--wa-panel); padding: 10px 16px; display: flex; 
+            align-items: center; z-index: 10; gap: 12px; height: 70px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+        .header-pfp { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; border: 1px solid rgba(255,255,255,0.1); }
+        .header-info { flex: 1; display: flex; flex-direction: column; }
         .header-info h2 { margin: 0; font-size: 17px; font-weight: 600; color: var(--wa-text); }
-        .header-info p { margin: 0; font-size: 12px; color: #8696a0; }
+        .lounge-id-tag { font-size: 11px; color: var(--u-blue); font-weight: 800; letter-spacing: 1px; margin-top: 2px; }
 
-        #chat-flow { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 5px; z-index: 2; scroll-behavior: smooth; }
-        .bubble { max-width: 85%; padding: 8px 12px; border-radius: 10px; font-size: 15px; line-height: 1.4; color: var(--wa-text); position: relative; box-shadow: 0 1px 1px rgba(0,0,0,0.2); }
+        #chat-flow { 
+            flex: 1; overflow-y: auto; padding: 15px; display: flex; 
+            flex-direction: column; gap: 5px; z-index: 2; 
+            -webkit-overflow-scrolling: touch; /* Smooth iOS scroll */
+        }
+        .bubble { max-width: 85%; padding: 8px 12px; border-radius: 10px; font-size: 15px; color: var(--wa-text); position: relative; box-shadow: 0 1px 1px rgba(0,0,0,0.2); }
         .bubble-me { align-self: flex-end; background: var(--wa-bubble-me); border-top-right-radius: 0; }
         .bubble-them { align-self: flex-start; background: var(--wa-bubble-them); border-top-left-radius: 0; }
-        .sender-name { font-size: 12px; font-weight: 700; color: #35cd96; display: block; margin-bottom: 2px; }
+        .sender-tag { font-size: 11px; font-weight: 800; color: #35cd96; display: block; margin-bottom: 2px; }
 
-        .footer { background: var(--wa-panel); padding: 10px 12px; display: flex; align-items: center; gap: 10px; z-index: 10; }
-        .input-wrap { flex: 1; background: #2A3942; border-radius: 25px; padding: 5px 18px; display: flex; align-items: center; }
-        .input-wrap input { background: transparent; border: none; color: white; padding: 10px 0; flex: 1; font-size: 16px; }
-        .fab { width: 50px; height: 50px; border-radius: 50%; background: #00a884; border: none; color: white; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
+        .footer { 
+            background: var(--wa-panel); padding: 10px 12px; display: flex; 
+            align-items: center; gap: 10px; z-index: 10;
+            padding-bottom: env(safe-area-inset-bottom, 10px); /* iPhone Notch Support */
+        }
+        .input-pill { flex: 1; background: var(--wa-input); border-radius: 25px; padding: 5px 18px; display: flex; align-items: center; }
+        .input-pill input { background: transparent; border: none; color: white; padding: 10px 0; flex: 1; font-size: 16px; }
+        .fab { width: 48px; height: 48px; border-radius: 50%; background: #00a884; border: none; color: white; display: flex; align-items: center; justify-content: center; font-size: 20px; }
     </style>
 </head>
 <body>
 
-    <div id="root">
+    <div id="app-root">
         <section id="view-auth">
-            <div class="brand-header">
-                <h1 class="brand-logo">UNIDESK</h1>
-                <p style="color: #8E8E93; font-size: 10px; letter-spacing: 5px; font-weight: 700;">AETHERCORE SYSTEM</p>
-            </div>
-
+            <h1 class="brand-logo">UNIDESK</h1>
             <div class="glass-card">
-                <div class="pfp-uploader">
+                <div class="pfp-wrap">
                     <img id="pfp-preview" src="https://cdn-icons-png.flaticon.com/512/9131/9131529.png">
-                    <label for="pfp-input" class="cam-icon"><i class="fas fa-camera"></i></label>
-                    <input type="file" id="pfp-input" class="hidden" accept="image/*" onchange="engine.onImage(this)">
+                    <label for="pfp-file" class="cam-badge"><i class="fas fa-camera"></i></label>
+                    <input type="file" id="pfp-file" class="hidden" accept="image/*" onchange="ctrl.onFile(this)">
                 </div>
-
-                <input type="text" id="in-user" class="u-input" placeholder="Your Display Name">
-                <input type="text" id="in-room" class="u-input" placeholder="Lounge Name">
-                
-                <button class="btn-exec" onclick="engine.createLounge()">INITIALIZE LOUNGE</button>
+                <input type="text" id="in-user" class="u-input" placeholder="Your Name">
+                <input type="text" id="in-lounge" class="u-input" placeholder="Lounge Name">
+                <button class="btn-exec" onclick="ctrl.init()">CREATE LOUNGE</button>
             </div>
         </section>
 
         <section id="view-chat" class="hidden">
             <div class="wa-doodle"></div>
             <header>
-                <img id="header-img" class="header-pfp" src="">
+                <img id="head-img" class="header-pfp">
                 <div class="header-info">
-                    <h2 id="header-name">Lounge</h2>
-                    <p>online • secure</p>
+                    <h2 id="head-title">Lounge Name</h2>
+                    <span id="head-id" class="lounge-id-tag">ID: 000000</span>
                 </div>
                 <i class="fas fa-ellipsis-v" style="color: #aebac1; font-size: 18px;"></i>
             </header>
@@ -110,12 +124,10 @@
             <div id="chat-flow"></div>
 
             <div class="footer">
-                <i class="far fa-smile" style="color: #8696a0; font-size: 24px;"></i>
-                <div class="input-wrap">
-                    <input type="text" id="msg-input" placeholder="Message" oninput="engine.toggleIcon()">
-                    <i class="fas fa-paperclip" style="color: #8696a0; transform: rotate(45deg); margin-left: 10px;"></i>
+                <div class="input-pill">
+                    <input type="text" id="chat-input" placeholder="Message" oninput="ctrl.onTyping()">
                 </div>
-                <button class="fab" onclick="engine.send()">
+                <button class="fab" onclick="ctrl.send()">
                     <i id="action-icon" class="fas fa-microphone"></i>
                 </button>
             </div>
@@ -133,53 +145,49 @@
             projectId: "unidesk-a70ac",
             storageBucket: "unidesk-a70ac.firebasestorage.app",
             messagingSenderId: "882535016432",
-            appId: "1:882535016432:web:6eca2645a47a827e779f35",
-            measurementId: "G-M26R027F70"
+            appId: "1:882535016432:web:6eca2645a47a827e779f35"
         };
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const storage = getStorage(app);
 
-        const state = { uid: 'u'+Date.now(), file: null, room: null, myName: '' };
+        const state = { uid: 'u'+Date.now(), file: null, room: null, name: '' };
 
-        const engine = {
-            onImage: (el) => {
+        const ctrl = {
+            onFile: (el) => {
                 state.file = el.files[0];
                 if(state.file) document.getElementById('pfp-preview').src = URL.createObjectURL(state.file);
             },
-            createLounge: async () => {
-                const lName = document.getElementById('in-room').value.trim();
-                state.myName = document.getElementById('in-user').value.trim();
-                if(!lName || !state.myName) return alert("Fill all details");
-
-                const btn = document.querySelector('.btn-exec');
-                btn.innerText = "CONFIGURING CLOUD...";
-                btn.disabled = true;
+            init: async () => {
+                const lName = document.getElementById('in-lounge').value.trim();
+                state.name = document.getElementById('in-user').value.trim();
+                if(!lName || !state.name) return;
 
                 const code = Math.floor(100000 + Math.random()*900000).toString();
-                let pfpUrl = "https://cdn-icons-png.flaticon.com/512/9131/9131529.png";
+                let url = "https://cdn-icons-png.flaticon.com/512/9131/9131529.png";
 
                 if(state.file) {
                     const sRef = ref(storage, `pfps/${code}.jpg`);
                     await uploadBytes(sRef, state.file);
-                    pfpUrl = await getDownloadURL(sRef);
+                    url = await getDownloadURL(sRef);
                 }
 
-                const roomObj = { name: lName, code: code, avatar: pfpUrl, admin: state.uid };
-                await setDoc(doc(db, "rooms", code), roomObj);
-                engine.openLounge(roomObj);
+                const room = { name: lName, code: code, avatar: url, admin: state.uid };
+                await setDoc(doc(db, "lounges", code), room);
+                ctrl.launch(room);
             },
-            openLounge: (room) => {
+            launch: (room) => {
                 state.room = room;
                 document.getElementById('view-auth').classList.add('hidden');
                 document.getElementById('view-chat').classList.remove('hidden');
 
-                // MAPPING METADATA TO HEADER
-                document.getElementById('header-name').innerText = room.name;
-                document.getElementById('header-img').src = room.avatar;
-
-                const q = query(collection(db, "rooms", room.code, "messages"), orderBy("ts", "asc"));
+                // SYNC DATA
+                document.getElementById('head-img').src = room.avatar;
+                document.getElementById('head-title').innerText = room.name;
+                document.getElementById('head-id').innerText = `ID: #${room.code}`; // DISPLAY ID BELOW HEADER
+                
+                const q = query(collection(db, "lounges", room.code, "messages"), orderBy("ts", "asc"));
                 onSnapshot(q, snap => {
                     const flow = document.getElementById('chat-flow');
                     flow.innerHTML = "";
@@ -188,28 +196,27 @@
                         const isMe = m.uid === state.uid;
                         const div = document.createElement('div');
                         div.className = `bubble ${isMe ? 'bubble-me' : 'bubble-them'}`;
-                        div.innerHTML = `<span class="sender-name">${isMe ? 'You' : m.sender}</span>${m.text}`;
+                        div.innerHTML = `<span class="sender-tag">${isMe ? 'You' : m.sender}</span>${m.text}`;
                         flow.appendChild(div);
                     });
                     flow.scrollTop = flow.scrollHeight;
                 });
             },
-            toggleIcon: () => {
-                const val = document.getElementById('msg-input').value.trim();
+            onTyping: () => {
+                const val = document.getElementById('chat-input').value.trim();
                 document.getElementById('action-icon').className = val ? "fas fa-paper-plane" : "fas fa-microphone";
             },
             send: async () => {
-                const inp = document.getElementById('msg-input');
+                const inp = document.getElementById('chat-input');
                 if(!inp.value.trim()) return;
-                await addDoc(collection(db, "rooms", state.room.code, "messages"), {
-                    text: inp.value, uid: state.uid, sender: state.myName, ts: serverTimestamp()
+                await addDoc(collection(db, "lounges", state.room.code, "messages"), {
+                    text: inp.value, uid: state.uid, sender: state.name, ts: serverTimestamp()
                 });
                 inp.value = "";
-                engine.toggleIcon();
+                ctrl.onTyping();
             }
         };
-
-        window.engine = engine;
+        window.ctrl = ctrl;
     </script>
 </body>
 </html>
