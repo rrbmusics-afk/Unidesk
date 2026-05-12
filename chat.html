@@ -50,11 +50,9 @@
         
         .overlay { position: fixed; inset: 0; background: #0b141a; z-index: 5000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
         
-        /* Admin Badge */
         #admin-panel { display: none; background: #f59e0b; color: black; font-size: 10px; padding: 4px 10px; border-radius: 20px; font-weight: bold; cursor: pointer; animation: pulse 1.5s infinite; }
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
 
-        /* Popup Modal */
         #req-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 6000; align-items: center; justify-content: center; padding: 20px; }
         .modal-content { background: #202c33; width: 100%; max-width: 300px; border-radius: 16px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); }
         .modal-header { padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); font-weight: bold; text-align: center; font-size: 14px; }
@@ -63,17 +61,16 @@
         .approve-btn { background: var(--wa-green); color: #0b141a; padding: 6px 12px; border-radius: 8px; font-size: 11px; font-weight: bold; }
 
         .input-field { width: 100%; background: #2a3942; padding: 15px; border-radius: 12px; text-align: center; outline: none; border: 1px solid rgba(255,255,255,0.05); color: #007AFF; font-weight: bold; }
+        
+        .recent-card { background: linear-gradient(145deg, #1e293b, #0f172a); border: 1px solid rgba(59, 130, 246, 0.3); padding: 20px; border-radius: 20px; text-align: left; position: relative; overflow: hidden; }
     </style>
 </head>
 <body>
 
-    <!-- Request Modal -->
     <div id="req-modal">
         <div class="modal-content">
             <div class="modal-header">Pending Requests</div>
-            <div id="req-list" class="req-list">
-                <!-- Requests injected here -->
-            </div>
+            <div id="req-list" class="req-list"></div>
             <button onclick="closeModal()" class="w-full p-3 text-xs text-gray-400 font-bold uppercase">Close</button>
         </div>
     </div>
@@ -82,13 +79,31 @@
     <div id="home-view" class="overlay">
         <div class="w-full max-w-xs space-y-6 text-center">
             <h1 class="text-4xl font-black text-blue-500 tracking-tighter italic">Student Lounge</h1>
+            
             <div id="initial-options" class="space-y-3">
                 <button onclick="showNamingView('create')" class="w-full bg-white/5 border border-white/10 p-5 rounded-2xl font-bold uppercase text-xs text-white/70">New Session</button>
-                <div class="py-2 text-gray-600 text-xs font-bold uppercase tracking-widest">or join existing</div>
                 <button onclick="showNamingView('join')" class="w-full bg-blue-600/10 border border-blue-500/20 p-5 rounded-2xl font-bold uppercase text-xs text-blue-500">Connect to Room</button>
+                
+                <!-- Recent Session Section -->
+                <div id="recent-session-area" class="hidden pt-4">
+                    <div class="py-2 text-gray-600 text-[10px] font-bold uppercase tracking-[0.2em] mb-2">Resume Recent</div>
+                    <div class="recent-card cursor-pointer" onclick="resumeRecent()">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <div id="recent-group-name" class="text-white font-bold text-lg">Group</div>
+                                <div id="recent-code" class="text-blue-400 text-xs font-mono tracking-widest mt-1">CODE: -----</div>
+                            </div>
+                            <div class="bg-blue-500/20 p-2 rounded-lg">
+                                <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"/></svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
+
             <div id="naming-view" class="space-y-3 hidden">
                 <input type="text" id="userNameInput" placeholder="Enter your name" class="input-field">
+                <input type="text" id="groupNameInput" placeholder="Group Name (e.g. CS-202)" class="input-field hidden">
                 <input type="text" id="roomCodeInput" placeholder="ROOM CODE" class="input-field uppercase hidden">
                 <div class="flex gap-2">
                     <button onclick="cancelNaming()" class="w-1/3 bg-white/5 p-4 rounded-2xl text-[10px] font-bold uppercase text-white/50">Back</button>
@@ -98,7 +113,6 @@
         </div>
     </div>
 
-    <!-- Knocking/Waiting View -->
     <div id="wait-view" class="overlay" style="display:none">
         <div class="text-center space-y-6">
             <div class="relative animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
@@ -107,7 +121,6 @@
         </div>
     </div>
 
-    <!-- Chat UI -->
     <div id="main-workspace">
         <header class="header">
             <div class="flex items-center gap-3">
@@ -115,24 +128,20 @@
                 <div class="flex flex-col">
                     <span class="text-[15px] font-bold leading-tight">Student Lounge</span>
                     <div class="flex items-center gap-2">
-                        <span id="status-text" class="text-[11px] text-gray-400 tracking-wider uppercase">Secure</span>
+                        <span id="group-name-display" class="text-[11px] text-gray-400 tracking-wider uppercase">Loading...</span>
                         <div id="admin-panel" onclick="openModal()">REQ: <span id="req-count">0</span></div>
                     </div>
                 </div>
             </div>
         </header>
-
         <main id="chatBox">
             <div id="e2ee-banner" class="self-center bg-[#182229] text-[#ffd700] text-[10px] px-4 py-1.5 rounded-lg mb-4 border border-[#ffd700]/10 tracking-widest uppercase">End-to-End Encrypted</div>
         </main>
-
         <footer class="footer">
             <div class="input-pill">
                 <input type="text" id="chatInput" placeholder="Message" autocomplete="off" class="w-full bg-transparent outline-none text-sm py-2 text-white">
             </div>
-            <button onclick="sendMessage()" class="action-btn">
-                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
-            </button>
+            <button onclick="sendMessage()" class="action-btn"><svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg></button>
         </footer>
     </div>
 
@@ -143,16 +152,34 @@
         const firebaseConfig = { apiKey: "AIzaSyDbfmd0zmv_mFV0CG2OrhKPPeU3zPYGOBg", authDomain: "unidesk-a70ac.firebaseapp.com", projectId: "unidesk-a70ac" };
         const db = getFirestore(initializeApp(firebaseConfig));
         
-        let myId = "TAB-" + Date.now() + "-" + Math.floor(Math.random()*999);
-        let savedName = "";
-        let currentRoom, isAdmin = false;
+        let myId = localStorage.getItem('sl_myId') || "TAB-" + Date.now() + "-" + Math.floor(Math.random()*999);
+        localStorage.setItem('sl_myId', myId);
+
+        let savedName = localStorage.getItem('sl_userName') || "";
+        let currentRoom = "";
+        let isAdmin = false;
+
+        window.onload = () => {
+            const lastRoom = localStorage.getItem('sl_lastRoom');
+            const lastGroup = localStorage.getItem('sl_lastGroupName');
+            if(lastRoom && savedName) {
+                document.getElementById('recent-session-area').classList.remove('hidden');
+                document.getElementById('recent-group-name').innerText = lastGroup || "Recent Group";
+                document.getElementById('recent-code').innerText = "CODE: " + lastRoom;
+            }
+        };
+
+        window.resumeRecent = () => {
+            const lastRoom = localStorage.getItem('sl_lastRoom');
+            isAdmin = localStorage.getItem('sl_isAdmin') === 'true';
+            openWorkspace(lastRoom);
+        };
 
         const workspace = document.getElementById('main-workspace');
         if (window.visualViewport) {
             window.visualViewport.addEventListener('resize', () => {
                 workspace.style.height = window.visualViewport.height + 'px';
-                const box = document.getElementById('chatBox');
-                box.scrollTop = box.scrollHeight;
+                document.getElementById('chatBox').scrollTop = document.getElementById('chatBox').scrollHeight;
                 window.scrollTo(0, 0);
             });
         }
@@ -162,9 +189,11 @@
             document.getElementById('naming-view').classList.remove('hidden');
             if(mode === 'join') {
                 document.getElementById('roomCodeInput').classList.remove('hidden');
+                document.getElementById('groupNameInput').classList.add('hidden');
                 document.getElementById('confirmBtn').onclick = () => joinRoom();
             } else {
                 document.getElementById('roomCodeInput').classList.add('hidden');
+                document.getElementById('groupNameInput').classList.remove('hidden');
                 document.getElementById('confirmBtn').onclick = () => createRoom();
             }
         };
@@ -176,12 +205,23 @@
 
         window.createRoom = async () => {
             const name = document.getElementById('userNameInput').value.trim();
+            const gname = document.getElementById('groupNameInput').value.trim() || "Chat Room";
             if(!name) return;
-            savedName = name;
-            isAdmin = true;
+            savedName = name; isAdmin = true;
             const code = Math.random().toString(36).substring(2, 8).toUpperCase();
-            // Added pendingRequests array and approvedIds array
-            await setDoc(doc(db, "rooms", code), { messages: [], status: 'active', pendingRequests: [], approvedIds: [] });
+            
+            localStorage.setItem('sl_userName', name);
+            localStorage.setItem('sl_lastRoom', code);
+            localStorage.setItem('sl_lastGroupName', gname);
+            localStorage.setItem('sl_isAdmin', 'true');
+
+            await setDoc(doc(db, "rooms", code), { 
+                groupName: gname,
+                messages: [], 
+                status: 'active', 
+                pendingRequests: [], 
+                approvedIds: [myId] 
+            });
             openWorkspace(code);
         };
 
@@ -191,20 +231,28 @@
             if(!name || !code) return;
             savedName = name;
             
-            // Join as a pending request
-            await updateDoc(doc(db, "rooms", code), { 
-                pendingRequests: arrayUnion({ id: myId, name: savedName }) 
-            });
+            localStorage.setItem('sl_userName', name);
+            localStorage.setItem('sl_lastRoom', code);
+            localStorage.setItem('sl_isAdmin', 'false');
 
+            const roomRef = doc(db, "rooms", code);
+            const snap = await getDoc(roomRef);
+            if(!snap.exists()) { alert("Room not found"); return; }
+
+            const data = snap.data();
+            localStorage.setItem('sl_lastGroupName', data.groupName || "Chat Room");
+
+            if(data.approvedIds.includes(myId)) {
+                openWorkspace(code);
+                return;
+            }
+
+            await updateDoc(roomRef, { pendingRequests: arrayUnion({ id: myId, name: savedName }) });
             document.getElementById('home-view').style.display = 'none';
             document.getElementById('wait-view').style.display = 'flex';
 
-            const unsub = onSnapshot(doc(db, "rooms", code), (snap) => {
-                const data = snap.data();
-                if (data.approvedIds && data.approvedIds.includes(myId)) {
-                    unsub();
-                    openWorkspace(code);
-                }
+            const unsub = onSnapshot(roomRef, (s) => {
+                if (s.data().approvedIds.includes(myId)) { unsub(); openWorkspace(code); }
             });
         };
 
@@ -223,33 +271,29 @@
             document.getElementById('home-view').style.display = 'none';
             document.getElementById('wait-view').style.display = 'none';
             document.getElementById('main-workspace').style.display = 'flex';
-            document.getElementById('status-text').innerText = "CODE: " + code;
             
             if (window.visualViewport) workspace.style.height = window.visualViewport.height + 'px';
 
             onSnapshot(doc(db, "rooms", code), s => {
                 const data = s.data();
+                if(!data) return;
+                
+                document.getElementById('group-name-display').innerText = data.groupName || "CODE: " + code;
+                
                 if(isAdmin) {
                     const reqs = data.pendingRequests || [];
                     const panel = document.getElementById('admin-panel');
-                    const countSpan = document.getElementById('req-count');
                     const list = document.getElementById('req-list');
-                    
                     if(reqs.length > 0) {
                         panel.style.display = 'block';
-                        countSpan.innerText = reqs.length;
-                        list.innerHTML = reqs.map(r => `
-                            <div class="req-item">
-                                <span class="text-xs font-bold">${r.name}</span>
-                                <button onclick="approveUser('${r.id}', '${r.name}')" class="approve-btn">LET IN</button>
-                            </div>
-                        `).join('');
+                        document.getElementById('req-count').innerText = reqs.length;
+                        list.innerHTML = reqs.map(r => `<div class="req-item"><span class="text-xs font-bold">${r.name}</span><button onclick="approveUser('${r.id}', '${r.name}')" class="approve-btn">LET IN</button></div>`).join('');
                     } else {
                         panel.style.display = 'none';
                         closeModal();
                     }
                 }
-                renderChat(data?.messages || []);
+                renderChat(data.messages || []);
             });
         }
 
@@ -257,8 +301,7 @@
             const chatInput = document.getElementById('chatInput');
             const text = chatInput.value.trim();
             if(!text) return;
-            chatInput.value = "";
-            chatInput.focus();
+            chatInput.value = ""; chatInput.focus();
             await updateDoc(doc(db, "rooms", currentRoom), { 
                 messages: arrayUnion({ user: myId, senderName: savedName, text: text, time: Date.now() }) 
             });
@@ -267,8 +310,7 @@
         function renderChat(messages) {
             const box = document.getElementById('chatBox');
             const banner = document.getElementById('e2ee-banner');
-            box.innerHTML = ''; 
-            box.appendChild(banner);
+            box.innerHTML = ''; box.appendChild(banner);
             messages.forEach(m => {
                 const isMe = m.user === myId;
                 const row = document.createElement('div');
