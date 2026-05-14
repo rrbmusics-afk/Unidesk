@@ -16,17 +16,22 @@
             --transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        /* UI LOCK PROTOCOL */
+        /* HARD-CORE UI LOCK PROTOCOL */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
             -webkit-font-smoothing: antialiased;
-            /* Disable Selection and Callouts */
+            
+            /* Disable Selection & Long-Press Callouts */
             -webkit-user-select: none;
             -ms-user-select: none;
             user-select: none;
             -webkit-touch-callout: none;
+            
+            /* SILENCE BLUE SELECTION HIGHLIGHT */
+            -webkit-tap-highlight-color: transparent;
+            -webkit-tap-highlight-color: rgba(0,0,0,0);
         }
 
         html, body {
@@ -197,7 +202,7 @@
         svg { width: 20px; height: 20px; fill: white; }
     </style>
 </head>
-<body oncontextmenu="return false;"> <!-- Global Context Menu Lock -->
+<body oncontextmenu="return false;">
 
     <header class="brand-core">
         <h1 class="logo">UNIDESK</h1>
@@ -239,13 +244,12 @@
     <script>
         const overlay = document.getElementById('overlay');
         
-        // Prevent default browser interactions
+        // Suppress browser dialogues & context menus
         document.addEventListener('contextmenu', event => event.preventDefault());
-        document.addEventListener('keydown', event => {
-            if (event.ctrlKey && (event.key === 'c' || event.key === 'u' || event.key === 's')) {
-                event.preventDefault();
-            }
-        });
+        document.addEventListener('touchstart', function(e) {
+            // Silence potential long-press select/copy triggers
+            if (e.touches.length > 1) e.preventDefault();
+        }, {passive: false});
 
         function openModal() {
             overlay.classList.add('active');
