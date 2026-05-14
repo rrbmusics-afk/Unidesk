@@ -3,208 +3,192 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UNIDESK - Student Utility Suite</title>
+    <title>Unidesk UI</title>
     <style>
         :root {
-            --bg-color: #0d1117;
-            --accent-blue: #4a90e2;
-            --card-bg: #161b22;
-            --card-border: #30363d;
-            --text-main: #ffffff;
-            --text-muted: #8b949e;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            --bg-color: #0b141a;
+            --accent-blue: #4086f4;
+            --card-dark: #121b22;
+            --border-color: #1d2a35;
+            --text-gray: #717e88;
         }
 
         body {
             background-color: var(--bg-color);
-            color: var(--text-main);
+            color: white;
+            font-family: 'Inter', -apple-system, sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: center;
             min-height: 100vh;
-            padding: 60px 20px;
+            margin: 0;
+            -webkit-font-smoothing: antialiased;
         }
 
-        /* Header Section */
-        header {
-            text-align: center;
-            margin-bottom: 50px;
-        }
-
-        .logo {
-            font-size: 3rem;
+        /* Typography */
+        .brand-title {
+            font-size: 58px;
             font-weight: 900;
             font-style: italic;
             color: var(--accent-blue);
             letter-spacing: -2px;
-            text-transform: uppercase;
+            margin-bottom: 4px;
         }
 
-        .subtitle {
-            font-size: 0.75rem;
-            letter-spacing: 4px;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            margin-top: 10px;
+        .brand-subtitle {
+            font-size: 11px;
+            letter-spacing: 4.5px;
+            color: var(--text-gray);
+            font-weight: 600;
+            margin-bottom: 60px;
         }
 
-        /* Main Container */
         .container {
-            width: 100%;
-            max-width: 400px;
+            width: 340px;
         }
 
-        /* Highlighted Card (Student Lounge) */
+        /* Featured Card: Student Lounge */
         .featured-card {
-            background: rgba(74, 144, 226, 0.05);
-            border: 2px solid var(--accent-blue);
-            border-radius: 40px;
+            border: 1.5px solid #1a4b8c;
+            background: linear-gradient(180deg, rgba(64,134,244,0.05) 0%, rgba(11,20,26,0) 100%);
+            border-radius: 45px;
             padding: 24px;
             display: flex;
             align-items: center;
-            margin-bottom: 40px;
-            position: relative;
-            cursor: pointer;
+            margin-bottom: 45px;
         }
 
-        .icon-box-blue {
-            width: 60px;
-            height: 60px;
-            background: var(--accent-blue);
-            border-radius: 18px;
+        .blue-icon {
+            width: 58px;
+            height: 58px;
+            background: linear-gradient(135deg, #4086f4 0%, #1a56b8 100%);
+            border-radius: 20px;
             display: flex;
             justify-content: center;
             align-items: center;
-            margin-right: 20px;
-            box-shadow: 0 0 20px rgba(74, 144, 226, 0.3);
+            margin-right: 18px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
         }
 
         /* Toolkit Section */
-        .section-label {
-            font-size: 0.7rem;
+        .toolkit-label {
+            font-size: 10px;
             letter-spacing: 3px;
-            color: var(--text-muted);
+            color: var(--text-gray);
+            font-weight: 700;
+            margin-bottom: 18px;
+            padding-left: 8px;
             text-transform: uppercase;
-            margin-bottom: 20px;
-            padding-left: 10px;
         }
 
         .tool-card {
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 25px;
-            padding: 20px;
+            background-color: var(--card-dark);
+            border-radius: 28px;
+            padding: 18px 22px;
             display: flex;
             align-items: center;
-            margin-bottom: 15px;
-            cursor: pointer;
-            transition: transform 0.2s ease;
+            margin-bottom: 14px;
+            border: 1px solid transparent;
         }
 
-        .tool-card:hover {
-            transform: scale(1.02);
-        }
-
-        .icon-box-dark {
-            width: 50px;
-            height: 50px;
-            background: #21262d;
-            border-radius: 12px;
+        .dark-icon {
+            width: 48px;
+            height: 48px;
+            background-color: #1c252c;
+            border-radius: 14px;
             display: flex;
             justify-content: center;
             align-items: center;
             margin-right: 18px;
         }
 
-        /* Typography */
-        .title-text {
-            font-size: 1.1rem;
+        /* Text Styles */
+        .main-label {
+            font-size: 17px;
             font-weight: 600;
             display: block;
+            margin-bottom: 2px;
         }
 
-        .desc-text {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            margin-top: 4px;
+        .sub-label {
+            font-size: 11px;
+            color: var(--text-gray);
             display: block;
         }
 
-        .arrow {
+        .lounge-sub {
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 700;
+            color: #5a6b79;
+        }
+
+        .chevron {
             margin-left: auto;
-            color: var(--accent-blue);
-            font-size: 1.2rem;
+            color: #2b579a;
+            font-size: 20px;
+            font-weight: 300;
         }
 
         /* Footer */
         footer {
-            margin-top: auto;
-            font-size: 0.65rem;
-            letter-spacing: 3px;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            padding-top: 40px;
+            margin-top: 80px;
+            font-size: 9px;
+            letter-spacing: 4px;
+            color: #3d4a54;
+            font-weight: 600;
         }
 
-        /* SVG Icons Simulation */
-        svg { fill: white; width: 24px; height: 24px; }
-        .icon-yellow { fill: #f1c40f; }
+        /* SVG Replacements for Pixel Accuracy */
+        .icon-svg { width: 22px; height: 22px; fill: white; }
+        .icon-resume { fill: #c59b48; }
     </style>
 </head>
 <body>
 
-    <header>
-        <div class="logo">UNIDESK</div>
-        <div class="subtitle">Student Utility Suite</div>
-    </header>
+    <div class="brand-title">UNIDESK</div>
+    <div class="brand-subtitle">STUDENT UTILITY SUITE</div>
 
     <div class="container">
         <!-- Student Lounge -->
         <div class="featured-card">
-            <div class="icon-box-blue">
-                <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.17L4 17.17V4h16v12z"/></svg>
+            <div class="blue-icon">
+                <svg class="icon-svg" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM4 4h16v12H5.17L4 17.17V4z"/></svg>
             </div>
             <div>
-                <span class="title-text">Student Lounge</span>
-                <span class="desc-text" style="text-transform: uppercase; letter-spacing: 1px;">Secure Communication</span>
+                <span class="main-label">Student Lounge</span>
+                <span class="sub-label lounge-sub">Secure Communication</span>
             </div>
-            <div class="arrow">›</div>
+            <div class="chevron">›</div>
         </div>
 
-        <div class="section-label">Toolkit</div>
+        <div class="toolkit-label">Toolkit</div>
 
         <!-- Page Forge -->
         <div class="tool-card">
-            <div class="icon-box-dark">
-                <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+            <div class="dark-icon">
+                <svg class="icon-svg" style="fill: #717e88;" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
             </div>
             <div>
-                <span class="title-text">Page Forge</span>
-                <span class="desc-text">Images to PDF Converter</span>
+                <span class="main-label">Page Forge</span>
+                <span class="sub-label">Images to PDF Converter</span>
             </div>
         </div>
 
         <!-- Resume Maker -->
-        <div class="tool-card">
-            <div class="icon-box-dark">
-                <svg class="icon-yellow" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+        <div class="tool-card" style="opacity: 0.6;">
+            <div class="dark-icon">
+                <svg class="icon-svg icon-resume" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
             </div>
             <div>
-                <span class="title-text">Resume Maker</span>
-                <span class="desc-text">Professional CV Builder</span>
+                <span class="main-label">Resume Maker</span>
+                <span class="sub-label">Professional CV Builder</span>
             </div>
         </div>
     </div>
 
-    <footer>
-        © 2026 AETHERCORE INTERACTIVE
-    </footer>
+    <footer>© 2026 AETHERCORE INTERACTIVE</footer>
 
 </body>
 </html>
