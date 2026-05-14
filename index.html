@@ -3,17 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>UNIDESK Premium | Aethercore</title>
+    <title>UNIDESK | Aethercore Interactive</title>
     <style>
         :root {
             --bg: #080c10;
             --accent: #4a90e2;
-            --card-surface: #12181f;
+            --surface: #12181f;
             --text-p: #ffffff;
             --text-s: #7a8691;
             --safe-top: env(safe-area-inset-top, 20px);
             --safe-bottom: env(safe-area-inset-bottom, 20px);
-            --bezier: cubic-bezier(0.16, 1, 0.3, 1);
+            --transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         * {
@@ -35,14 +35,14 @@
             align-items: center;
         }
 
-        /* Branding */
-        .brand-header {
+        /* Branding Layer */
+        .brand-core {
             text-align: center;
-            margin-bottom: 50px;
+            margin-bottom: 60px;
         }
 
-        .brand-logo {
-            font-size: 64px;
+        .logo {
+            font-size: 68px;
             font-weight: 900;
             font-style: italic;
             color: var(--accent);
@@ -50,34 +50,34 @@
             line-height: 0.9;
         }
 
-        .brand-tag {
+        .tagline {
             font-size: 10px;
             letter-spacing: 5px;
             font-weight: 700;
             color: var(--text-s);
             text-transform: uppercase;
-            margin-top: 12px;
+            margin-top: 15px;
         }
 
-        .container {
+        /* Primary Actions */
+        .main-stack {
             width: 100%;
-            max-width: 400px;
+            max-width: 380px;
         }
 
-        /* Student Lounge Card */
-        .lounge-card {
-            background: linear-gradient(165deg, rgba(74, 144, 226, 0.15) 0%, rgba(8, 12, 16, 0) 100%);
+        .btn-lounge {
+            background: linear-gradient(165deg, rgba(74, 144, 226, 0.18) 0%, rgba(8, 12, 16, 0) 100%);
             border: 1.5px solid var(--accent);
             border-radius: 40px;
-            padding: 24px;
+            padding: 26px;
             display: flex;
             align-items: center;
             cursor: pointer;
-            margin-bottom: 40px;
-            transition: transform 0.2s var(--bezier);
+            margin-bottom: 30px;
+            transition: var(--transition);
         }
 
-        .lounge-card:active { transform: scale(0.97); }
+        .btn-lounge:active { transform: scale(0.96); }
 
         .icon-blue {
             width: 60px;
@@ -91,49 +91,82 @@
             box-shadow: 0 10px 20px rgba(74, 144, 226, 0.3);
         }
 
-        /* Toolkit Interactive Section */
+        /* Toolkit Trigger Button */
         .toolkit-trigger {
+            background: var(--surface);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 35px;
+            padding: 24px;
             display: flex;
-            justify-content: space-between;
+            justify-content: center;
             align-items: center;
-            padding: 10px;
-            margin-bottom: 15px;
             cursor: pointer;
+            transition: var(--transition);
+            width: 100%;
         }
 
-        .toolkit-label {
-            font-size: 11px;
-            letter-spacing: 3px;
-            color: var(--text-s);
+        .toolkit-trigger:active { transform: scale(0.98); background: #1a222a; }
+
+        .toolkit-text {
+            font-size: 12px;
+            letter-spacing: 4px;
             font-weight: 800;
+            color: var(--text-s);
             text-transform: uppercase;
         }
 
-        .toggle-icon {
-            color: var(--text-s);
-            transition: transform 0.4s var(--bezier);
-            font-size: 18px;
-        }
-
-        .is-active .toggle-icon { transform: rotate(90deg); }
-
-        /* Pop-up Tool Grid */
-        .tool-drawer {
-            max-height: 0;
-            overflow: hidden;
+        /* Modal Architecture */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(15px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
             opacity: 0;
-            transform: translateY(-10px);
-            transition: all 0.5s var(--bezier);
+            visibility: hidden;
+            transition: var(--transition);
         }
 
-        .is-active + .tool-drawer {
-            max-height: 400px;
+        .modal-overlay.active {
             opacity: 1;
-            transform: translateY(0);
+            visibility: visible;
         }
 
+        .modal-content {
+            width: 90%;
+            max-width: 360px;
+            background: #11181e;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 45px;
+            padding: 30px;
+            transform: scale(0.8) translateY(40px);
+            transition: var(--transition);
+            box-shadow: 0 40px 100px rgba(0, 0, 0, 0.8);
+        }
+
+        .modal-overlay.active .modal-content {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            text-align: center;
+            margin-bottom: 25px;
+            font-size: 10px;
+            letter-spacing: 3px;
+            color: var(--text-s);
+            text-transform: uppercase;
+            font-weight: 800;
+        }
+
+        /* Tool Cards inside Modal */
         .tool-card {
-            background: var(--card-surface);
+            background: rgba(255, 255, 255, 0.03);
             border: 1px solid rgba(255, 255, 255, 0.05);
             border-radius: 30px;
             padding: 20px;
@@ -141,9 +174,10 @@
             align-items: center;
             margin-bottom: 12px;
             cursor: pointer;
+            transition: var(--transition);
         }
 
-        .tool-card:active { background: #1a222a; }
+        .tool-card:active { background: rgba(255, 255, 255, 0.08); }
 
         .icon-dark {
             width: 50px;
@@ -156,10 +190,18 @@
             margin-right: 18px;
         }
 
-        /* Typography */
         .title { font-size: 18px; font-weight: 600; }
-        .subtitle-text { font-size: 13px; color: var(--text-s); margin-top: 2px; }
-        .chevron { margin-left: auto; color: #2e3c4a; font-size: 24px; }
+        .sub { font-size: 13px; color: var(--text-s); margin-top: 2px; }
+
+        .close-btn {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: var(--text-s);
+            padding: 10px;
+            cursor: pointer;
+            font-weight: 600;
+        }
 
         footer {
             margin-top: auto;
@@ -175,32 +217,34 @@
 </head>
 <body>
 
-    <header class="brand-header">
-        <h1 class="brand-logo">UNIDESK</h1>
-        <div class="brand-tag">Student Utility Suite</div>
+    <header class="brand-core">
+        <h1 class="logo">UNIDESK</h1>
+        <div class="tagline">Student Utility Suite</div>
     </header>
 
-    <div class="container">
+    <div class="main-stack">
         <!-- Student Lounge -->
-        <div class="lounge-card" onclick="window.location.href='page.html'">
+        <div class="btn-lounge" onclick="window.location.href='page.html'">
             <div class="icon-blue">
                 <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
             </div>
             <div>
                 <span class="title">Student Lounge</span>
-                <span class="subtitle-text" style="text-transform: uppercase; letter-spacing: 1px; font-size: 10px; font-weight: 700;">Secure Network</span>
+                <span class="sub" style="text-transform: uppercase; letter-spacing: 1px; font-size: 10px; font-weight: 700;">Secure Network</span>
             </div>
-            <div class="chevron">›</div>
         </div>
 
-        <!-- Toolkit Interactive Trigger -->
-        <div class="toolkit-trigger" onclick="toggleToolkit(this)">
-            <span class="toolkit-label">Toolkit</span>
-            <span class="toggle-icon">▶</span>
+        <!-- Toolkit Trigger -->
+        <div class="toolkit-trigger" onclick="openToolkit()">
+            <span class="toolkit-text">Open Toolkit</span>
         </div>
+    </div>
 
-        <!-- Pop-up Drawer -->
-        <div class="tool-drawer" id="toolkitDrawer">
+    <!-- The Dialogue Box (Modal) -->
+    <div class="modal-overlay" id="modalOverlay" onclick="closeToolkit(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">Systems Toolkit</div>
+            
             <!-- Page Forge -->
             <div class="tool-card" onclick="window.location.href='https://sharanmusician.github.io/Page-Forge/'">
                 <div class="icon-dark">
@@ -208,7 +252,7 @@
                 </div>
                 <div>
                     <span class="title">Page Forge</span>
-                    <span class="subtitle-text">Images to PDF Converter</span>
+                    <span class="sub">Images to PDF Converter</span>
                 </div>
             </div>
 
@@ -219,19 +263,27 @@
                 </div>
                 <div>
                     <span class="title">Resume Maker</span>
-                    <span class="subtitle-text">Professional CV Builder</span>
+                    <span class="sub">Professional CV Builder</span>
                 </div>
             </div>
+
+            <div class="close-btn" onclick="closeToolkit(null)">Dismiss</div>
         </div>
     </div>
 
     <footer>&copy; 2026 AETHERCORE INTERACTIVE</footer>
 
     <script>
-        function toggleToolkit(element) {
-            element.classList.toggle('is-active');
-            // Premium haptic feedback
-            if ('vibrate' in navigator) navigator.vibrate(10);
+        const overlay = document.getElementById('modalOverlay');
+
+        function openToolkit() {
+            overlay.classList.add('active');
+            if ('vibrate' in navigator) navigator.vibrate(15);
+        }
+
+        function closeToolkit(event) {
+            overlay.classList.remove('active');
+            if ('vibrate' in navigator) navigator.vibrate(5);
         }
     </script>
 </body>
