@@ -19,6 +19,11 @@
             padding: 0;
             box-sizing: border-box;
             font-family: 'Inter', -apple-system, sans-serif;
+            /* Disable text selection and blue highlights */
+            -webkit-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
@@ -29,6 +34,31 @@
             align-items: center;
             min-height: 100vh;
             overflow: hidden;
+        }
+
+        /* Home Button Style */
+        .home-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 10px 15px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: 0.3s;
+            z-index: 100;
+        }
+
+        .home-btn:active {
+            transform: scale(0.95);
+            background: var(--border-color);
         }
 
         .container {
@@ -110,6 +140,8 @@
             color: white;
             outline: none;
             transition: 0.3s;
+            -webkit-user-select: text; /* Allow typing in inputs */
+            user-select: text;
         }
 
         input:focus {
@@ -141,10 +173,40 @@
             color: #30363d;
         }
 
+        /* Custom In-Website Message */
+        #custom-toast {
+            visibility: hidden;
+            min-width: 250px;
+            background-color: #ff4d4d;
+            color: #fff;
+            text-align: center;
+            border-radius: 12px;
+            padding: 16px;
+            position: fixed;
+            z-index: 1000;
+            bottom: 30px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+        }
+
+        #custom-toast.show {
+            visibility: visible;
+            animation: fadein 0.5s, fadeout 0.5s 2.5s;
+        }
+
+        @keyframes fadein { from {bottom: 0; opacity: 0;} to {bottom: 30px; opacity: 1;} }
+        @keyframes fadeout { from {bottom: 30px; opacity: 1;} to {bottom: 0; opacity: 0;} }
+
         .hidden { display: none; }
     </style>
 </head>
 <body>
+
+    <button class="home-btn" onclick="window.history.back()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Home
+    </button>
 
     <div class="container">
         <h1 class="logo">UNIDESK</h1>
@@ -156,7 +218,6 @@
                 <button class="tab-btn" onclick="switchMode('join')">JOIN</button>
             </div>
 
-            <!-- Create Section -->
             <div id="create-section">
                 <div class="input-group">
                     <label>YOUR NAME</label>
@@ -169,7 +230,6 @@
                 <button class="action-btn" onclick="handleLounge('create')">CREATE LOUNGE</button>
             </div>
 
-            <!-- Join Section -->
             <div id="join-section" class="hidden">
                 <div class="input-group">
                     <label>YOUR NAME</label>
@@ -184,9 +244,19 @@
         </div>
     </div>
 
+    <!-- Custom snackbar element -->
+    <div id="custom-toast">Please fill in all details</div>
+
     <div class="footer-brand">© 2026 AETHERCORE INTERACTIVE</div>
 
     <script>
+        function showToast(message) {
+            const toast = document.getElementById("custom-toast");
+            toast.innerText = message;
+            toast.className = "show";
+            setTimeout(() => { toast.className = toast.className.replace("show", ""); }, 3000);
+        }
+
         function switchMode(mode) {
             const createSec = document.getElementById('create-section');
             const joinSec = document.getElementById('join-section');
@@ -217,11 +287,10 @@
             }
 
             if (!userName || !loungeTarget) {
-                alert("Please fill in all details");
+                showToast("Please enter all details to proceed.");
                 return;
             }
 
-            // Data Persistence for chat.html
             const sessionData = {
                 user: userName,
                 lounge: loungeTarget,
@@ -230,8 +299,6 @@
             };
 
             localStorage.setItem('unidesk_session', JSON.stringify(sessionData));
-            
-            // Redirect to chat.html
             window.location.href = 'chat.html';
         }
     </script>
