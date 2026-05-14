@@ -2,117 +2,126 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Unidesk | Lounge</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Home | Your Website Name</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+
     <style>
-        :root { --wa-bg: #0B141A; --wa-panel: #202C33; --wa-me: #005C4B; --wa-them: #202C33; --u-blue: #2D7FF9; }
-        body, html { margin: 0; padding: 0; height: 100dvh; background: var(--wa-bg); color: white; font-family: 'Inter', sans-serif; overflow: hidden; }
-        header { background: var(--wa-panel); padding: 10px 16px; display: flex; align-items: center; height: 75px; gap: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .h-img { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; }
-        .h-id { font-size: 11px; color: var(--u-blue); font-weight: 800; }
-        #chat-flow { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 8px; height: calc(100vh - 150px); background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); background-blend-mode: overlay; }
-        .msg { max-width: 80%; padding: 10px 15px; border-radius: 12px; font-size: 15px; }
-        .msg-me { align-self: flex-end; background: var(--wa-me); border-top-right-radius: 0; }
-        .msg-them { align-self: flex-start; background: var(--wa-them); border-top-left-radius: 0; }
-        footer { background: var(--wa-panel); padding: 12px; display: flex; gap: 10px; align-items: center; position: fixed; bottom: 0; width: 100%; }
-        .pill { flex: 1; background: #2A3942; border-radius: 25px; padding: 0 15px; height: 48px; display: flex; align-items: center; }
-        .pill input { background: transparent; border: none; color: white; flex: 1; font-size: 16px; }
-        .send-btn { width: 48px; height: 48px; border-radius: 50%; background: #00a884; border: none; color: white; font-size: 18px; }
-        #admin-bar { background: var(--u-blue); padding: 10px 15px; font-size: 12px; font-weight: 800; cursor: pointer; display: none; }
-        .hidden { display: none !important; }
-        #modal { position: fixed; inset:0; background: rgba(0,0,0,0.9); z-index: 1000; display: flex; align-items:center; justify-content:center; }
+        :root {
+            --primary: #2563eb;
+            --dark: #1e293b;
+            --light: #f8fafc;
+            --text: #334155;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            color: var(--text);
+            background-color: var(--light);
+            line-height: 1.5;
+        }
+
+        header {
+            background: white;
+            padding: 1.25rem 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .logo {
+            font-weight: 800;
+            font-size: 1.5rem;
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        nav a {
+            margin-left: 2rem;
+            text-decoration: none;
+            color: var(--dark);
+            font-weight: 600;
+            transition: color 0.3s;
+        }
+
+        nav a:hover {
+            color: var(--primary);
+        }
+
+        .hero {
+            padding: 100px 5%;
+            text-align: center;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .hero h1 {
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            color: var(--dark);
+            margin-bottom: 1.5rem;
+            letter-spacing: -0.02em;
+        }
+
+        .btn {
+            display: inline-block;
+            background: var(--primary);
+            color: white;
+            padding: 0.8rem 2rem;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-top: 2rem;
+            transition: transform 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3);
+        }
+
+        footer {
+            padding: 4rem 5%;
+            background: var(--dark);
+            color: white;
+            text-align: center;
+            margin-top: 100px;
+        }
     </style>
 </head>
 <body>
 
-    <div id="admin-bar" onclick="showReqs()">PENDING REQUESTS <i class="fas fa-chevron-right"></i></div>
-    
     <header>
-        <img id="h-img" class="h-img">
-        <div style="flex:1">
-            <h2 id="h-name" style="margin:0; font-size:18px;">Lounge</h2>
-            <span id="h-id" class="h-id"></span>
-        </div>
-        <i class="fas fa-ellipsis-v"></i>
+        <a href="/" class="logo">PORTFOLIO.</a>
+        <nav>
+            <a href="#work">Work</a>
+            <a href="#about">About</a>
+            <a href="#contact">Contact</a>
+        </nav>
     </header>
 
-    <div id="chat-flow"></div>
+    <main>
+        <section class="hero">
+            <h1>Building digital experiences that matter.</h1>
+            <p>Welcome to your new project. This index file is ready for your content, custom styles, and scripts.</p>
+            <a href="#" class="btn">View My Work</a>
+        </section>
+    </main>
 
     <footer>
-        <div class="pill"><input type="text" id="msg-in" placeholder="Message"></div>
-        <button class="send-btn" onclick="send()"><i class="fas fa-paper-plane"></i></button>
+        <p>&copy; 2026 Developer Name. All rights reserved.</p>
     </footer>
 
-    <div id="modal" class="hidden">
-        <div style="background:var(--wa-panel); width:300px; padding:25px; border-radius:25px;">
-            <h3>Entry Requests</h3>
-            <div id="req-list"></div>
-            <button style="width:100%; padding:10px; margin-top:15px;" onclick="document.getElementById('modal').classList.add('hidden')">CLOSE</button>
-        </div>
-    </div>
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, doc, getDoc, onSnapshot, collection, addDoc, query, orderBy, serverTimestamp, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyDbfmd0zmv_mFV0CG2OrhKPPeU3zPYGOBg",
-            authDomain: "unidesk-a70ac.firebaseapp.com",
-            projectId: "unidesk-a70ac",
-            storageBucket: "unidesk-a70ac.firebasestorage.app",
-            appId: "1:882535016432:web:6eca2645a47a827e779f35"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-
-        const params = new URLSearchParams(window.location.search);
-        const code = params.get('code');
-        const uid = params.get('uid');
-        const userName = params.get('name');
-
-        const snap = await getDoc(doc(db, "rooms", code));
-        const room = snap.data();
-
-        document.getElementById('h-img').src = room.avatar;
-        document.getElementById('h-name').innerText = room.name;
-        document.getElementById('h-id').innerText = `ID: #${room.code}`;
-
-        if(uid === room.admin) {
-            onSnapshot(collection(db, "rooms", code, "requests"), s => {
-                document.getElementById('admin-bar').style.display = s.empty ? 'none' : 'block';
-                const list = document.getElementById('req-list');
-                list.innerHTML = "";
-                s.forEach(d => {
-                    list.innerHTML += `<div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-                        <span>${d.data().name}</span>
-                        <button onclick="approve('${d.id}')">APPROVE</button>
-                    </div>`;
-                });
-            });
-        }
-
-        window.approve = async (id) => { await deleteDoc(doc(db, "rooms", code, "requests", id)); };
-        window.showReqs = () => document.getElementById('modal').classList.remove('hidden');
-
-        onSnapshot(query(collection(db, "rooms", code, "messages"), orderBy("ts", "asc")), s => {
-            const flow = document.getElementById('chat-flow'); flow.innerHTML = "";
-            s.forEach(d => {
-                const m = d.data(); const isMe = m.uid === uid;
-                flow.innerHTML += `<div class="msg ${isMe?'msg-me':'msg-them'}">
-                    <b style="font-size:10px; color:#35cd96; display:block;">${isMe?'You':m.sender}</b>${m.text}</div>`;
-            });
-            flow.scrollTop = flow.scrollHeight;
-        });
-
-        window.send = async () => {
-            const inp = document.getElementById('msg-in');
-            if(!inp.value.trim()) return;
-            await addDoc(collection(db, "rooms", code, "messages"), { text: inp.value, uid, sender: userName, ts: serverTimestamp() });
-            inp.value = "";
-        };
-    </script>
 </body>
 </html>
