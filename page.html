@@ -2,117 +2,214 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Unidesk | Lounge</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unidesk | Student Utility Suite</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { --wa-bg: #0B141A; --wa-panel: #202C33; --wa-me: #005C4B; --wa-them: #202C33; --u-blue: #2D7FF9; }
-        body, html { margin: 0; padding: 0; height: 100dvh; background: var(--wa-bg); color: white; font-family: 'Inter', sans-serif; overflow: hidden; }
-        header { background: var(--wa-panel); padding: 10px 16px; display: flex; align-items: center; height: 75px; gap: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .h-img { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; }
-        .h-id { font-size: 11px; color: var(--u-blue); font-weight: 800; }
-        #chat-flow { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 8px; height: calc(100vh - 150px); background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); background-blend-mode: overlay; }
-        .msg { max-width: 80%; padding: 10px 15px; border-radius: 12px; font-size: 15px; }
-        .msg-me { align-self: flex-end; background: var(--wa-me); border-top-right-radius: 0; }
-        .msg-them { align-self: flex-start; background: var(--wa-them); border-top-left-radius: 0; }
-        footer { background: var(--wa-panel); padding: 12px; display: flex; gap: 10px; align-items: center; position: fixed; bottom: 0; width: 100%; }
-        .pill { flex: 1; background: #2A3942; border-radius: 25px; padding: 0 15px; height: 48px; display: flex; align-items: center; }
-        .pill input { background: transparent; border: none; color: white; flex: 1; font-size: 16px; }
-        .send-btn { width: 48px; height: 48px; border-radius: 50%; background: #00a884; border: none; color: white; font-size: 18px; }
-        #admin-bar { background: var(--u-blue); padding: 10px 15px; font-size: 12px; font-weight: 800; cursor: pointer; display: none; }
-        .hidden { display: none !important; }
-        #modal { position: fixed; inset:0; background: rgba(0,0,0,0.9); z-index: 1000; display: flex; align-items:center; justify-content:center; }
+        :root {
+            --bg-color: #0B1219;
+            --card-bg: #151C25;
+            --accent-blue: #2D7FF9;
+            --text-main: #FFFFFF;
+            --text-dim: #6B7280;
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 60px 24px;
+        }
+
+        /* Branding Section */
+        .brand-container {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+
+        .logo {
+            font-size: 42px;
+            font-weight: 900;
+            font-style: italic;
+            color: var(--accent-blue);
+            letter-spacing: -1px;
+            margin: 0;
+        }
+
+        .subtitle {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 4px;
+            color: var(--text-dim);
+            margin-top: 8px;
+            text-transform: uppercase;
+        }
+
+        /* Featured Card (Student Lounge) */
+        .featured-card {
+            width: 100%;
+            max-width: 400px;
+            background: rgba(45, 127, 249, 0.05);
+            border: 1px solid var(--accent-blue);
+            border-radius: 32px;
+            padding: 24px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin-bottom: 40px;
+            position: relative;
+        }
+
+        .icon-box-large {
+            width: 64px;
+            height: 64px;
+            background: var(--accent-blue);
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 0 20px rgba(45, 127, 249, 0.3);
+        }
+
+        /* Toolkit Section */
+        .toolkit-label {
+            width: 100%;
+            max-width: 400px;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 3px;
+            color: var(--text-dim);
+            margin-bottom: 16px;
+            text-transform: uppercase;
+        }
+
+        .card-list {
+            width: 100%;
+            max-width: 400px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .standard-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .standard-card:active {
+            background: #1C2632;
+        }
+
+        .icon-box-small {
+            width: 48px;
+            height: 48px;
+            background: #1F2937;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent-blue);
+            font-size: 18px;
+        }
+
+        .icon-box-small.yellow { color: #FBBF24; }
+
+        .card-info h3 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .card-info p {
+            margin: 4px 0 0;
+            font-size: 12px;
+            color: var(--text-dim);
+        }
+
+        .chevron {
+            margin-left: auto;
+            color: var(--accent-blue);
+            font-size: 14px;
+        }
+
+        /* Footer */
+        footer {
+            margin-top: auto;
+            padding-top: 60px;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: #374151;
+            text-transform: uppercase;
+        }
     </style>
 </head>
 <body>
 
-    <div id="admin-bar" onclick="showReqs()">PENDING REQUESTS <i class="fas fa-chevron-right"></i></div>
-    
-    <header>
-        <img id="h-img" class="h-img">
-        <div style="flex:1">
-            <h2 id="h-name" style="margin:0; font-size:18px;">Lounge</h2>
-            <span id="h-id" class="h-id"></span>
+    <div class="brand-container">
+        <h1 class="logo">UNIDESK</h1>
+        <div class="subtitle">Student Utility Suite</div>
+    </div>
+
+    <div class="featured-card">
+        <div class="icon-box-large">
+            <i class="fas fa-comment-dots"></i>
         </div>
-        <i class="fas fa-ellipsis-v"></i>
-    </header>
+        <div class="card-info">
+            <h3>Student Lounge</h3>
+            <p style="text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">Secure Communication</p>
+        </div>
+        <i class="fas fa-chevron-right chevron"></i>
+    </div>
 
-    <div id="chat-flow"></div>
+    <div class="toolkit-label">Toolkit</div>
 
-    <footer>
-        <div class="pill"><input type="text" id="msg-in" placeholder="Message"></div>
-        <button class="send-btn" onclick="send()"><i class="fas fa-paper-plane"></i></button>
-    </footer>
+    <div class="card-list">
+        <div class="standard-card">
+            <div class="icon-box-small">
+                <i class="fas fa-file-alt"></i>
+            </div>
+            <div class="card-info">
+                <h3>Page Forge</h3>
+                <p>Images to PDF Converter</p>
+            </div>
+        </div>
 
-    <div id="modal" class="hidden">
-        <div style="background:var(--wa-panel); width:300px; padding:25px; border-radius:25px;">
-            <h3>Entry Requests</h3>
-            <div id="req-list"></div>
-            <button style="width:100%; padding:10px; margin-top:15px;" onclick="document.getElementById('modal').classList.add('hidden')">CLOSE</button>
+        <div class="standard-card">
+            <div class="icon-box-small yellow">
+                <i class="fas fa-user-tie"></i>
+            </div>
+            <div class="card-info">
+                <h3>Resume Maker</h3>
+                <p>Professional CV Builder</p>
+            </div>
         </div>
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, doc, getDoc, onSnapshot, collection, addDoc, query, orderBy, serverTimestamp, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    <footer>
+        © 2026 Aethercore Interactive
+    </footer>
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyDbfmd0zmv_mFV0CG2OrhKPPeU3zPYGOBg",
-            authDomain: "unidesk-a70ac.firebaseapp.com",
-            projectId: "unidesk-a70ac",
-            storageBucket: "unidesk-a70ac.firebasestorage.app",
-            appId: "1:882535016432:web:6eca2645a47a827e779f35"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-
-        const params = new URLSearchParams(window.location.search);
-        const code = params.get('code');
-        const uid = params.get('uid');
-        const userName = params.get('name');
-
-        const snap = await getDoc(doc(db, "rooms", code));
-        const room = snap.data();
-
-        document.getElementById('h-img').src = room.avatar;
-        document.getElementById('h-name').innerText = room.name;
-        document.getElementById('h-id').innerText = `ID: #${room.code}`;
-
-        if(uid === room.admin) {
-            onSnapshot(collection(db, "rooms", code, "requests"), s => {
-                document.getElementById('admin-bar').style.display = s.empty ? 'none' : 'block';
-                const list = document.getElementById('req-list');
-                list.innerHTML = "";
-                s.forEach(d => {
-                    list.innerHTML += `<div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-                        <span>${d.data().name}</span>
-                        <button onclick="approve('${d.id}')">APPROVE</button>
-                    </div>`;
-                });
-            });
-        }
-
-        window.approve = async (id) => { await deleteDoc(doc(db, "rooms", code, "requests", id)); };
-        window.showReqs = () => document.getElementById('modal').classList.remove('hidden');
-
-        onSnapshot(query(collection(db, "rooms", code, "messages"), orderBy("ts", "asc")), s => {
-            const flow = document.getElementById('chat-flow'); flow.innerHTML = "";
-            s.forEach(d => {
-                const m = d.data(); const isMe = m.uid === uid;
-                flow.innerHTML += `<div class="msg ${isMe?'msg-me':'msg-them'}">
-                    <b style="font-size:10px; color:#35cd96; display:block;">${isMe?'You':m.sender}</b>${m.text}</div>`;
-            });
-            flow.scrollTop = flow.scrollHeight;
-        });
-
-        window.send = async () => {
-            const inp = document.getElementById('msg-in');
-            if(!inp.value.trim()) return;
-            await addDoc(collection(db, "rooms", code, "messages"), { text: inp.value, uid, sender: userName, ts: serverTimestamp() });
-            inp.value = "";
-        };
-    </script>
 </body>
 </html>
