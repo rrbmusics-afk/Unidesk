@@ -275,30 +275,55 @@
         }
 
         function handleLounge(type) {
-            let userName, loungeTarget;
+            let userName, loungeInput;
 
             if (type === 'create') {
                 userName = document.getElementById('create-user').value;
-                loungeTarget = document.getElementById('lounge-name').value;
+                loungeInput = document.getElementById('lounge-name').value;
+
+                if (!userName || !loungeInput) {
+                    showToast("Please fill in all details");
+                    return;
+                }
+
+                // Generate a random 6-digit numeric code
+                const numericCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+                const sessionData = {
+                    user: userName,
+                    loungeName: loungeInput, 
+                    lounge: numericCode, // This is the 6-digit key for Firebase
+                    mode: type,
+                    timestamp: new Date().getTime()
+                };
+
+                localStorage.setItem('unidesk_session', JSON.stringify(sessionData));
+                window.location.href = 'chat.html';
+
             } else {
                 userName = document.getElementById('join-user').value;
-                loungeTarget = document.getElementById('lounge-code').value;
+                loungeInput = document.getElementById('lounge-code').value;
+
+                if (!userName || !loungeInput) {
+                    showToast("Please fill in all details");
+                    return;
+                }
+
+                if (loungeInput.length !== 6 || isNaN(loungeInput)) {
+                    showToast("Please enter a valid 6-digit code");
+                    return;
+                }
+
+                const sessionData = {
+                    user: userName,
+                    lounge: loungeInput,
+                    mode: type,
+                    timestamp: new Date().getTime()
+                };
+
+                localStorage.setItem('unidesk_session', JSON.stringify(sessionData));
+                window.location.href = 'chat.html';
             }
-
-            if (!userName || !loungeTarget) {
-                showToast("Please enter all details to proceed.");
-                return;
-            }
-
-            const sessionData = {
-                user: userName,
-                lounge: loungeTarget,
-                mode: type,
-                timestamp: new Date().getTime()
-            };
-
-            localStorage.setItem('unidesk_session', JSON.stringify(sessionData));
-            window.location.href = 'chat.html';
         }
     </script>
 </body>
