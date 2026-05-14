@@ -2,193 +2,245 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Unidesk UI</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>UNIDESK | Aethercore Interactive</title>
     <style>
         :root {
-            --bg-color: #0b141a;
-            --accent-blue: #4086f4;
-            --card-dark: #121b22;
-            --border-color: #1d2a35;
-            --text-gray: #717e88;
+            --bg: #090e12;
+            --accent: #3e81f1;
+            --accent-glow: rgba(62, 129, 241, 0.35);
+            --card-surface: #12181f;
+            --border-subtle: rgba(255, 255, 255, 0.06);
+            --text-primary: #ffffff;
+            --text-secondary: #7a8691;
+            --transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         body {
-            background-color: var(--bg-color);
-            color: white;
-            font-family: 'Inter', -apple-system, sans-serif;
+            background-color: var(--bg);
+            color: var(--text-primary);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            margin: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
             min-height: 100vh;
-            margin: 0;
+            justify-content: center;
+            overflow: hidden;
             -webkit-font-smoothing: antialiased;
         }
 
-        /* Typography */
-        .brand-title {
-            font-size: 58px;
+        /* Hero Header */
+        .header-group {
+            text-align: center;
+            margin-bottom: 54px;
+            animation: fadeInDown 0.8s var(--transition);
+        }
+
+        .brand-logo {
+            font-size: 64px;
             font-weight: 900;
             font-style: italic;
-            color: var(--accent-blue);
-            letter-spacing: -2px;
-            margin-bottom: 4px;
+            color: var(--accent);
+            letter-spacing: -3px;
+            line-height: 1;
+            margin: 0;
+            text-shadow: 0 0 30px var(--accent-glow);
         }
 
-        .brand-subtitle {
-            font-size: 11px;
-            letter-spacing: 4.5px;
-            color: var(--text-gray);
-            font-weight: 600;
-            margin-bottom: 60px;
+        .brand-tagline {
+            font-size: 10px;
+            letter-spacing: 5px;
+            color: var(--text-secondary);
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-top: 12px;
+            opacity: 0.8;
         }
 
-        .container {
-            width: 340px;
+        /* Layout Container */
+        .wrapper {
+            width: 360px;
+            perspective: 1000px;
         }
 
-        /* Featured Card: Student Lounge */
-        .featured-card {
-            border: 1.5px solid #1a4b8c;
-            background: linear-gradient(180deg, rgba(64,134,244,0.05) 0%, rgba(11,20,26,0) 100%);
-            border-radius: 45px;
-            padding: 24px;
+        /* Premium Featured Card */
+        .lounge-card {
+            position: relative;
+            background: linear-gradient(165deg, rgba(62, 129, 241, 0.12) 0%, rgba(9, 14, 18, 0) 100%);
+            border: 1px solid rgba(62, 129, 241, 0.4);
+            border-radius: 42px;
+            padding: 26px;
             display: flex;
             align-items: center;
-            margin-bottom: 45px;
+            cursor: pointer;
+            transition: var(--transition);
+            margin-bottom: 48px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
         }
 
-        .blue-icon {
-            width: 58px;
-            height: 58px;
-            background: linear-gradient(135deg, #4086f4 0%, #1a56b8 100%);
+        .lounge-card:hover {
+            transform: translateY(-4px) scale(1.02);
+            border-color: var(--accent);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .icon-accent {
+            width: 62px;
+            height: 62px;
+            background: linear-gradient(135deg, #4c8cf5 0%, #2563eb 100%);
             border-radius: 20px;
             display: flex;
             justify-content: center;
             align-items: center;
-            margin-right: 18px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+            margin-right: 20px;
+            box-shadow: 0 10px 20px rgba(37, 99, 235, 0.3);
         }
 
-        /* Toolkit Section */
-        .toolkit-label {
-            font-size: 10px;
+        /* Toolkit Grid */
+        .toolkit-header {
+            font-size: 11px;
             letter-spacing: 3px;
-            color: var(--text-gray);
-            font-weight: 700;
-            margin-bottom: 18px;
-            padding-left: 8px;
+            color: var(--text-secondary);
+            font-weight: 800;
             text-transform: uppercase;
+            margin: 0 0 20px 12px;
         }
 
-        .tool-card {
-            background-color: var(--card-dark);
-            border-radius: 28px;
-            padding: 18px 22px;
+        .standard-card {
+            background: var(--card-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: 30px;
+            padding: 20px 24px;
             display: flex;
             align-items: center;
-            margin-bottom: 14px;
-            border: 1px solid transparent;
+            margin-bottom: 16px;
+            cursor: pointer;
+            transition: var(--transition);
         }
 
-        .dark-icon {
-            width: 48px;
-            height: 48px;
-            background-color: #1c252c;
-            border-radius: 14px;
+        .standard-card:hover {
+            background: #1a222a;
+            border-color: #30363d;
+            transform: translateX(6px);
+        }
+
+        .icon-dark {
+            width: 52px;
+            height: 52px;
+            background: #1c232b;
+            border-radius: 16px;
             display: flex;
             justify-content: center;
             align-items: center;
-            margin-right: 18px;
+            margin-right: 20px;
         }
 
-        /* Text Styles */
-        .main-label {
-            font-size: 17px;
+        /* Typography Control */
+        .lbl-main {
+            font-size: 18px;
             font-weight: 600;
-            display: block;
-            margin-bottom: 2px;
-        }
-
-        .sub-label {
-            font-size: 11px;
-            color: var(--text-gray);
+            letter-spacing: -0.3px;
             display: block;
         }
 
-        .lounge-sub {
+        .lbl-sub {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+            display: block;
+        }
+
+        .lbl-caps {
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 1.2px;
             font-weight: 700;
-            color: #5a6b79;
+            font-size: 10px;
+            color: #5b6975;
         }
 
         .chevron {
             margin-left: auto;
-            color: #2b579a;
-            font-size: 20px;
-            font-weight: 300;
+            color: #2e3c4a;
+            font-size: 24px;
         }
 
-        /* Footer */
+        /* Footer Entity */
         footer {
-            margin-top: 80px;
-            font-size: 9px;
+            margin-top: 60px;
+            font-size: 10px;
             letter-spacing: 4px;
             color: #3d4a54;
             font-weight: 600;
+            text-align: center;
         }
 
-        /* SVG Replacements for Pixel Accuracy */
-        .icon-svg { width: 22px; height: 22px; fill: white; }
-        .icon-resume { fill: #c59b48; }
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        svg { width: 24px; height: 24px; fill: white; }
+        .gold { fill: #c0a060; }
     </style>
 </head>
 <body>
 
-    <div class="brand-title">UNIDESK</div>
-    <div class="brand-subtitle">STUDENT UTILITY SUITE</div>
+    <header class="header-group">
+        <h1 class="brand-logo">UNIDESK</h1>
+        <div class="brand-tagline">STUDENT UTILITY SUITE</div>
+    </header>
 
-    <div class="container">
-        <!-- Student Lounge -->
-        <div class="featured-card">
-            <div class="blue-icon">
-                <svg class="icon-svg" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM4 4h16v12H5.17L4 17.17V4z"/></svg>
+    <div class="wrapper">
+        <!-- Main Entry: Student Lounge -->
+        <div class="lounge-card" onclick="location.href='page.html'">
+            <div class="icon-accent">
+                <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
             </div>
             <div>
-                <span class="main-label">Student Lounge</span>
-                <span class="sub-label lounge-sub">Secure Communication</span>
+                <span class="lbl-main">Student Lounge</span>
+                <span class="lbl-sub lbl-caps">Secure Communication</span>
             </div>
             <div class="chevron">›</div>
         </div>
 
-        <div class="toolkit-label">Toolkit</div>
+        <div class="toolkit-header">Core Toolkit</div>
 
-        <!-- Page Forge -->
-        <div class="tool-card">
-            <div class="dark-icon">
-                <svg class="icon-svg" style="fill: #717e88;" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+        <!-- Tool: Page Forge -->
+        <div class="standard-card" onclick="location.href='https://sharanmusician.github.io/Page-Forge/'">
+            <div class="icon-dark">
+                <svg style="opacity: 0.6;" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
             </div>
             <div>
-                <span class="main-label">Page Forge</span>
-                <span class="sub-label">Images to PDF Converter</span>
+                <span class="lbl-main">Page Forge</span>
+                <span class="lbl-sub">Professional PDF Engine</span>
             </div>
         </div>
 
-        <!-- Resume Maker -->
-        <div class="tool-card" style="opacity: 0.6;">
-            <div class="dark-icon">
-                <svg class="icon-svg icon-resume" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+        <!-- Tool: Resume Maker -->
+        <div class="standard-card" style="opacity: 0.5; cursor: default;">
+            <div class="icon-dark">
+                <svg class="gold" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
             </div>
             <div>
-                <span class="main-label">Resume Maker</span>
-                <span class="sub-label">Professional CV Builder</span>
+                <span class="lbl-main">Resume Maker</span>
+                <span class="lbl-sub">Architectural CV Builder</span>
             </div>
         </div>
     </div>
 
-    <footer>© 2026 AETHERCORE INTERACTIVE</footer>
+    <footer>
+        &copy; 2026 AETHERCORE INTERACTIVE
+    </footer>
 
+    <script>
+        // Haptic Feedback Simulation for Mobile
+        document.querySelectorAll('.standard-card, .lounge-card').forEach(button => {
+            button.addEventListener('click', () => {
+                if (window.navigator.vibrate) window.navigator.vibrate(10);
+            });
+        });
+    </script>
 </body>
 </html>
