@@ -34,22 +34,21 @@
         });
 
         async function handleCreate() {
-            // Admin creates the lounge document
-            // Integration: Using session.loungeName to store the actual name 
-            // under the 6-digit loungeId key.
             await setDoc(doc(db, "lounges", loungeId), {
                 admin: userName,
                 createdAt: serverTimestamp(),
                 loungeName: session.loungeName || loungeId 
             }, { merge: true });
             
-            // Redirect to the actual chat page
             window.location.href = 'chats.html';
         }
 
         async function handleJoin() {
             const loungeRef = doc(db, "lounges", loungeId);
             const loungeSnap = await getDoc(loungeRef);
+
+            // Hide the initial verification loader regardless of the result
+            document.getElementById('loading-state').style.display = 'none';
 
             if (loungeSnap.exists()) {
                 // Show knocking screen and send request
@@ -61,15 +60,13 @@
                     timestamp: Date.now()
                 });
 
-                // Listen for admin approval
                 onSnapshot(doc(db, "lounges", loungeId, "requests", reqRef.id), (snap) => {
                     if (snap.exists() && snap.data().status === 'accepted') {
                         window.location.href = 'chats.html';
                     }
                 });
             } else {
-                // Professional Error handling
-                document.getElementById('loading-state').style.display = 'none';
+                // Show Error screen if code is invalid/not found
                 document.getElementById('error-screen').style.display = 'flex';
                 setTimeout(() => {
                     window.location.href = 'page.html';
@@ -112,17 +109,23 @@
         <div id="loading-state">
             <div class="spinner"></div>
             <h2 style="color: var(--accent);">Verifying Session</h2>
-            <p>Please wait while we connect you to the AetherCore servers...</p>
+            <p>Scanning AetherCore for Lounge ID: <span style="color:white">#</span><span id="target-id" style="color:white"></span></p>
         </div>
 
-        <!-- Knocking Screen (Visible only when joining valid room) -->
+        <script>
+            // Simple visual feedback to show which code is being verified
+            const sess = JSON.parse(localStorage.getItem('unidesk_session'));
+            if(sess) document.getElementById('target-id').innerText = sess.lounge;
+        </script>
+
+        <!-- Knocking Screen -->
         <div id="knocking-screen" class="overlay">
             <div class="spinner" style="border-top-color: #f1c40f;"></div>
             <h2 style="color: #f1c40f;">Knocking...</h2>
-            <p>Room found. Waiting for the Lounge Admin to grant you access.</p>
+            <p>Lounge found. Waiting for the Admin to grant you access.</p>
         </div>
 
-        <!-- Error Screen (Visible only if room doesn't exist) -->
+        <!-- Error Screen -->
         <div id="error-screen" class="overlay">
             <div style="font-size: 3rem; margin-bottom: 20px;">🚫</div>
             <h2 style="color: var(--error);">Lounge Not Found</h2>
