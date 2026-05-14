@@ -2,208 +2,200 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Aethercore | Entrance</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700&display=swap');
-        :root { --accent: #2D7FF9; --bg: #050608; --card: #0F1116; --border: rgba(255,255,255,0.08); }
-        * { font-family: 'Space Grotesk', sans-serif; -webkit-tap-highlight-color: transparent; outline: none; }
-        body { 
-            background: var(--bg); color: #fff; margin: 0; min-height: 100dvh;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            background-image: radial-gradient(circle at 50% 50%, #111827 0%, #050608 100%);
-        }
-        .glass-card {
-            width: 92%; max-width: 380px; background: var(--card); border-radius: 42px;
-            padding: 35px; border: 1px solid var(--border); box-shadow: 0 40px 100px rgba(0,0,0,0.7);
-        }
-        .tab-switcher {
-            display: grid; grid-template-columns: 1fr 1fr; background: #000; 
-            padding: 5px; border-radius: 22px; margin-bottom: 28px; border: 1px solid var(--border);
-        }
-        .tab-btn {
-            border: none; background: transparent; color: #444; padding: 12px; 
-            border-radius: 18px; font-size: 11px; font-weight: 800; cursor: pointer; transition: 0.4s;
-        }
-        .tab-btn.active { background: var(--accent); color: #fff; }
-        
-        /* Avatar UI */
-        .avatar-zone { width: 105px; height: 105px; margin: 0 auto 28px; position: relative; cursor: pointer; }
-        .pfp-frame { 
-            width: 100%; height: 100%; border-radius: 35px; border: 2px dashed var(--border); 
-            background: #1C1F26; display: flex; align-items: center; justify-content: center; overflow: hidden;
-        }
-        .pfp-frame img { width: 100%; height: 100%; object-fit: cover; display: none; }
-        .cam-badge {
-            position: absolute; right: -5px; bottom: -5px; background: var(--accent);
-            width: 34px; height: 34px; border-radius: 12px; display: flex; align-items: center; justify-content: center; border: 4px solid var(--card);
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UNIDESK | Chat</title>
+    <script type="module">
+        // Firebase Setup
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, doc, setDoc, getDoc, updateDoc, onSnapshot, collection, addDoc, query, orderBy, arrayUnion } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDbfmd0zmv_mFV0CG2OrhKPPeU3zPYGOBg",
+            authDomain: "unidesk-a70ac.firebaseapp.com",
+            projectId: "unidesk-a70ac",
+            storageBucket: "unidesk-a70ac.firebasestorage.app",
+            messagingSenderId: "882535016432",
+            appId: "1:882535016432:web:6eca2645a47a827e779f35"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // State Management
+        const session = JSON.parse(localStorage.getItem('unidesk_session'));
+        if (!session) window.location.href = 'index.html';
+
+        const loungeId = session.lounge;
+        const userName = session.user;
+        const isCreator = session.mode === 'create';
+        let myRequestId = null;
+
+        // UI Elements
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('header-title').innerText = loungeId;
+            if (isCreator) {
+                initLounge();
+            } else {
+                sendJoinRequest();
+            }
+            listenForMessages();
+        });
+
+        // --- CORE FUNCTIONS ---
+
+        async function initLounge() {
+            // Create lounge in Firestore if it doesn't exist
+            await setDoc(doc(db, "lounges", loungeId), {
+                name: loungeId,
+                admin: userName,
+                createdAt: Date.now()
+            }, { merge: true });
+            
+            document.getElementById('admin-tools').style.display = 'block';
+            listenForRequests();
         }
 
-        /* Inputs */
-        .input-stack input {
-            width: 100%; background: rgba(0,0,0,0.4); border: 1px solid var(--border);
-            padding: 18px; border-radius: 20px; color: #fff; text-align: center; margin-bottom: 12px; font-size: 15px;
+        async function sendJoinRequest() {
+            const loadingOverlay = document.getElementById('loading-overlay');
+            loadingOverlay.style.display = 'flex';
+
+            // Add self to requests
+            const reqRef = await addDoc(collection(db, "lounges", loungeId, "requests"), {
+                name: userName,
+                status: 'pending',
+                timestamp: Date.now()
+            });
+            myRequestId = reqRef.id;
+
+            // Listen for approval
+            onSnapshot(doc(db, "lounges", loungeId, "requests", myRequestId), (snap) => {
+                if (snap.exists() && snap.data().status === 'accepted') {
+                    loadingOverlay.style.display = 'none';
+                }
+            });
         }
-        .action-btn {
-            width: 100%; padding: 20px; border-radius: 24px; border: none; background: #14171C; color: #333; 
-            font-weight: 800; transition: 0.5s; cursor: not-allowed; display: flex; align-items: center; justify-content: center; gap: 10px;
+
+        function listenForRequests() {
+            onSnapshot(collection(db, "lounges", loungeId, "requests"), (snapshot) => {
+                const list = document.getElementById('request-list');
+                const badge = document.getElementById('req-count');
+                let count = 0;
+                list.innerHTML = '';
+                
+                snapshot.forEach(docSnap => {
+                    const data = docSnap.data();
+                    if (data.status === 'pending') {
+                        count++;
+                        const li = document.createElement('div');
+                        li.className = 'request-item';
+                        li.innerHTML = `
+                            <span>${data.name} wants to join</span>
+                            <button onclick="approveUser('${docSnap.id}')">Accept</button>
+                        `;
+                        list.appendChild(li);
+                    }
+                });
+                badge.innerText = count;
+                badge.style.display = count > 0 ? 'block' : 'none';
+            });
         }
-        .action-btn.unlocked { background: #fff; color: #000; cursor: pointer; }
+
+        window.approveUser = async (reqId) => {
+            await updateDoc(doc(db, "lounges", loungeId, "requests", reqId), { status: 'accepted' });
+        };
+
+        async function sendMessage() {
+            const input = document.getElementById('msg-input');
+            if (!input.value.trim()) return;
+
+            await addDoc(collection(db, "lounges", loungeId, "messages"), {
+                text: input.value,
+                sender: userName,
+                timestamp: Date.now()
+            });
+            input.value = '';
+        }
+
+        function listenForMessages() {
+            const q = query(collection(db, "lounges", loungeId, "messages"), orderBy("timestamp", "asc"));
+            onSnapshot(q, (snapshot) => {
+                const container = document.getElementById('chat-container');
+                container.innerHTML = '';
+                snapshot.forEach(doc => {
+                    const msg = doc.data();
+                    const div = document.createElement('div');
+                    div.className = `message ${msg.sender === userName ? 'sent' : 'received'}`;
+                    div.innerHTML = `<div class="sender-name">${msg.sender}</div>${msg.text}`;
+                    container.appendChild(div);
+                });
+                container.scrollTop = container.scrollHeight;
+            });
+        }
+
+        window.toggleReqPopup = () => {
+            const p = document.getElementById('request-popup');
+            p.style.display = p.style.display === 'block' ? 'none' : 'block';
+        };
         
-        /* Loader */
-        .loader {
-            width: 80px; height: 80px; border: 4px solid rgba(45, 127, 249, 0.1);
-            border-top: 4px solid var(--accent); border-radius: 50%; animation: spin 1s linear infinite;
+        window.sendMessage = sendMessage;
+    </script>
+    <style>
+        :root {
+            --whatsapp-bg: #0b141a;
+            --header-bg: #202c33;
+            --msg-sent: #005c4b;
+            --msg-received: #202c33;
+            --accent: #58a6ff;
         }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .hidden { display: none !important; }
+        body { margin: 0; background: var(--whatsapp-bg); color: white; font-family: sans-serif; }
+        
+        /* Header */
+        header { background: var(--header-bg); padding: 15px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; }
+        
+        /* Chat Area */
+        #chat-container { height: calc(100vh - 130px); overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+        .message { max-width: 70%; padding: 8px 12px; border-radius: 8px; font-size: 0.9rem; position: relative; }
+        .sent { align-self: flex-end; background: var(--msg-sent); }
+        .received { align-self: flex-start; background: var(--msg-received); }
+        .sender-name { font-size: 0.7rem; color: var(--accent); margin-bottom: 4px; font-weight: bold; }
+
+        /* Input Area */
+        .input-area { position: fixed; bottom: 0; width: 100%; background: var(--header-bg); padding: 10px; display: flex; gap: 10px; }
+        input { flex: 1; background: #2a3942; border: none; padding: 12px; border-radius: 8px; color: white; outline: none; }
+        
+        /* Overlay & Popups */
+        #loading-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; }
+        #request-popup { display: none; position: absolute; top: 60px; right: 10px; background: #2a3942; border-radius: 8px; width: 250px; padding: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        .request-item { display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; margin-bottom: 8px; padding-bottom: 5px; border-bottom: 1px solid #3b4a54; }
+        .req-btn { background: var(--accent); border: none; border-radius: 50%; width: 30px; height: 30px; cursor: pointer; color: white; }
+        #req-count { position: absolute; top: 5px; right: 5px; background: red; font-size: 10px; border-radius: 50%; padding: 2px 6px; }
     </style>
 </head>
 <body>
 
-    <!-- KNOCKING OVERLAY -->
-    <div id="knocking-screen" class="fixed inset-0 z-[200] bg-black/95 backdrop-blur-xl flex flex-col items-center justify-center hidden">
-        <div class="relative flex items-center justify-center">
-            <div class="loader"></div>
-            <i class="fa-solid fa-shield-halved absolute text-xl text-[#2D7FF9]"></i>
-        </div>
-        <h2 class="mt-8 text-lg font-bold tracking-tight text-white uppercase">Knocking...</h2>
-        <p class="text-gray-500 text-[10px] mt-2 uppercase tracking-[0.3em] font-bold text-center px-10 leading-relaxed">
-            Waiting for Admin to approve your entry to the lounge
-        </p>
-        <button onclick="location.reload()" class="mt-12 text-gray-600 text-[9px] font-black uppercase tracking-widest border border-white/5 px-8 py-3 rounded-full active:bg-white/5">
-            Cancel Request
-        </button>
-    </div>
-
-    <div class="text-center mb-10">
-        <h1 class="text-4xl font-black text-[#2D7FF9] italic tracking-tighter uppercase leading-none">Student Lounge</h1>
-        <p class="text-[9px] text-gray-600 tracking-[0.5em] font-bold uppercase mt-3">Secure Academic Hub</p>
-    </div>
-
-    <div class="glass-card">
-        <div class="tab-switcher">
-            <button class="tab-btn active" id="btn-create" onclick="setMode('create', this)">CREATE</button>
-            <button class="tab-btn" id="btn-join" onclick="setMode('join', this)">JOIN</button>
-        </div>
-
-        <div id="pfp-ui" class="avatar-zone" onclick="document.getElementById('file-up').click()">
-            <div class="pfp-frame" id="frame">
-                <i class="fas fa-user text-3xl text-[#333]" id="user-icon"></i>
-                <img id="preview">
+    <header>
+        <div id="header-title">Lounge Name</div>
+        <div id="admin-tools" style="display: none; position: relative;">
+            <button class="req-btn" onclick="toggleReqPopup()">🔔</button>
+            <span id="req-count">0</span>
+            <div id="request-popup">
+                <h4 style="margin-bottom: 10px;">Join Requests</h4>
+                <div id="request-list"></div>
             </div>
-            <div class="cam-badge"><i class="fas fa-plus text-xs"></i></div>
-            <input type="file" id="file-up" class="hidden" accept="image/*" onchange="loadImg(this)">
         </div>
+    </header>
 
-        <div class="input-stack">
-            <input type="text" id="user" placeholder="YOUR NAME" oninput="v()">
-            <input type="text" id="lounge" placeholder="LOUNGE NAME" oninput="v()">
-            <input type="text" id="code" class="hidden" placeholder="6-DIGIT CODE" maxlength="6" oninput="v()">
-        </div>
+    <div id="chat-container"></div>
 
-        <button id="go-btn" class="action-btn" disabled>
-            <span id="btn-txt">INITIALIZE</span>
-            <i class="fas fa-bolt-lightning"></i>
-        </button>
+    <div class="input-area">
+        <input type="text" id="msg-input" placeholder="Type a message">
+        <button onclick="sendMessage()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">✈️</button>
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    <div id="loading-overlay">
+        <h2>Knocking...</h2>
+        <p>Waiting for admin to let you in.</p>
+    </div>
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyDbfmd0zmv_mFV0CG2OrhKPPeU3zPYGOBg",
-            databaseURL: "https://unidesk-a70ac-default-rtdb.firebaseio.com",
-            projectId: "unidesk-a70ac",
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-
-        let mode = 'create';
-        let imgData = "";
-
-        // UI Management
-        window.setMode = (m, el) => {
-            mode = m;
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            el.classList.add('active');
-            
-            // Toggle visibility based on mode
-            document.getElementById('lounge').classList.toggle('hidden', m==='join');
-            document.getElementById('code').classList.toggle('hidden', m==='create');
-            document.getElementById('btn-txt').innerText = m === 'create' ? 'INITIALIZE' : 'CONNECT';
-            v();
-        };
-
-        window.loadImg = (i) => {
-            if (i.files && i.files[0]) {
-                const r = new FileReader();
-                r.onload = (e) => {
-                    imgData = e.target.result;
-                    document.getElementById('preview').src = imgData;
-                    document.getElementById('preview').style.display = 'block';
-                    document.getElementById('user-icon').style.display = 'none';
-                    document.getElementById('frame').style.borderStyle = 'solid';
-                };
-                r.readAsDataURL(i.files[0]);
-            }
-        };
-
-        window.v = () => {
-            const u = document.getElementById('user').value.trim();
-            const l = document.getElementById('lounge').value.trim();
-            const c = document.getElementById('code').value.trim();
-            const isOk = (mode === 'create') ? (u && l) : (u && c.length === 6);
-            const b = document.getElementById('go-btn');
-            b.disabled = !isOk; b.classList.toggle('unlocked', isOk);
-        };
-
-        // Execution Logic
-        document.getElementById('go-btn').onclick = async () => {
-            const name = document.getElementById('user').value.trim();
-            const lTitle = document.getElementById('lounge').value.trim();
-            const lCode = mode === 'join' ? document.getElementById('code').value.trim() : Math.floor(100000 + Math.random() * 900000).toString();
-
-            // Local Session Storage
-            localStorage.setItem('user_pfp', imgData);
-            localStorage.setItem('user_name', name);
-            localStorage.setItem('lounge_title', mode === 'create' ? lTitle : "Student Lounge");
-            localStorage.setItem('lounge_code', lCode);
-            localStorage.setItem('user_role', mode === 'create' ? 'admin' : 'joiner');
-
-            if (mode === 'join') {
-                document.getElementById('knocking-screen').classList.remove('hidden');
-                
-                // 1. Submit Request to Realtime Database
-                const requestPath = ref(db, `rooms/${lCode}/requests/${name}`);
-                
-                try {
-                    await set(requestPath, {
-                        name: name,
-                        pfp: imgData || "", // SYNC: Shared for Admin review
-                        status: 'pending'
-                    });
-
-                    // 2. Wait for Admin to change status to 'approved'
-                    onValue(requestPath, (snapshot) => {
-                        const data = snapshot.val();
-                        if (data && data.status === 'approved') {
-                            location.href = 'message.html';
-                        }
-                    });
-                } catch (e) {
-                    alert("Error reaching server.");
-                    document.getElementById('knocking-screen').classList.add('hidden');
-                }
-            } else {
-                // Admin skips knocking
-                location.href = 'message.html';
-            }
-        };
-    </script>
 </body>
 </html>
