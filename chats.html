@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UNIDESK | Chat</title>
+    <title>UNIDESK | Chat Session</title>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, doc, updateDoc, onSnapshot, collection, addDoc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, updateDoc, onSnapshot, collection, addDoc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDbfmd0zmv_mFV0CG2OrhKPPeU3zPYGOBg",
@@ -26,10 +26,19 @@
         const { user: userName, lounge: loungeId, mode } = session;
         const isAdmin = mode === 'create';
 
-        document.addEventListener('DOMContentLoaded', () => {
-            // Setup Header Details
-            document.getElementById('display-lounge-name').innerText = loungeId;
+        document.addEventListener('DOMContentLoaded', async () => {
+            // 1. Display the 6-digit code immediately
             document.getElementById('display-lounge-code').innerText = `ID: ${loungeId}`;
+
+            // 2. Fetch the Lounge Name from Firebase
+            const loungeRef = doc(db, "lounges", loungeId);
+            const loungeSnap = await getDoc(loungeRef);
+            
+            if (loungeSnap.exists()) {
+                document.getElementById('display-lounge-name').innerText = loungeSnap.data().loungeName;
+            } else {
+                document.getElementById('display-lounge-name').innerText = "Student Lounge";
+            }
 
             if (isAdmin) {
                 initAdminPanel();
@@ -87,7 +96,7 @@
                         const div = document.createElement('div');
                         div.className = 'req-item';
                         div.innerHTML = `
-                            <span>${data.name}</span>
+                            <span>${data.name} wants to join</span>
                             <button onclick="acceptEntry('${d.id}')">ACCEPT</button>
                         `;
                         list.appendChild(div);
@@ -119,7 +128,7 @@
             --dim: #8696a0;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
         body { background: var(--bg); color: var(--text); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
 
         header {
@@ -141,15 +150,14 @@
             padding: 20px;
             display: flex;
             flex-direction: column;
-            gap: 10px;
-            background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png');
-            background-blend-mode: overlay;
+            gap: 12px;
             background-color: var(--bg);
+            /* WhatsApp-style wallpaper pattern could be added here */
         }
 
-        .msg { max-width: 70%; display: flex; flex-direction: column; }
+        .msg { max-width: 80%; display: flex; flex-direction: column; }
         .msg small { font-size: 0.65rem; color: var(--accent); font-weight: bold; margin-bottom: 2px; margin-left: 5px; }
-        .bubble { padding: 8px 12px; border-radius: 8px; font-size: 0.95rem; line-height: 1.4; position: relative; }
+        .bubble { padding: 8px 12px; border-radius: 8px; font-size: 0.95rem; line-height: 1.4; }
         
         .sent { align-self: flex-end; }
         .sent .bubble { background: var(--me); border-top-right-radius: 0; }
@@ -172,13 +180,11 @@
         .send-btn {
             background: transparent;
             border: none;
-            color: var(--dim);
+            color: var(--accent);
             cursor: pointer;
-            transition: 0.2s;
         }
-        .send-btn:hover { color: var(--accent); }
 
-        /* Admin Styles */
+        /* Admin/Bell Styles */
         #admin-tools { position: relative; }
         .bell-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; position: relative; }
         #req-count {
@@ -196,15 +202,14 @@
             box-shadow: 0 8px 24px rgba(0,0,0,0.5);
         }
         #req-popup.active { display: flex; }
-        #req-popup h4 { font-size: 0.8rem; color: var(--dim); margin-bottom: 12px; text-transform: uppercase; }
         .req-item {
             display: flex; justify-content: space-between; align-items: center;
             padding: 10px 0; border-bottom: 1px solid #3b4a54;
         }
-        .req-item span { font-size: 0.9rem; }
+        .req-item span { font-size: 0.85rem; }
         .req-item button {
             background: var(--accent); border: none; color: white;
-            padding: 5px 10px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 0.75rem;
+            padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.7rem;
         }
     </style>
 </head>
@@ -212,7 +217,7 @@
 
     <header>
         <div class="lounge-info">
-            <h3 id="display-lounge-name">Lounge Name</h3>
+            <h3 id="display-lounge-name">Loading...</h3>
             <p id="display-lounge-code">ID: 000000</p>
         </div>
         
@@ -221,7 +226,7 @@
                 🔔<span id="req-count">0</span>
             </button>
             <div id="req-popup">
-                <h4>Entry Requests</h4>
+                <p style="font-size: 0.7rem; color: var(--dim); margin-bottom: 10px;">ENTRY REQUESTS</p>
                 <div id="req-list"></div>
             </div>
         </div>
@@ -232,7 +237,7 @@
     <footer>
         <input type="text" id="msg-input" placeholder="Type a message" onkeypress="if(event.key === 'Enter') sendMsg()">
         <button class="send-btn" onclick="sendMsg()">
-            <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor"><path d="M1.101 21.757L23.8 12.028 1.101 2.3l.011 7.912 13.623 1.816-13.623 1.817-.011 7.912z"></path></svg>
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M1.101 21.757L23.8 12.028 1.101 2.3l.011 7.912 13.623 1.816-13.623 1.817-.011 7.912z"></path></svg>
         </button>
     </footer>
 
