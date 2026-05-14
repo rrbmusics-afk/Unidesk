@@ -16,17 +16,22 @@
             --transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
+        /* UI LOCK PROTOCOL */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
             -webkit-font-smoothing: antialiased;
+            /* Disable Selection and Callouts */
+            -webkit-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
         }
 
-        /* Fixed Screen Architecture */
         html, body {
             height: 100%;
-            overflow: hidden; /* Zero scrolling */
+            overflow: hidden;
             background-color: var(--bg);
         }
 
@@ -38,14 +43,13 @@
             padding: calc(var(--safe-top) + 40px) 30px calc(var(--safe-bottom) + 20px);
         }
 
-        /* Aesthetic Branding: Smaller Scale */
         .brand-core {
             text-align: center;
             margin-bottom: 50px;
         }
 
         .logo {
-            font-size: 42px; /* Precision scaled down */
+            font-size: 42px;
             font-weight: 900;
             font-style: italic;
             color: var(--accent);
@@ -54,7 +58,7 @@
         }
 
         .tagline {
-            font-size: 8px; /* High-end minimalist small text */
+            font-size: 8px;
             letter-spacing: 4px;
             font-weight: 700;
             color: var(--text-s);
@@ -68,7 +72,6 @@
             margin: 0 auto;
         }
 
-        /* Card Refinement */
         .btn-lounge {
             background: linear-gradient(165deg, rgba(74, 144, 226, 0.12) 0%, rgba(8, 12, 16, 0) 100%);
             border: 1px solid rgba(74, 144, 226, 0.4);
@@ -117,7 +120,6 @@
             text-transform: uppercase;
         }
 
-        /* Dialogue Box / Modal */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0;
@@ -168,7 +170,6 @@
             margin-right: 12px;
         }
 
-        /* Typography Hierarchy (Small/Aesthetic) */
         .title { font-size: 15px; font-weight: 600; letter-spacing: -0.2px; }
         .sub { font-size: 11px; color: var(--text-s); margin-top: 1px; }
         .close-label {
@@ -180,14 +181,13 @@
             font-weight: 600;
         }
 
-        /* Fixed Footer (Micro-Text) */
         footer {
             position: absolute;
             bottom: calc(var(--safe-bottom) + 15px);
             width: 100%;
             left: 0;
             text-align: center;
-            font-size: 7.5px; /* Extremely small/architectural */
+            font-size: 7.5px;
             letter-spacing: 3.5px;
             color: #313a43;
             font-weight: 600;
@@ -197,7 +197,7 @@
         svg { width: 20px; height: 20px; fill: white; }
     </style>
 </head>
-<body>
+<body oncontextmenu="return false;"> <!-- Global Context Menu Lock -->
 
     <header class="brand-core">
         <h1 class="logo">UNIDESK</h1>
@@ -220,7 +220,6 @@
         </div>
     </div>
 
-    <!-- Dialogue Box -->
     <div class="modal-overlay" id="overlay" onclick="closeModal()">
         <div class="modal-content" onclick="event.stopPropagation()">
             <div class="tool-card" onclick="location.href='https://sharanmusician.github.io/Page-Forge/'">
@@ -239,10 +238,20 @@
 
     <script>
         const overlay = document.getElementById('overlay');
+        
+        // Prevent default browser interactions
+        document.addEventListener('contextmenu', event => event.preventDefault());
+        document.addEventListener('keydown', event => {
+            if (event.ctrlKey && (event.key === 'c' || event.key === 'u' || event.key === 's')) {
+                event.preventDefault();
+            }
+        });
+
         function openModal() {
             overlay.classList.add('active');
             if (navigator.vibrate) navigator.vibrate(10);
         }
+
         function closeModal() {
             overlay.classList.remove('active');
         }
