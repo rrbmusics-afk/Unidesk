@@ -35,10 +35,12 @@
 
         async function handleCreate() {
             // Admin creates the lounge document
+            // Integration: Using session.loungeName to store the actual name 
+            // under the 6-digit loungeId key.
             await setDoc(doc(db, "lounges", loungeId), {
                 admin: userName,
                 createdAt: serverTimestamp(),
-                loungeName: loungeId 
+                loungeName: session.loungeName || loungeId 
             }, { merge: true });
             
             // Redirect to the actual chat page
