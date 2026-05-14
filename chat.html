@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UNIDESK | Chat Session</title>
+    <title>UNIDESK | Lounge Session</title>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot, collection, addDoc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
@@ -27,18 +27,21 @@
         const isAdmin = mode === 'create';
 
         document.addEventListener('DOMContentLoaded', async () => {
+            // Setup Initial UI
             document.getElementById('lounge-title').innerText = loungeId;
             document.getElementById('lounge-display-code').innerText = `ROOM ID: ${loungeId}`;
             
             if (isAdmin) {
+                // Admins see the chat immediately
+                document.getElementById('main-chat-wrapper').style.display = 'block';
                 initAdminLogic();
             } else {
+                // Joiners stay on the loading/knocking screen
                 validateAndJoin();
             }
             listenForMessages();
         });
 
-        // --- Validation Logic ---
         async function validateAndJoin() {
             const loungeRef = doc(db, "lounges", loungeId);
             const loungeSnap = await getDoc(loungeRef);
@@ -46,22 +49,14 @@
             if (loungeSnap.exists()) {
                 initJoinerLogic();
             } else {
-                // Professional Error Handling
-                const errorScreen = document.getElementById('error-screen');
-                errorScreen.style.display = 'flex';
-                setTimeout(() => {
-                    window.location.href = 'page.html';
-                }, 3000);
+                document.getElementById('knocking-screen').style.display = 'none';
+                document.getElementById('error-screen').style.display = 'flex';
+                setTimeout(() => { window.location.href = 'page.html'; }, 3000);
             }
         }
 
-        // --- Admin/Creator Logic ---
         async function initAdminLogic() {
-            await setDoc(doc(db, "lounges", loungeId), { 
-                admin: userName,
-                createdAt: serverTimestamp() 
-            }, { merge: true });
-            
+            await setDoc(doc(db, "lounges", loungeId), { admin: userName }, { merge: true });
             document.getElementById('admin-ui').style.display = 'block';
 
             onSnapshot(collection(db, "lounges", loungeId, "requests"), (snapshot) => {
@@ -69,7 +64,6 @@
                 const badge = document.getElementById('req-count');
                 let count = 0;
                 list.innerHTML = '';
-
                 snapshot.forEach(d => {
                     const data = d.data();
                     if (data.status === 'pending') {
@@ -85,37 +79,29 @@
             });
         }
 
-        window.acceptUser = async (id) => {
-            await updateDoc(doc(db, "lounges", loungeId, "requests", id), { status: 'accepted' });
-        };
-
-        // --- Joiner Logic (Knocking) ---
         async function initJoinerLogic() {
             document.getElementById('knocking-screen').style.display = 'flex';
-            
             const reqRef = await addDoc(collection(db, "lounges", loungeId, "requests"), {
-                name: userName,
-                status: 'pending',
-                time: Date.now()
+                name: userName, status: 'pending', time: Date.now()
             });
 
             onSnapshot(doc(db, "lounges", loungeId, "requests", reqRef.id), (snap) => {
                 if (snap.exists() && snap.data().status === 'accepted') {
                     document.getElementById('knocking-screen').style.display = 'none';
+                    document.getElementById('main-chat-wrapper').style.display = 'block';
                 }
             });
         }
 
-        // --- Message Logic ---
+        window.acceptUser = async (id) => {
+            await updateDoc(doc(db, "lounges", loungeId, "requests", id), { status: 'accepted' });
+        };
+
         window.sendMsg = async () => {
             const input = document.getElementById('msg-input');
-            const val = input.value.trim();
-            if (!val) return;
-
+            if (!input.value.trim()) return;
             await addDoc(collection(db, "lounges", loungeId, "messages"), {
-                sender: userName,
-                text: val,
-                timestamp: serverTimestamp()
+                sender: userName, text: input.value, timestamp: serverTimestamp()
             });
             input.value = '';
         };
@@ -127,9 +113,8 @@
                 box.innerHTML = '';
                 snapshot.forEach(d => {
                     const m = d.data();
-                    const isMe = m.sender === userName;
                     const div = document.createElement('div');
-                    div.className = `msg ${isMe ? 'sent' : 'received'}`;
+                    div.className = `msg ${m.sender === userName ? 'sent' : 'received'}`;
                     div.innerHTML = `<small>${m.sender}</small><div>${m.text}</div>`;
                     box.appendChild(div);
                 });
@@ -143,73 +128,72 @@
         };
     </script>
     <style>
-        :root { --bg: #05070a; --header: #0d1117; --bubble-me: #005c4b; --bubble-them: #202c33; --accent: #58a6ff; --text-dim: #8b949e; --error: #ff4d4d; }
-        body { margin: 0; background: var(--bg); color: white; font-family: 'Inter', sans-serif; overflow: hidden; }
+        :root { --bg: #05070a; --header: #0d1117; --accent: #58a6ff; --error: #ff4d4d; --text-dim: #8b949e; }
+        body { margin: 0; background: var(--bg); color: white; font-family: 'Inter', sans-serif; }
         
-        header { background: var(--header); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #30363d; position: sticky; top: 0; z-index: 10; }
-        #lounge-title { margin: 0; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px; }
+        /* Main Chat Wrapper hidden by default */
+        #main-chat-wrapper { display: none; height: 100vh; overflow: hidden; }
+
+        header { background: var(--header); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #30363d; }
         #lounge-display-code { display: block; font-size: 0.65rem; color: var(--accent); font-weight: bold; margin-top: 4px; }
 
         #chat-box { height: calc(100vh - 150px); overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
-        .msg { max-width: 75%; padding: 10px 14px; border-radius: 12px; line-height: 1.4; position: relative; }
-        .msg small { font-size: 0.65rem; color: var(--accent); font-weight: bold; margin-bottom: 4px; display: block; }
-        .sent { align-self: flex-end; background: var(--bubble-me); border-bottom-right-radius: 2px; }
-        .received { align-self: flex-start; background: var(--bubble-them); border-bottom-left-radius: 2px; }
+        .msg { max-width: 75%; padding: 10px 14px; border-radius: 12px; }
+        .msg small { font-size: 0.65rem; color: var(--accent); font-weight: bold; display: block; margin-bottom: 4px; }
+        .sent { align-self: flex-end; background: #005c4b; border-bottom-right-radius: 2px; }
+        .received { align-self: flex-start; background: #202c33; border-bottom-left-radius: 2px; }
 
         footer { position: fixed; bottom: 0; width: 100%; background: var(--header); padding: 15px; display: flex; gap: 10px; border-top: 1px solid #30363d; }
-        input { flex: 1; background: #161b22; border: 1px solid #30363d; padding: 12px; border-radius: 10px; color: white; outline: none; transition: 0.3s; }
-        input:focus { border-color: var(--accent); }
-        .send-btn { background: var(--accent); border: none; border-radius: 50%; width: 45px; height: 45px; cursor: pointer; color: white; display: flex; align-items: center; justify-content: center; }
-        
-        /* Overlays */
-        .overlay { position: fixed; inset: 0; background: #05070a; z-index: 1000; display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; }
-        
-        #req-popup { display: none; position: absolute; top: 70px; right: 20px; background: #161b22; padding: 15px; border: 1px solid #30363d; border-radius: 16px; width: 280px; z-index: 100; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .req-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: 0.85rem; padding-bottom: 8px; border-bottom: 1px solid #30363d; }
-        .req-row button { background: var(--accent); border: none; color: white; padding: 6px 12px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.7rem; }
-        #req-count { background: var(--error); border-radius: 50%; padding: 2px 6px; font-size: 10px; position: absolute; top: 10px; right: 10px; font-weight: bold; }
+        input { flex: 1; background: #161b22; border: 1px solid #30363d; padding: 12px; border-radius: 10px; color: white; outline: none; }
+        .send-btn { background: var(--accent); border: none; border-radius: 50%; width: 45px; height: 45px; color: white; cursor: pointer; }
 
+        .overlay { position: fixed; inset: 0; background: var(--bg); z-index: 2000; display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+        #req-popup { display: none; position: absolute; top: 70px; right: 20px; background: #161b22; padding: 15px; border: 1px solid #30363d; border-radius: 16px; width: 280px; z-index: 100; }
+        .req-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid #30363d; padding-bottom: 8px; }
+        .req-row button { background: var(--accent); border: none; color: white; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 0.7rem; }
+        #req-count { background: var(--error); border-radius: 50%; padding: 2px 6px; font-size: 10px; position: absolute; top: 10px; right: 10px; }
+
+        .spinner { width: 40px; height: 40px; border: 3px solid #30363d; border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
         @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
-    <header>
-        <div>
-            <h3 id="lounge-title">Lounge</h3>
-            <span id="lounge-display-code"></span>
-        </div>
-        <div id="admin-ui" style="display: none; position: relative;">
-            <button onclick="toggleRequests()" style="background: none; border: none; color: white; cursor: pointer; font-size: 1.4rem;">🔔</button>
-            <span id="req-count" style="visibility: hidden;">0</span>
-            <div id="req-popup">
-                <p style="font-size: 0.7rem; color: var(--text-dim); margin-bottom: 15px; letter-spacing: 1px; font-weight: bold;">KNOCKING REQUESTS</p>
-                <div id="req-list"></div>
+    <!-- Chat Session UI (Hidden until Admin accepts or if user is Creator) -->
+    <div id="main-chat-wrapper">
+        <header>
+            <div>
+                <h3 id="lounge-title" style="margin:0; text-transform:uppercase;">Lounge</h3>
+                <span id="lounge-display-code"></span>
             </div>
-        </div>
-    </header>
-
-    <div id="chat-box"></div>
-
-    <footer>
-        <input type="text" id="msg-input" placeholder="Say something...">
-        <button onclick="sendMsg()" class="send-btn">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
-        </button>
-    </footer>
-
-    <!-- Knocking Screen -->
-    <div id="knocking-screen" class="overlay">
-        <div style="width: 40px; height: 40px; border: 3px solid #30363d; border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px;"></div>
-        <h2 style="color: var(--accent); margin-bottom: 10px; letter-spacing: 2px;">KNOCKING...</h2>
-        <p style="color: var(--text-dim); font-size: 0.9rem;">The admin must accept you into the lounge.</p>
+            <div id="admin-ui" style="display: none; position: relative;">
+                <button onclick="toggleRequests()" style="background: none; border: none; color: white; cursor: pointer; font-size: 1.4rem;">🔔</button>
+                <span id="req-count" style="visibility: hidden;">0</span>
+                <div id="req-popup">
+                    <p style="font-size: 0.7rem; color: var(--text-dim); margin-bottom: 15px;">PENDING REQUESTS</p>
+                    <div id="req-list"></div>
+                </div>
+            </div>
+        </header>
+        <div id="chat-box"></div>
+        <footer>
+            <input type="text" id="msg-input" placeholder="Say something...">
+            <button onclick="sendMsg()" class="send-btn">➤</button>
+        </footer>
     </div>
 
-    <!-- Error Screen (No Room Found) -->
+    <!-- Professional Loading / Knocking Screen -->
+    <div id="knocking-screen" class="overlay" style="display: flex;">
+        <div class="spinner"></div>
+        <h2 style="color: var(--accent); letter-spacing: 2px;">AUTHORIZING</h2>
+        <p style="color: var(--text-dim);">Connecting to server and requesting access...</p>
+    </div>
+
+    <!-- Professional Error Screen -->
     <div id="error-screen" class="overlay">
         <div style="font-size: 3rem; margin-bottom: 20px;">🚫</div>
-        <h2 style="color: var(--error); margin-bottom: 10px; letter-spacing: 2px;">LOUNGE NOT FOUND</h2>
-        <p style="color: var(--text-dim); font-size: 0.9rem;">The room code provided is invalid or has expired.</p>
+        <h2 style="color: var(--error); letter-spacing: 2px;">SESSION NOT FOUND</h2>
+        <p style="color: var(--text-dim);">The requested lounge room does not exist.</p>
         <p style="color: var(--accent); font-size: 0.8rem; margin-top: 20px;">Returning to Lobby...</p>
     </div>
 
