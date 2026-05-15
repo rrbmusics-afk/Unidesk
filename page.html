@@ -20,7 +20,6 @@
             box-sizing: border-box;
             font-family: 'Inter', -apple-system, sans-serif;
             -webkit-user-select: none;
-            -ms-user-select: none;
             user-select: none;
             -webkit-tap-highlight-color: transparent;
         }
@@ -52,11 +51,6 @@
             gap: 8px;
             transition: 0.3s;
             z-index: 100;
-        }
-
-        .home-btn:active {
-            transform: scale(0.95);
-            background: var(--border-color);
         }
 
         .container {
@@ -139,7 +133,6 @@
             color: white;
             outline: none;
             transition: 0.3s;
-            -webkit-user-select: text;
             user-select: text;
         }
 
@@ -160,18 +153,6 @@
             transition: transform 0.2s;
         }
 
-        .action-btn:active {
-            transform: scale(0.98);
-        }
-
-        .footer-brand {
-            position: absolute;
-            bottom: 20px;
-            font-size: 0.6rem;
-            letter-spacing: 2px;
-            color: #30363d;
-        }
-
         #custom-toast {
             visibility: hidden;
             min-width: 250px;
@@ -183,30 +164,18 @@
             position: fixed;
             z-index: 1000;
             bottom: 30px;
-            font-size: 0.9rem;
-            font-weight: 600;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
             left: 50%;
             transform: translateX(-50%);
+            transition: 0.3s;
         }
 
-        #custom-toast.show {
-            visibility: visible;
-            animation: fadein 0.5s, fadeout 0.5s 2.5s;
-        }
-
-        @keyframes fadein { from {bottom: 0; opacity: 0;} to {bottom: 30px; opacity: 1;} }
-        @keyframes fadeout { from {bottom: 30px; opacity: 1;} to {bottom: 0; opacity: 0;} }
-
+        #custom-toast.show { visibility: visible; }
         .hidden { display: none; }
     </style>
 </head>
 <body>
 
-    <button class="home-btn" onclick="window.location.href='index.html'">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-        Home
-    </button>
+    <button class="home-btn" onclick="window.location.href='index.html'">Home</button>
 
     <div class="container">
         <h1 class="logo">STUDENT LOUNGE</h1>
@@ -227,7 +196,7 @@
                     <label>LOUNGE NAME</label>
                     <input type="text" id="lounge-name" placeholder="e.g. Mechanical Engineering">
                 </div>
-                <button class="action-btn" id="create-btn">CREATE LOUNGE</button>
+                <button class="action-btn" onclick="handleLounge('create')">CREATE LOUNGE</button>
             </div>
 
             <div id="join-section" class="hidden">
@@ -239,31 +208,15 @@
                     <label>LOUNGE CODE</label>
                     <input type="text" id="lounge-code" placeholder="Enter 6-digit code">
                 </div>
-                <button class="action-btn" id="join-btn">JOIN LOUNGE</button>
+                <button class="action-btn" onclick="handleLounge('join')">JOIN LOUNGE</button>
             </div>
         </div>
     </div>
 
     <div id="custom-toast">Please fill in all details</div>
-    <div class="footer-brand">© 2026 AETHERCORE INTERACTIVE</div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js";
-        import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyDbfmd0zmv_mFV0CG2OrhKPPeU3zPYGOBg",
-            authDomain: "unidesk-a70ac.firebaseapp.com",
-            projectId: "unidesk-a70ac",
-            storageBucket: "unidesk-a70ac.firebasestorage.app",
-            messagingSenderId: "882535016432",
-            appId: "1:882535016432:web:6eca2645a47a827e779f35",
-            measurementId: "G-M26R027F70"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-
+    <script>
+        // Tab Switching Logic
         window.switchMode = function(mode) {
             const createSec = document.getElementById('create-section');
             const joinSec = document.getElementById('join-section');
@@ -284,73 +237,53 @@
         function showToast(message) {
             const toast = document.getElementById("custom-toast");
             toast.innerText = message;
-            toast.className = "show";
-            setTimeout(() => { toast.className = toast.className.replace("show", ""); }, 3000);
+            toast.classList.add("show");
+            setTimeout(() => { toast.classList.remove("show"); }, 3000);
         }
 
-        async function handleLounge(type) {
-            let userName, loungeInput, role;
-            // Generates a random unique ID for the user
-            const uniqueId = "U" + Math.floor(Date.now() + Math.random() * 1000);
+        // The "Brain" that connects to chat.html
+        window.handleLounge = function(type) {
+            let userName, loungeInput;
+            const uniqueUid = "U" + Math.floor(Math.random() * 1000000);
 
             if (type === 'create') {
-                userName = document.getElementById('create-user').value;
-                loungeInput = document.getElementById('lounge-name').value;
-                role = "admin"; // Explicitly setting creator as admin
-                if (!userName || !loungeInput) return showToast("Please fill in all details");
-                
-                const numericCode = Math.floor(100000 + Math.random() * 900000).toString();
-                
-                try {
-                    await setDoc(doc(db, "lounges", numericCode, "members", uniqueId), {
-                        uid: uniqueId,
-                        name: userName,
-                        role: role,
-                        loungeName: loungeInput,
-                        timestamp: new Date().getTime()
-                    });
+                userName = document.getElementById('create-user').value.trim();
+                loungeInput = document.getElementById('lounge-name').value.trim();
 
-                    localStorage.setItem('unidesk_session', JSON.stringify({ 
-                        uid: uniqueId, 
-                        role: role, 
-                        user: userName, 
-                        lounge: numericCode 
-                    }));
-                    window.location.href = 'chat.html';
-                } catch (e) {
-                    showToast("Error connecting to database");
-                }
+                if (!userName || !loungeInput) return showToast("Fill in all details");
+
+                // Generate random 6-digit code
+                const code = Math.floor(100000 + Math.random() * 900000).toString();
+
+                // Store data for chat.html to read
+                localStorage.setItem('unidesk_session', JSON.stringify({
+                    uid: uniqueUid,
+                    user: userName,
+                    lounge: code,
+                    loungeName: loungeInput,
+                    mode: 'create' // Tells chat.html: "I am the boss, let me in"
+                }));
+
+                window.location.href = 'chat.html';
 
             } else {
-                userName = document.getElementById('join-user').value;
-                loungeInput = document.getElementById('lounge-code').value;
-                role = "member"; // Explicitly setting joiner as member
-                if (!userName || !loungeInput) return showToast("Please fill in all details");
-                if (loungeInput.length !== 6 || isNaN(loungeInput)) return showToast("Invalid code");
+                userName = document.getElementById('join-user').value.trim();
+                loungeInput = document.getElementById('lounge-code').value.trim();
 
-                try {
-                    await setDoc(doc(db, "lounges", loungeInput, "members", uniqueId), {
-                        uid: uniqueId,
-                        name: userName,
-                        role: role,
-                        timestamp: new Date().getTime()
-                    });
+                if (!userName || !loungeInput) return showToast("Fill in all details");
+                if (loungeInput.length !== 6) return showToast("Code must be 6 digits");
 
-                    localStorage.setItem('unidesk_session', JSON.stringify({ 
-                        uid: uniqueId, 
-                        role: role, 
-                        user: userName, 
-                        lounge: loungeInput 
-                    }));
-                    window.location.href = 'chat.html';
-                } catch (e) {
-                    showToast("Error joining lounge");
-                }
+                // Store data for chat.html to read
+                localStorage.setItem('unidesk_session', JSON.stringify({
+                    uid: uniqueUid,
+                    user: userName,
+                    lounge: loungeInput,
+                    mode: 'join' // Tells chat.html: "I am a guest, verify me"
+                }));
+
+                window.location.href = 'chat.html';
             }
         }
-
-        document.getElementById('create-btn').addEventListener('click', () => handleLounge('create'));
-        document.getElementById('join-btn').addEventListener('click', () => handleLounge('join'));
     </script>
 </body>
 </html>
