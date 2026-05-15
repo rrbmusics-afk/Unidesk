@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UNIDESK | Gateway</title>
+    <title>UNIDESK | Routing</title>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, doc, getDoc, setDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
@@ -26,63 +26,45 @@
 
         document.addEventListener('DOMContentLoaded', async () => {
             if (mode === 'create') {
-                // IMMEDIATE ACCESS FOR CREATOR
+                // --- INSTANT CREATION: BYPASS VERIFICATION ---
                 window.location.replace('chats.html');
             } else {
-                // VERIFICATION FOR JOINERS
-                handleJoinProcess();
-            }
-        });
+                // --- JOINER: MUST VERIFY & KNOCK ---
+                const loungeSnap = await getDoc(doc(db, "lounges", loungeId));
+                if (!loungeSnap.exists()) {
+                    alert("Lounge Not Found. Returning to lobby.");
+                    window.location.replace('page.html');
+                    return;
+                }
 
-        async function handleJoinProcess() {
-            const loungeRef = doc(db, "lounges", loungeId);
-            const loungeSnap = await getDoc(loungeRef);
+                document.getElementById('wait-ui').style.display = 'block';
+                
+                // Send Request
+                const reqRef = doc(db, "lounges", loungeId, "requests", userUid);
+                await setDoc(reqRef, { name: userName, uid: userUid, status: 'pending', timestamp: serverTimestamp() });
 
-            if (!loungeSnap.exists()) {
-                alert("Lounge code not found. Please check the code and try again.");
-                window.location.replace('page.html');
-                return;
-            }
-
-            document.getElementById('gate-ui').style.display = 'flex';
-
-            // Send Join Request
-            const reqRef = doc(db, "lounges", loungeId, "requests", userUid);
-            await setDoc(reqRef, {
-                name: userName,
-                uid: userUid,
-                status: 'pending',
-                timestamp: serverTimestamp()
-            });
-
-            // Monitor Status
-            onSnapshot(reqRef, (snap) => {
-                if (snap.exists()) {
-                    const status = snap.data().status;
-                    if (status === 'accepted') window.location.replace('chats.html');
-                    if (status === 'rejected') {
-                        alert("Entry Declined: The administrator has denied your request.");
-                        localStorage.removeItem('unidesk_session');
+                // Listen for Admin
+                onSnapshot(reqRef, (snap) => {
+                    if (snap.exists() && snap.data().status === 'accepted') window.location.replace('chats.html');
+                    if (snap.exists() && snap.data().status === 'rejected') {
+                        alert("Your request was declined.");
                         window.location.replace('page.html');
                     }
-                }
-            });
-        }
+                });
+            }
+        });
     </script>
     <style>
-        body { margin: 0; background: #05070a; color: white; font-family: 'Inter', sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; text-align: center; }
-        .spinner { width: 40px; height: 40px; border: 3px solid #161b22; border-top-color: #58a6ff; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px; }
+        body { background: #0b141a; color: white; font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; }
+        #wait-ui { display: none; text-align: center; }
+        .loader { width: 30px; height: 30px; border: 3px solid #2a3942; border-top-color: #00a884; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 15px; }
         @keyframes spin { to { transform: rotate(360deg); } }
-        #gate-ui { display: none; flex-direction: column; }
-        h2 { letter-spacing: 1px; color: #58a6ff; }
-        p { color: #8b949e; }
     </style>
 </head>
 <body>
-    <div id="gate-ui">
-        <div class="spinner"></div>
-        <h2>Requesting Entry</h2>
-        <p>Waiting for the Lounge Admin to approve your session...</p>
+    <div id="wait-ui">
+        <div class="loader"></div>
+        <p>Knocking on the Lounge door...</p>
     </div>
 </body>
 </html>
