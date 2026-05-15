@@ -2,9 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UNIDESK | Gateway</title>
-    
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, doc, getDoc, setDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
@@ -23,22 +22,20 @@
 
         const session = JSON.parse(localStorage.getItem('unidesk_session'));
         if (!session) window.location.href = 'page.html';
-
         const { user: userName, lounge: loungeId, mode, uid: userUid } = session;
 
         document.addEventListener('DOMContentLoaded', async () => {
             if (mode === 'create') {
-                // --- ADMIN FAST TRACK ---
+                // ADMIN: Fast track to creating the lounge
                 await setDoc(doc(db, "lounges", loungeId), {
                     admin: userName,
                     adminUid: userUid,
                     createdAt: serverTimestamp(),
-                    loungeName: session.loungeName || "Aether Lounge"
+                    loungeName: session.loungeName || "Elite Lounge"
                 }, { merge: true });
-                
                 window.location.replace('chats.html');
             } else {
-                // --- MEMBER VERIFICATION & KNOCK ---
+                // MEMBER: Join process
                 handleJoinProcess();
             }
         });
@@ -47,18 +44,15 @@
             const loungeRef = doc(db, "lounges", loungeId);
             const loungeSnap = await getDoc(loungeRef);
 
-            // 1. Check if lounge exists
             if (!loungeSnap.exists()) {
-                alert("Lounge Not Found: The code entered does not match any active sessions.");
+                alert("Lounge code not found.");
                 window.location.replace('page.html');
                 return;
             }
 
-            // 2. Show UI for knocking
-            document.getElementById('loading-state').style.display = 'none';
-            document.getElementById('knocking-screen').style.display = 'flex';
+            document.getElementById('gate-ui').style.display = 'flex';
 
-            // 3. Send Request to Admin
+            // Send Knock Request
             const reqRef = doc(db, "lounges", loungeId, "requests", userUid);
             await setDoc(reqRef, {
                 name: userName,
@@ -67,70 +61,32 @@
                 timestamp: serverTimestamp()
             });
 
-            // 4. Live listen for Approval/Rejection
+            // Listen for Admin's decision
             onSnapshot(reqRef, (snap) => {
                 if (snap.exists()) {
                     const status = snap.data().status;
-                    if (status === 'accepted') {
-                        window.location.replace('chats.html');
-                    } else if (status === 'rejected') {
-                        document.getElementById('knocking-screen').style.display = 'none';
-                        document.getElementById('rejected-screen').style.display = 'flex';
-                        
-                        setTimeout(() => {
-                            localStorage.removeItem('unidesk_session');
-                            window.location.replace('page.html');
-                        }, 4000);
+                    if (status === 'accepted') window.location.replace('chats.html');
+                    if (status === 'rejected') {
+                        alert("The Admin has declined your entry.");
+                        localStorage.removeItem('unidesk_session');
+                        window.location.replace('page.html');
                     }
                 }
             });
         }
     </script>
-
     <style>
-        :root { --bg: #05070a; --accent: #58a6ff; --error: #ff4d4d; --text: #8b949e; --warn: #f1c40f; }
-        body { 
-            margin: 0; background: var(--bg); color: white; 
-            font-family: 'Inter', sans-serif; height: 100vh;
-            display: flex; align-items: center; justify-content: center; text-align: center;
-        }
-        .container { width: 90%; max-width: 400px; padding: 20px; }
-        .spinner {
-            width: 40px; height: 40px; border: 3px solid #161b22;
-            border-radius: 50%; border-top-color: var(--accent);
-            animation: spin 1s linear infinite; margin: 0 auto 20px;
-        }
+        body { margin: 0; background: #05070a; color: white; font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; text-align: center; }
+        .spinner { width: 40px; height: 40px; border: 3px solid #161b22; border-top-color: #58a6ff; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px; }
         @keyframes spin { to { transform: rotate(360deg); } }
-        .view { display: none; flex-direction: column; align-items: center; }
-        h2 { font-size: 1.3rem; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
-        p { color: var(--text); font-size: 0.95rem; line-height: 1.5; }
+        #gate-ui { display: none; flex-direction: column; }
     </style>
 </head>
 <body>
-
-    <div class="container">
-        <!-- Loader during code check -->
-        <div id="loading-state">
-            <div class="spinner"></div>
-            <h2 style="color: var(--accent);">Synchronizing</h2>
-            <p>Accessing AetherCore database...</p>
-        </div>
-
-        <!-- Waiting for Admin -->
-        <div id="knocking-screen" class="view">
-            <div class="spinner" style="border-top-color: var(--warn);"></div>
-            <h2 style="color: var(--warn);">Knocking...</h2>
-            <p>Verification successful. Please wait for the Lounge Admin to approve your entry request.</p>
-        </div>
-
-        <!-- Professional Rejection Message -->
-        <div id="rejected-screen" class="view">
-            <div style="font-size: 3rem; margin-bottom: 20px;">🚫</div>
-            <h2 style="color: var(--error);">Access Denied</h2>
-            <p>We apologize, but your request to join this session has been declined by the administrator.</p>
-            <p style="margin-top: 15px; font-size: 0.8rem; opacity: 0.6;">You will be redirected to the lobby momentarily.</p>
-        </div>
+    <div id="gate-ui">
+        <div class="spinner"></div>
+        <h2>Knocking...</h2>
+        <p>Waiting for the Lounge Admin to let you in.</p>
     </div>
-
 </body>
 </html>
