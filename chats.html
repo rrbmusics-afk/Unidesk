@@ -3,12 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>UNIDESK | Professional Lounge</title>
-    
-    <!-- Firebase SDKs -->
+    <title>UNIDESK | Lounge</title>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, doc, getDoc, updateDoc, deleteDoc, onSnapshot, collection, addDoc, query, orderBy, serverTimestamp, arrayUnion, arrayRemove, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, updateDoc, deleteDoc, onSnapshot, collection, addDoc, query, orderBy, serverTimestamp, arrayUnion } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
         const firebaseConfig = {
@@ -24,7 +22,6 @@
         const db = getFirestore(app);
         const storage = getStorage(app);
 
-        // --- Core Session Logic ---
         const session = JSON.parse(localStorage.getItem('unidesk_session'));
         if (!session) window.location.href = 'page.html';
         const { user: userName, lounge: loungeId } = session;
@@ -34,37 +31,33 @@
         let audioChunks = [];
         let longPressTimer;
 
-        // --- Initialization ---
         document.addEventListener('DOMContentLoaded', () => {
-            syncLoungeData();
-            listenForMessages();
-            setupInputLogic();
+            syncLounge();
+            listenMessages();
+            initInputLogic();
         });
 
-        // 1. Sync Lounge, Members, and Admin Status
-        function syncLoungeData() {
+        // 1. DYNAMIC LOUNGE DATA FROM FIREBASE
+        function syncLounge() {
             onSnapshot(doc(db, "lounges", loungeId), (snap) => {
                 if (!snap.exists()) {
-                    alert("Lounge deleted by Admin.");
+                    alert("Lounge has been disbanded.");
                     window.location.href = 'page.html';
                     return;
                 }
                 const data = snap.data();
                 isAdmin = (data.admin === userName);
                 
-                // Header UI Updates
+                // Set Theme-Correct Header
                 document.getElementById('header-title').innerText = data.loungeName || "Student Lounge";
                 document.getElementById('header-pfp').src = data.photo || "https://cdn-icons-png.flaticon.com/512/149/149071.png";
-                document.getElementById('display-id').innerText = `ID: ${loungeId}`;
-                
-                // Update Group Info UI
-                updateGroupInfo(data);
+                document.getElementById('id-sub').innerText = `ID: ${loungeId}`;
+
                 if(isAdmin) syncRequests();
-                syncMembers(data.members || []);
             });
         }
 
-        // 2. Real Media: Voice Recording (WhatsApp Style)
+        // 2. REAL VOICE RECORDER (WhatsApp Logic)
         async function startVoice() {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             mediaRecorder = new MediaRecorder(stream);
@@ -72,265 +65,199 @@
             mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
             mediaRecorder.onstop = async () => {
                 const blob = new Blob(audioChunks, { type: 'audio/webm' });
-                const fileRef = ref(storage, `lounges/${loungeId}/audio/${Date.now()}.webm`);
+                const fileRef = ref(storage, `lounges/${loungeId}/voice/${Date.now()}.webm`);
                 await uploadBytes(fileRef, blob);
                 const url = await getDownloadURL(fileRef);
-                sendMediaMessage('audio', url);
+                sendMsg('audio', url);
             };
             mediaRecorder.start();
-            document.getElementById('mic-btn').style.color = '#ff4d4d';
+            document.getElementById('mic-btn').classList.add('recording');
         }
 
         function stopVoice() {
             if(mediaRecorder && mediaRecorder.state !== "inactive") {
                 mediaRecorder.stop();
-                document.getElementById('mic-btn').style.color = 'var(--wa-dim)';
+                document.getElementById('mic-btn').classList.remove('recording');
             }
         }
 
-        // 3. Message Handling & Long Press
-        async function sendTextMessage() {
-            const input = document.getElementById('msg-input');
-            const text = input.value.trim();
-            if(!text) return;
-            await addDoc(collection(db, "lounges", loungeId, "messages"), {
-                sender: userName, text, type: 'text', timestamp: serverTimestamp()
-            });
-            input.value = '';
-            toggleInputIcons();
+        async function sendMsg(type, content, fileName = "") {
+            const data = {
+                sender: userName,
+                type,
+                timestamp: serverTimestamp(),
+                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            };
+            if(type === 'text') data.text = content;
+            else data.url = content;
+            if(fileName) data.fileName = fileName;
+
+            await addDoc(collection(db, "lounges", loungeId, "messages"), data);
         }
 
-        async function sendMediaMessage(type, url, fileName = "") {
-            await addDoc(collection(db, "lounges", loungeId, "messages"), {
-                sender: userName, type, url, fileName, timestamp: serverTimestamp()
-            });
-        }
-
-        function listenForMessages() {
+        function listenMessages() {
             const q = query(collection(db, "lounges", loungeId, "messages"), orderBy("timestamp", "asc"));
-            onSnapshot(q, (snapshot) => {
+            onSnapshot(q, (snap) => {
                 const box = document.getElementById('chat-box');
                 box.innerHTML = '';
-                snapshot.forEach(d => {
-                    const msg = d.data();
-                    renderMessage(msg, d.id);
-                });
+                snap.forEach(d => renderMsg(d.data(), d.id));
                 box.scrollTop = box.scrollHeight;
             });
         }
 
-        // --- UI Rendering ---
-        function renderMessage(msg, id) {
-            const box = document.getElementById('chat-box');
+        function renderMsg(msg, id) {
             const isMe = msg.sender === userName;
             const div = document.createElement('div');
             div.className = `msg-row ${isMe ? 'me' : 'them'}`;
-            
-            // Long press logic for Edit/Delete
-            div.oncontextmenu = (e) => { e.preventDefault(); showMessageOptions(id, msg, isMe); };
+            div.oncontextmenu = (e) => { e.preventDefault(); showMenu(id, msg, isMe); };
 
-            let html = `<div class="bubble">`;
-            if(!isMe) html += `<span class="sender-tag">${msg.sender}</span>`;
+            let content = `<div class="bubble">`;
+            if(!isMe) content += `<span class="sender">${msg.sender}</span>`;
             
-            if(msg.type === 'text') html += `<p>${msg.text}</p>`;
-            else if(msg.type === 'image') html += `<img src="${msg.url}" class="msg-img" onclick="openFullscreen('${msg.url}')">`;
-            else if(msg.type === 'audio') html += `<audio controls src="${msg.url}" class="msg-audio"></audio>`;
-            else if(msg.type === 'doc') html += `<a href="${msg.url}" target="_blank" class="msg-doc">📄 ${msg.fileName}</a>`;
+            if(msg.type === 'text') content += `<p>${msg.text}</p>`;
+            else if(msg.type === 'image') content += `<img src="${msg.url}" class="chat-img" onclick="viewFS('${msg.url}')">`;
+            else if(msg.type === 'audio') content += `<audio controls src="${msg.url}"></audio>`;
+            else if(msg.type === 'doc') content += `<a href="${msg.url}" target="_blank" class="doc-file">📄 ${msg.fileName}</a>`;
             
-            html += `<span class="msg-time">10:00 AM</span></div>`;
-            div.innerHTML = html;
-            box.appendChild(div);
+            content += `<span class="time">${msg.time}</span></div>`;
+            div.innerHTML = content;
+            document.getElementById('chat-box').appendChild(div);
         }
-
-        // --- Admin Functions ---
-        window.handleJoinRequest = async (reqId, status) => {
-            if(status === 'accepted') {
-                const reqSnap = await getDoc(doc(db, "lounges", loungeId, "requests", reqId));
-                const newMember = reqSnap.data().name;
-                await updateDoc(doc(db, "lounges", loungeId), { members: arrayUnion(newMember) });
-            }
-            await deleteDoc(doc(db, "lounges", loungeId, "requests", reqId));
-        };
-
-        window.updateLoungePfp = async (input) => {
-            if(!isAdmin || !input.files[0]) return;
-            const fileRef = ref(storage, `lounges/${loungeId}/pfp.jpg`);
-            await uploadBytes(fileRef, input.files[0]);
-            const url = await getDownloadURL(fileRef);
-            await updateDoc(doc(db, "lounges", loungeId), { photo: url });
-        };
     </script>
-
     <style>
         :root {
-            --wa-bg: #0b141a;
-            --wa-header: #202c33;
-            --wa-me: #005c4b;
-            --wa-them: #202c33;
-            --wa-accent: #00a884;
-            --wa-text: #e9edef;
-            --wa-dim: #8696a0;
+            --bg: #05070a;
+            --card: #0d1117;
+            --accent: #58a6ff;
+            --me: #005c4b;
+            --them: #202c33;
+            --text: #ffffff;
+            --dim: #8b949e;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { background: var(--wa-bg); color: var(--wa-text); font-family: 'Segoe UI', Roboto, sans-serif; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-user-select: none; user-select: none; }
+        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
 
-        /* Header & Info Bar */
-        header { background: var(--wa-header); padding: 10px 16px; display: flex; align-items: center; gap: 12px; z-index: 10; }
-        .pfp-main { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; cursor: pointer; }
-        .header-info { flex: 1; cursor: pointer; }
-        .header-info h2 { font-size: 1.1rem; font-weight: 500; }
-        .header-info p { font-size: 0.75rem; color: var(--wa-accent); font-weight: bold; }
+        /* AetherCore Styled Header */
+        header { background: var(--card); padding: 12px 16px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #30363d; z-index: 100; }
+        .pfp-wrap { width: 42px; height: 42px; border-radius: 50%; border: 1px solid var(--accent); overflow: hidden; }
+        .pfp-wrap img { width: 100%; height: 100%; object-fit: cover; }
+        .info-wrap { flex: 1; }
+        .info-wrap h2 { font-size: 1rem; color: var(--accent); letter-spacing: 1px; text-transform: uppercase; }
+        .info-wrap p { font-size: 0.7rem; color: var(--dim); }
 
-        /* Admin Request Bar */
-        #admin-request-bar {
-            background: #182229; color: var(--wa-accent); padding: 10px 16px; font-size: 0.85rem;
-            display: none; justify-content: space-between; align-items: center; border-bottom: 1px solid #2a3942;
+        /* Request Bar - Aesthetic Float */
+        #request-bar { 
+            background: rgba(88, 166, 255, 0.1); color: var(--accent); 
+            padding: 10px 16px; font-size: 0.8rem; font-weight: 600;
+            display: none; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid var(--accent);
         }
 
-        /* Chat Area with Custom Doodle */
-        #chat-box {
-            flex: 1; overflow-y: auto; padding: 15px;
-            background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png');
-            background-size: 400px; display: flex; flex-direction: column; gap: 6px;
+        /* Doodle Chat Background */
+        #chat-box { 
+            flex: 1; overflow-y: auto; padding: 15px; 
+            background-image: radial-gradient(#161b22 1px, transparent 1px);
+            background-size: 20px 20px;
+            display: flex; flex-direction: column; gap: 8px;
         }
 
         .msg-row { display: flex; width: 100%; }
         .msg-row.me { justify-content: flex-end; }
-        .bubble { max-width: 85%; padding: 6px 10px; border-radius: 8px; position: relative; box-shadow: 0 1px 1px rgba(0,0,0,0.2); }
-        .me .bubble { background: var(--wa-me); border-top-right-radius: 0; }
-        .them .bubble { background: var(--wa-them); border-top-left-radius: 0; }
-        .sender-tag { color: #f1c40f; font-size: 0.75rem; font-weight: bold; display: block; margin-bottom: 2px; }
-        .msg-time { font-size: 0.65rem; color: var(--wa-dim); float: right; margin-top: 4px; margin-left: 8px; }
+        .bubble { max-width: 85%; padding: 8px 12px; border-radius: 12px; position: relative; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        .me .bubble { background: var(--me); border-top-right-radius: 0; }
+        .them .bubble { background: var(--them); border-top-left-radius: 0; }
+        .sender { color: var(--accent); font-size: 0.7rem; font-weight: bold; display: block; margin-bottom: 3px; }
+        .time { font-size: 0.6rem; color: var(--dim); float: right; margin-top: 5px; margin-left: 10px; }
 
-        /* Footer Input Area */
-        footer { background: var(--wa-header); padding: 8px 10px; display: flex; align-items: center; gap: 8px; }
-        .input-pill { flex: 1; background: #2a3942; border-radius: 25px; display: flex; align-items: center; padding: 0 15px; }
-        #msg-input { flex: 1; background: transparent; border: none; color: white; padding: 12px 0; outline: none; font-size: 1rem; }
-        .footer-btn { background: var(--wa-accent); border: none; width: 45px; height: 45px; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        /* Footer / Keyboard Persistent */
+        footer { background: var(--card); padding: 10px; display: flex; align-items: center; gap: 8px; position: sticky; bottom: 0; }
+        .input-pill { flex: 1; background: #161b22; border-radius: 24px; padding: 0 15px; display: flex; align-items: center; border: 1px solid #30363d; }
+        #msg-input { flex: 1; background: transparent; border: none; color: white; padding: 12px 0; outline: none; font-size: 0.95rem; -webkit-user-select: text; user-select: text; }
+        
+        .footer-btn { background: var(--accent); border: none; width: 44px; height: 44px; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
+        .recording { background: #ff4d4d !important; animation: pulse 1s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
 
-        /* Fullscreen Modals */
-        .full-modal { position: fixed; inset: 0; background: var(--wa-bg); z-index: 1000; display: none; flex-direction: column; }
-        .modal-header { background: var(--wa-header); padding: 15px; display: flex; align-items: center; gap: 20px; }
-        .member-item { display: flex; align-items: center; padding: 15px; border-bottom: 1px solid #202c33; }
+        /* Full Modals */
+        .modal { position: fixed; inset: 0; background: var(--bg); z-index: 1000; display: none; flex-direction: column; }
+        .chat-img { width: 100%; border-radius: 8px; margin-top: 5px; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <header>
-        <img id="header-pfp" onclick="openPfpPopup()" src="" class="pfp-main">
-        <div class="header-info" onclick="openLoungeInfo()">
-            <h2 id="header-title">Lounge</h2>
-            <p id="display-id">ID: 000000</p>
+    <header onclick="openLoungeInfo()">
+        <div class="pfp-wrap"><img id="header-pfp" src=""></div>
+        <div class="info-wrap">
+            <h2 id="header-title">Loading...</h2>
+            <p id="id-sub">ID: 000000</p>
         </div>
     </header>
 
-    <!-- Admin Approval Bar (Only shows for admin if requests > 0) -->
-    <div id="admin-request-bar" onclick="openRequestPopup()">
-        <span>Pending Approval Requests</span>
-        <span id="request-badge">0</span>
+    <div id="request-bar" onclick="openReqList()">
+        <span>NEW ENTRY REQUESTS</span>
+        <span id="req-count">0</span>
     </div>
 
     <div id="chat-box"></div>
 
     <footer>
         <div class="input-pill">
-            <span onclick="document.getElementById('doc-input').click()" style="margin-right:12px; cursor:pointer">📎</span>
-            <input type="file" id="doc-input" multiple hidden onchange="uploadDocs(this)">
+            <span onclick="document.getElementById('doc-up').click()" style="margin-right:12px; cursor:pointer">📎</span>
+            <input type="file" id="doc-up" multiple hidden onchange="upDocs(this)">
             
-            <input type="text" id="msg-input" placeholder="Message" oninput="toggleInputIcons()">
+            <input type="text" id="msg-input" placeholder="Secure Message..." oninput="toggleIcons()">
             
-            <span onclick="document.getElementById('img-input').click()" style="cursor:pointer">📷</span>
-            <input type="file" id="img-input" accept="image/*" hidden onchange="uploadImage(this)">
+            <span onclick="document.getElementById('img-up').click()" style="cursor:pointer">📷</span>
+            <input type="file" id="img-up" accept="image/*" hidden onchange="upImg(this)">
         </div>
 
-        <!-- Voice / Send Button Logic -->
         <button id="mic-btn" class="footer-btn" 
                 onmousedown="startVoice()" onmouseup="stopVoice()"
                 ontouchstart="startVoice()" ontouchend="stopVoice()">
             🎤
         </button>
-        <button id="send-btn" class="footer-btn" style="display:none;" onclick="sendTextMessage()">
+        <button id="send-btn" class="footer-btn" style="display:none;" onclick="sendText()">
             <svg viewBox="0 0 24 24" width="24" height="24" fill="white"><path d="M1.101 21.757L23.8 12.028 1.101 2.3l.011 7.912 13.623 1.816-13.623 1.817-.011 7.912z"></path></svg>
         </button>
     </footer>
 
-    <!-- Lounge Info Modal -->
-    <div id="info-modal" class="full-modal">
-        <div class="modal-header">
-            <span onclick="closeAllModals()" style="font-size:1.5rem">←</span>
-            <h2>Lounge Info</h2>
+    <div id="info-modal" class="modal">
         </div>
-        <div style="overflow-y:auto; flex:1">
-            <div style="text-align:center; padding: 20px; background: #111b21;">
-                <div style="position:relative; display:inline-block">
-                    <img id="info-pfp" src="" style="width:150px; height:150px; border-radius:50%; object-fit:cover">
-                    <button id="edit-pfp-icon" onclick="document.getElementById('pfp-change').click()" style="position:absolute; bottom:0; right:0; background:var(--wa-accent); border:none; padding:10px; border-radius:50%; display:none">✏️</button>
-                    <input type="file" id="pfp-change" hidden onchange="updateLoungePfp(this)">
-                </div>
-                <h1 id="info-name" style="margin-top:10px">Lounge Name</h1>
-                <p id="info-code" style="color:var(--wa-dim)"></p>
-            </div>
-
-            <div id="admin-actions" style="display:none; padding:15px; border-bottom: 8px solid #000">
-                <button onclick="renameLounge()" style="color:var(--wa-accent); background:none; border:none; display:block; padding:10px 0; font-size:1rem">Rename Lounge</button>
-                <button onclick="deleteLounge()" style="color:#ff4b4b; background:none; border:none; display:block; padding:10px 0; font-size:1rem">Delete Lounge</button>
-            </div>
-            
-            <div style="padding:15px">
-                <button onclick="leaveLounge()" style="color:#ff4b4b; background:none; border:none; font-size:1rem">Exit Lounge</button>
-            </div>
-
-            <div id="member-list-container" style="padding:15px">
-                <p style="color:var(--wa-accent); font-weight:bold">MEMBERS</p>
-                <div id="member-list"></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Fullscreen Image View -->
-    <div id="fs-image-view" class="full-modal" style="background:#000; justify-content:center">
-        <div class="modal-header" style="background:transparent; position:absolute; top:0; width:100%">
-            <span onclick="closeAllModals()" style="font-size:1.5rem">←</span>
-            <a id="download-link" href="#" download style="color:white; margin-left:auto; text-decoration:none">Download</a>
-        </div>
-        <img id="fs-img-tag" style="width:100%; max-height:80vh; object-fit:contain">
-    </div>
 
     <script>
-        // UI Helpers
-        function toggleInputIcons() {
+        function toggleIcons() {
             const input = document.getElementById('msg-input');
-            const mic = document.getElementById('mic-btn');
-            const send = document.getElementById('send-btn');
-            if(input.value.trim().length > 0) {
-                mic.style.display = 'none';
-                send.style.display = 'flex';
-            } else {
-                mic.style.display = 'flex';
-                send.style.display = 'none';
+            const hasText = input.value.trim().length > 0;
+            document.getElementById('mic-btn').style.display = hasText ? 'none' : 'flex';
+            document.getElementById('send-btn').style.display = hasText ? 'flex' : 'none';
+        }
+
+        window.sendText = () => {
+            const val = document.getElementById('msg-input').value;
+            if(val.trim()) {
+                sendMsg('text', val);
+                document.getElementById('msg-input').value = '';
+                toggleIcons();
             }
+        };
+
+        async function upImg(el) {
+            if(!el.files[0]) return;
+            const fileRef = ref(storage, `lounges/${loungeId}/images/${Date.now()}.jpg`);
+            await uploadBytes(fileRef, el.files[0]);
+            const url = await getDownloadURL(fileRef);
+            sendMsg('image', url);
         }
 
-        function openLoungeInfo() {
-            document.getElementById('info-modal').style.display = 'flex';
-            document.getElementById('info-pfp').src = document.getElementById('header-pfp').src;
-            document.getElementById('info-name').innerText = document.getElementById('header-title').innerText;
-            document.getElementById('info-code').innerText = document.getElementById('display-id').innerText;
-            if(isAdmin) {
-                document.getElementById('admin-actions').style.display = 'block';
-                document.getElementById('edit-pfp-icon').style.display = 'block';
+        async function upDocs(el) {
+            const files = Array.from(el.files).slice(0, 10);
+            for(let f of files) {
+                const fRef = ref(storage, `lounges/${loungeId}/docs/${f.name}`);
+                await uploadBytes(fRef, f);
+                const url = await getDownloadURL(fRef);
+                sendMsg('doc', url, f.name);
             }
-        }
-
-        function closeAllModals() {
-            document.querySelectorAll('.full-modal').forEach(m => m.style.display = 'none');
-        }
-
-        function openFullscreen(url) {
-            document.getElementById('fs-image-view').style.display = 'flex';
-            document.getElementById('fs-img-tag').src = url;
-            document.getElementById('download-link').href = url;
         }
     </script>
 </body>
