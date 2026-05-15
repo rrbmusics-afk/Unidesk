@@ -21,7 +21,6 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // Get session from page.html
         const session = JSON.parse(localStorage.getItem('unidesk_session'));
         if (!session) window.location.href = 'page.html';
 
@@ -31,17 +30,11 @@
             const loungeRef = doc(db, "lounges", loungeId);
             const loungeSnap = await getDoc(loungeRef);
 
-            // 1. Check if lounge exists
-            if (!loungeSnap.exists() && mode !== 'create') {
-                alert("Lounge not found.");
-                window.location.href = 'page.html';
-                return;
-            }
-
-            // 2. ADMIN BYPASS: If you created it, go straight to chats.html
+            // 1. Admin Bypass
             if (mode === 'create') {
-                // Ensure adminUid is set in the main doc so chats.html recognizes you
+                // If creating, ensure admin data is set then go to lounge
                 await setDoc(loungeRef, { 
+                    admin: userName,
                     adminUid: userUid,
                     loungeName: session.loungeName || "New Lounge" 
                 }, { merge: true });
@@ -50,9 +43,10 @@
                 return;
             }
 
-            // 3. MEMBER KNOCKING: Create a unique request document
+            // 2. Member Knocking
             const myReqRef = doc(db, "lounges", loungeId, "requests", userUid);
             
+            // Create the request
             await setDoc(myReqRef, {
                 name: userName,
                 uid: userUid,
@@ -60,23 +54,28 @@
                 timestamp: serverTimestamp()
             });
 
+            // Update UI to show waiting state
             document.getElementById('gate-ui').innerHTML = `
-                <div class="spinner"></div>
-                <h2>Knocking...</h2>
-                <p>Waiting for the Admin to grant access.</p>
-                <div class="user-tag">${userName}</div>
+                <div class="container">
+                    <div class="radar">
+                        <div class="circle"></div>
+                        <div class="circle"></div>
+                        <div class="circle"></div>
+                    </div>
+                    <h2>Request Sent</h2>
+                    <p>Waiting for the Admin to grant access to <strong>${loungeId}</strong></p>
+                    <div class="user-badge">${userName}</div>
+                </div>
             `;
 
-            // 4. LISTEN ONLY TO MY REQUEST
-            // This prevents the "Admin declining others kicks me" bug
+            // 3. Listen for approval/rejection
             onSnapshot(myReqRef, (snap) => {
                 if (snap.exists()) {
                     const status = snap.data().status;
                     if (status === 'accepted') {
                         window.location.replace('chats.html');
                     } else if (status === 'rejected') {
-                        alert("The Admin declined your request.");
-                        window.location.href = 'page.html';
+                        window.location.href = 'decline.html';
                     }
                 }
             });
@@ -86,49 +85,60 @@
     </script>
 
     <style>
+        :root { --bg: #0b141a; --accent: #58a6ff; }
         body {
             margin: 0;
-            background: #0b141a;
+            background: var(--bg);
             color: white;
-            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            font-family: -apple-system, system-ui, sans-serif;
             display: flex;
             align-items: center;
             justify-content: center;
             height: 100vh;
-            text-align: center;
+            overflow: hidden;
         }
-        #gate-ui {
-            padding: 20px;
-            width: 90%;
-            max-width: 400px;
-        }
-        .spinner {
-            width: 50px;
-            height: 50px;
-            border: 3px solid rgba(88, 166, 255, 0.1);
-            border-top-color: #58a6ff;
+        .container { text-align: center; width: 90%; max-width: 400px; }
+        
+        /* Pulse Animation */
+        .radar { position: relative; width: 100px; height: 100px; margin: 0 auto 30px; }
+        .circle {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 2px solid var(--accent);
             border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 20px;
+            opacity: 0;
+            animation: pulse 2s infinite;
         }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        h2 { font-weight: 600; margin-bottom: 10px; color: #58a6ff; }
-        p { color: #8696a0; font-size: 0.9rem; line-height: 1.4; }
-        .user-tag {
-            margin-top: 30px;
+        .circle:nth-child(2) { animation-delay: 0.6s; }
+        .circle:nth-child(3) { animation-delay: 1.2s; }
+
+        @keyframes pulse {
+            0% { transform: scale(0.5); opacity: 0; }
+            50% { opacity: 0.5; }
+            100% { transform: scale(1.5); opacity: 0; }
+        }
+
+        h2 { font-weight: 700; font-size: 1.5rem; margin-bottom: 8px; letter-spacing: -0.5px; }
+        p { color: #8696a0; font-size: 0.95rem; line-height: 1.5; }
+        strong { color: var(--accent); }
+
+        .user-badge {
+            margin-top: 40px;
             display: inline-block;
-            background: #202c33;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            color: #58a6ff;
-            border: 1px solid #30363d;
+            background: rgba(88, 166, 255, 0.1);
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-size: 0.85rem;
+            color: var(--accent);
+            border: 1px solid rgba(88, 166, 255, 0.2);
+            font-weight: 600;
         }
     </style>
 </head>
 <body>
     <div id="gate-ui">
-        <p>Initializing Secure Link...</p>
+        <p>Connecting to AetherCore...</p>
     </div>
 </body>
 </html>
