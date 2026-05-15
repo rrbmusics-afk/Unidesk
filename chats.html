@@ -22,55 +22,60 @@
 
         const session = JSON.parse(localStorage.getItem('unidesk_session'));
         if (!session) window.location.href = 'page.html';
-        const { user: userName, lounge: loungeId, uid: userUid, mode } = session;
+        const { user: userName, lounge: loungeId, uid: userUid, mode, loungeName } = session;
 
-        // --- 1. SESSION INITIALIZATION ---
-        async function startSession() {
+        // --- 1. INITIALIZE LOUNGE ---
+        async function initLounge() {
             const loungeRef = doc(db, "lounges", loungeId);
             
             if (mode === 'create') {
-                // INSTANTLY CREATE NEW LOUNGE DATA
+                // If I am the creator, force the lounge into the DB immediately
                 await setDoc(loungeRef, {
                     admin: userName,
                     adminUid: userUid,
-                    loungeName: "Global Lounge",
+                    loungeName: loungeName || "Global Lounge",
                     createdAt: serverTimestamp()
                 }, { merge: true });
             }
 
-            // Sync Header
+            // Sync Header Info
             onSnapshot(loungeRef, (snap) => {
                 if (!snap.exists()) return;
-                document.getElementById('l-name').innerText = snap.data().loungeName;
-                document.getElementById('l-id').innerText = "#" + loungeId;
+                document.getElementById('display-l-name').innerText = snap.data().loungeName;
+                document.getElementById('display-l-id').innerText = "#" + loungeId;
                 
+                // Show Admin Controls if I am the owner
                 if (userUid === snap.data().adminUid) {
-                    document.getElementById('admin-badge').style.display = 'block';
-                    listenForKnocks();
+                    document.getElementById('admin-tag').style.display = 'block';
+                    setupAdminLobby();
                 }
             });
         }
 
-        // --- 2. ADMIN ONLY: LOBBY LISTENER ---
-        function listenForKnocks() {
+        // --- 2. ADMIN LOBBY LOGIC ---
+        function setupAdminLobby() {
             const q = query(collection(db, "lounges", loungeId, "requests"), where("status", "==", "pending"));
             onSnapshot(q, (snap) => {
                 const count = snap.size;
-                const btn = document.getElementById('lobby-btn');
-                btn.style.display = count > 0 ? 'block' : 'none';
-                btn.innerText = `Lobby (${count})`;
+                const lobbyBtn = document.getElementById('lobby-trigger');
+                lobbyBtn.style.display = count > 0 ? 'flex' : 'none';
+                lobbyBtn.innerHTML = `<span>Lobby</span><div class="count">${count}</div>`;
 
                 window.openLobby = () => {
-                    let html = '<h3>Entry Requests</h3>';
+                    let listHtml = '<h3>Entry Requests</h3>';
+                    if(snap.empty) listHtml += '<p>No pending requests.</p>';
                     snap.forEach(d => {
-                        html += `<div class="req-row">
+                        listHtml += `
+                        <div class="request-item">
                             <span>${d.data().name}</span>
-                            <button onclick="respond('${d.id}', 'accepted')">✓</button>
-                            <button onclick="respond('${d.id}', 'rejected')">×</button>
+                            <div class="actions">
+                                <button class="btn-acc" onclick="respond('${d.id}', 'accepted')">Accept</button>
+                                <button class="btn-rej" onclick="respond('${d.id}', 'rejected')">Reject</button>
+                            </div>
                         </div>`;
                     });
-                    document.getElementById('modal-body').innerHTML = html;
-                    document.getElementById('modal').style.display = 'flex';
+                    document.getElementById('lobby-content').innerHTML = listHtml;
+                    document.getElementById('lobby-modal').style.display = 'flex';
                 };
             });
         }
@@ -79,65 +84,103 @@
             await updateDoc(doc(db, "lounges", loungeId, "requests", id), { status });
         };
 
-        // --- 3. CHAT LOGIC ---
-        const chatQ = query(collection(db, "lounges", loungeId, "messages"), orderBy("timestamp", "asc"));
-        onSnapshot(chatQ, (snap) => {
-            const box = document.getElementById('chat-box');
-            box.innerHTML = '';
+        // --- 3. REAL-TIME MESSAGING ---
+        const msgQuery = query(collection(db, "lounges", loungeId, "messages"), orderBy("timestamp", "asc"));
+        onSnapshot(msgQuery, (snap) => {
+            const chatBox = document.getElementById('chat-flow');
+            chatBox.innerHTML = '';
             snap.forEach(d => {
-                const m = d.data();
-                const isMe = m.uid === userUid;
-                box.innerHTML += `<div class="msg ${isMe ? 'me' : 'them'}">
-                    <div class="bubble"><small>${m.sender}</small><p>${m.text}</p></div>
+                const data = d.data();
+                const isMe = data.uid === userUid;
+                chatBox.innerHTML += `
+                <div class="message-row ${isMe ? 'msg-me' : 'msg-them'}">
+                    <div class="bubble">
+                        <div class="sender-name">${data.sender}</div>
+                        <div class="text">${data.text}</div>
+                    </div>
                 </div>`;
             });
-            box.scrollTo(0, box.scrollHeight);
+            chatBox.scrollTo(0, chatBox.scrollHeight);
         });
 
-        window.send = async () => {
-            const inp = document.getElementById('inp');
-            if (!inp.value.trim()) return;
+        window.sendMessage = async () => {
+            const input = document.getElementById('message-input');
+            const text = input.value.trim();
+            if (!text) return;
+            input.value = '';
             await addDoc(collection(db, "lounges", loungeId, "messages"), {
-                sender: userName, uid: userUid, text: inp.value, timestamp: serverTimestamp()
+                sender: userName,
+                uid: userUid,
+                text: text,
+                timestamp: serverTimestamp()
             });
-            inp.value = '';
         };
 
-        startSession();
+        initLounge();
     </script>
+
     <style>
-        :root { --bg: #0b141a; --panel: #202c33; --accent: #00a884; }
-        body { margin: 0; background: var(--bg); color: white; font-family: sans-serif; display: flex; flex-direction: column; height: 100vh; }
-        header { background: var(--panel); padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #30363d; }
-        #chat-box { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
-        .msg { display: flex; width: 100%; }
-        .msg.me { justify-content: flex-end; }
-        .bubble { background: #232d36; padding: 8px 12px; border-radius: 8px; max-width: 80%; }
-        .me .bubble { background: #005c4b; }
-        .bubble small { color: #ffd700; font-size: 0.7rem; }
-        .bubble p { margin: 5px 0 0; }
-        footer { background: var(--panel); padding: 10px; display: flex; gap: 10px; padding-bottom: 30px; }
-        input { flex: 1; background: #2a3942; border: none; color: white; padding: 10px 15px; border-radius: 20px; outline: none; }
-        #lobby-btn { display: none; background: #f44336; border: none; color: white; padding: 5px 10px; border-radius: 5px; font-size: 0.8rem; cursor: pointer; }
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; align-items: center; justify-content: center; }
-        .req-row { display: flex; align-items: center; justify-content: space-between; width: 250px; background: #2a3942; padding: 10px; margin-bottom: 5px; border-radius: 8px; }
+        :root { --bg: #05070a; --panel: #0d1117; --accent: #58a6ff; --border: #30363d; }
+        * { box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { margin: 0; background: var(--bg); color: white; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        
+        header { background: var(--panel); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
+        .l-title { font-weight: 700; color: white; margin: 0; font-size: 1.1rem; }
+        .l-code { font-size: 0.75rem; color: var(--accent); font-weight: 600; }
+        
+        #admin-tag { display: none; background: #238636; font-size: 0.6rem; padding: 2px 6px; border-radius: 4px; font-weight: bold; margin-bottom: 4px; width: fit-content; }
+
+        #chat-flow { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+        .message-row { display: flex; width: 100%; }
+        .msg-me { justify-content: flex-end; }
+        .bubble { max-width: 80%; padding: 10px 14px; border-radius: 16px; position: relative; }
+        .msg-them .bubble { background: #161b22; border-bottom-left-radius: 4px; border: 1px solid var(--border); }
+        .msg-me .bubble { background: #1f6feb; border-bottom-right-radius: 4px; }
+        
+        .sender-name { font-size: 0.65rem; font-weight: 700; margin-bottom: 4px; color: var(--accent); }
+        .msg-me .sender-name { color: #8ec2ff; }
+        .text { font-size: 0.95rem; line-height: 1.4; }
+
+        footer { background: var(--panel); padding: 15px; display: flex; gap: 10px; align-items: center; border-top: 1px solid var(--border); padding-bottom: calc(15px + env(safe-area-inset-bottom)); }
+        input { flex: 1; background: #161b22; border: 1px solid var(--border); color: white; padding: 12px 18px; border-radius: 25px; outline: none; }
+        .send-btn { background: var(--accent); border: none; color: white; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+
+        #lobby-trigger { display: none; background: #f85149; border: none; color: white; padding: 6px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; align-items: center; gap: 6px; cursor: pointer; }
+        .count { background: white; color: #f85149; border-radius: 50%; width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; font-size: 0.6rem; }
+
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
+        .modal-box { background: var(--panel); width: 100%; max-width: 350px; border-radius: 20px; padding: 20px; border: 1px solid var(--border); }
+        .request-item { display: flex; justify-content: space-between; align-items: center; background: #161b22; padding: 12px; border-radius: 12px; margin-top: 10px; }
+        .btn-acc { background: #238636; color: white; border: none; padding: 5px 10px; border-radius: 6px; margin-right: 5px; }
+        .btn-rej { background: #da3633; color: white; border: none; padding: 5px 10px; border-radius: 6px; }
     </style>
 </head>
 <body>
+
     <header>
-        <div><h2 id="l-name" style="margin:0">Lounge</h2><span id="l-id" style="font-size:0.7rem; color:var(--accent)"></span></div>
         <div>
-            <span id="admin-badge" style="display:none; font-size:0.6rem; background:var(--accent); padding:2px 5px; border-radius:3px; margin-right:5px;">ADMIN</span>
-            <button id="lobby-btn" onclick="openLobby()"></button>
+            <div id="admin-tag">ADMIN</div>
+            <div class="l-title" id="display-l-name">Lounge</div>
+            <div class="l-code" id="display-l-id">#000000</div>
         </div>
+        <button id="lobby-trigger" onclick="openLobby()"></button>
     </header>
-    <div id="chat-box"></div>
+
+    <div id="chat-flow"></div>
+
     <footer>
-        <input id="inp" placeholder="Message..." onkeypress="if(event.key==='Enter') send()">
-        <button onclick="send()" style="border:none; background:var(--accent); color:white; padding:10px 20px; border-radius:20px;">➤</button>
+        <input id="message-input" type="text" placeholder="Type a message..." autocomplete="off" onkeypress="if(event.key==='Enter') sendMessage()">
+        <button class="send-btn" onclick="sendMessage()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+        </button>
     </footer>
-    <div id="modal" class="modal" onclick="this.style.display='none'">
-        <div id="modal-body" style="background:#1e2a32; padding:20px; border-radius:15px;" onclick="event.stopPropagation()"></div>
+
+    <div id="lobby-modal" class="modal" onclick="this.style.display='none'">
+        <div class="modal-box" onclick="event.stopPropagation()">
+            <div id="lobby-content"></div>
+            <button onclick="document.getElementById('lobby-modal').style.display='none'" style="width:100%; margin-top:15px; background:transparent; border:1px solid var(--border); color:var(--text-dim); padding:10px; border-radius:10px; color: white;">Close</button>
+        </div>
     </div>
+
 </body>
 </html>
