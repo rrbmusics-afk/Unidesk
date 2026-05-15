@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>AetherCore | Chat</title>
+    <title>AetherCore | Secure Lounge</title>
     
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, doc, onSnapshot, collection, addDoc, query, orderBy, serverTimestamp, updateDoc, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, doc, onSnapshot, collection, addDoc, updateDoc, deleteDoc, query, orderBy, serverTimestamp, arrayUnion, arrayRemove, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
         const firebaseConfig = {
@@ -29,215 +29,250 @@
 
         let mediaRecorder;
         let audioChunks = [];
+        let pressTimer;
 
-        // --- Admin & Header Sync ---
+        // --- Core State Logic ---
         onSnapshot(doc(db, "lounges", loungeId), (snap) => {
             if (!snap.exists()) return;
             const data = snap.data();
-            document.getElementById('dn').innerText = data.loungeName || "Aether Lounge";
-            document.getElementById('dp').src = data.photo || 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
-            document.getElementById('di').innerText = "Lounge Code: " + loungeId;
+            document.getElementById('header-name').innerText = data.loungeName;
+            document.getElementById('header-pfp').src = data.photo || 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
+            document.getElementById('lounge-code-text').innerText = "Lounge Code: " + loungeId;
 
-            // Admin Logic: Show Accept Button if user is Admin and there are pending requests
-            const adminPanel = document.getElementById('admin-req-panel');
-            if (data.admin === userName && data.pending && data.pending.length > 0) {
-                adminPanel.style.display = 'flex';
-                document.getElementById('req-count').innerText = `${data.pending.length} Join Request(s)`;
-                
-                window.acceptAll = async () => {
-                    const loungeRef = doc(db, "lounges", loungeId);
-                    await updateDoc(loungeRef, {
-                        members: arrayUnion(...data.pending),
-                        pending: [] 
-                    });
-                };
+            // Admin Approval Bar
+            const approvalBar = document.getElementById('approval-bar');
+            if (data.admin === userName && data.pending?.length > 0) {
+                approvalBar.style.display = 'flex';
+                document.getElementById('req-text').innerText = `${data.pending.length} Pending Requests`;
+                window.showRequests = () => renderRequestPopup(data.pending);
             } else {
-                adminPanel.style.display = 'none';
+                approvalBar.style.display = 'none';
             }
         });
 
-        // --- Chat Listener ---
+        // --- Chat & Message Logic ---
         const q = query(collection(db, "lounges", loungeId, "messages"), orderBy("timestamp", "asc"));
         onSnapshot(q, (snap) => {
             const box = document.getElementById('chat-box');
             box.innerHTML = '';
             snap.forEach(d => {
-                const m = d.data();
+                const m = { id: d.id, ...d.data() };
                 const isMe = m.sender === userName;
                 const row = document.createElement('div');
                 row.className = `msg-row ${isMe ? 'me' : 'them'}`;
+                row.oncontextmenu = (e) => { e.preventDefault(); showMsgMenu(m, isMe); };
+                row.ontouchstart = () => pressTimer = setTimeout(() => showMsgMenu(m, isMe), 600);
+                row.ontouchend = () => clearTimeout(pressTimer);
+
+                let content = `<div class="bubble">`;
+                if(!isMe) content += `<div class="sender-name">${m.sender}</div>`;
                 
-                let html = `<div class="bubble">`;
-                if(!isMe) html += `<div class="st">${m.sender}</div>`;
-                if(m.type === 'text') html += `<p class="msg-txt">${m.text}</p>`;
-                else if(m.type === 'image') html += `<img src="${m.url}" class="ci" onclick="window.open('${m.url}')">`;
-                else if(m.type === 'audio') html += `<audio controls src="${m.url}"></audio>`;
-                html += `<div class="mt">${m.time || ''}</div></div>`;
-                
-                row.innerHTML = html;
+                if(m.type === 'text') content += `<p class="txt">${m.text}</p>`;
+                else if(m.type === 'image') content += `<img src="${m.url}" class="chat-img" onclick="viewImage('${m.url}')">`;
+                else if(m.type === 'audio') content += `<audio controls src="${m.url}"></audio>`;
+                else if(m.type === 'doc') content += `<a href="${m.url}" target="_blank" class="doc-link">📄 ${m.fileName}</a>`;
+
+                content += `<div class="msg-meta"><span>${m.time || ''}</span>${isMe ? '<span class="status">✓✓</span>' : ''}</div></div>`;
+                row.innerHTML = content;
                 box.appendChild(row);
             });
             box.scrollTo(0, box.scrollHeight);
         });
 
-        // --- Input Actions ---
-        window.sendTxt = (e) => {
-            if(e) e.preventDefault(); 
-            const el = document.getElementById('msg-input');
-            const val = el.value.trim();
-            if(val){
-                addDoc(collection(db, "lounges", loungeId, "messages"), {
-                    sender: userName, type: 'text', text: val, timestamp: serverTimestamp(),
-                    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                });
-                el.value = '';
-                toggleIcons(false);
-                el.focus(); 
+        // --- Functional Actions ---
+        window.sendText = (e) => {
+            if(e) e.preventDefault();
+            const input = document.getElementById('msg-input');
+            if(!input.value.trim()) return;
+            pushMessage({ type: 'text', text: input.value.trim() });
+            input.value = '';
+            toggleInput(false);
+            input.focus();
+        };
+
+        async function pushMessage(payload) {
+            await addDoc(collection(db, "lounges", loungeId, "messages"), {
+                sender: userName,
+                ...payload,
+                timestamp: serverTimestamp(),
+                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                seenBy: [userName]
+            });
+        }
+
+        // --- Voice Recording Logic ---
+        window.startVoice = async () => {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            mediaRecorder = new MediaRecorder(stream);
+            audioChunks = [];
+            mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+            mediaRecorder.onstop = async () => {
+                const blob = new Blob(audioChunks, { type: 'audio/webm' });
+                const fileRef = ref(storage, `media/${loungeId}/v_${Date.now()}`);
+                const snap = await uploadBytes(fileRef, blob);
+                pushMessage({ type: 'audio', url: await getDownloadURL(snap.ref) });
+            };
+            mediaRecorder.start();
+            document.getElementById('mic-btn').classList.add('recording');
+        };
+
+        window.stopVoice = () => {
+            if(mediaRecorder) {
+                mediaRecorder.stop();
+                document.getElementById('mic-btn').classList.remove('recording');
             }
         };
 
-        window.upImg = async (el) => {
-            const f = el.files[0]; if(!f) return;
-            const r = ref(storage, `media/${loungeId}/${Date.now()}`);
-            const s = await uploadBytes(r, f);
-            const url = await getDownloadURL(s.ref);
-            addDoc(collection(db, "lounges", loungeId, "messages"), {
-                sender: userName, type: 'image', url, timestamp: serverTimestamp(),
-                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-            });
+        // --- Multi-Document Upload (Up to 10) ---
+        window.uploadDocs = async (el) => {
+            const files = Array.from(el.files).slice(0, 10);
+            for (let f of files) {
+                const r = ref(storage, `docs/${loungeId}/${Date.now()}_${f.name}`);
+                const s = await uploadBytes(r, f);
+                pushMessage({ type: 'doc', url: await getDownloadURL(s.ref), fileName: f.name });
+            }
         };
 
-        window.startRec = async () => {
-            try {
-                const s = await navigator.mediaDevices.getUserMedia({ audio: true });
-                mediaRecorder = new MediaRecorder(s);
-                audioChunks = [];
-                mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-                mediaRecorder.onstop = async () => {
-                    const b = new Blob(audioChunks, { type: 'audio/webm' });
-                    const r = ref(storage, `media/${loungeId}/v_${Date.now()}`);
-                    const snap = await uploadBytes(r, b);
-                    const url = await getDownloadURL(snap.ref);
-                    addDoc(collection(db, "lounges", loungeId, "messages"), {
-                        sender: userName, type: 'audio', url, timestamp: serverTimestamp(),
-                        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                    });
-                };
-                mediaRecorder.start();
-                document.getElementById('mic').classList.add('rec');
-            } catch (e) { alert("Mic access denied"); }
+        // --- Message Menu Logic ---
+        window.showMsgMenu = (m, isMe) => {
+            const menu = document.getElementById('msg-menu');
+            menu.style.display = 'flex';
+            window.currentMsg = m;
+            document.getElementById('delete-everyone').style.display = isMe ? 'block' : 'none';
+            document.getElementById('edit-opt').style.display = (isMe && m.type === 'text') ? 'block' : 'none';
         };
 
-        window.stopRec = () => { if(mediaRecorder) { mediaRecorder.stop(); document.getElementById('mic').classList.remove('rec'); } };
-        window.toggleIcons = (typing) => {
-            document.getElementById('mic').style.display = typing ? 'none' : 'flex';
-            document.getElementById('send').style.display = typing ? 'flex' : 'none';
+        window.deleteMsg = async (type) => {
+            const m = window.currentMsg;
+            if(type === 'everyone') await deleteDoc(doc(db, "lounges", loungeId, "messages", m.id));
+            // 'For me' logic would involve local storage filter or user-specific sub-collection
+            closePopups();
         };
 
-        if (window.visualViewport) {
-            window.visualViewport.addEventListener('resize', () => {
-                document.body.style.height = window.visualViewport.height + 'px';
-                window.scrollTo(0,0);
-            });
-        }
+        // --- UI Utilities ---
+        window.toggleInput = (typing) => {
+            document.getElementById('mic-btn').style.display = typing ? 'none' : 'flex';
+            document.getElementById('send-btn').style.display = typing ? 'flex' : 'none';
+        };
+
+        window.closePopups = () => {
+            document.querySelectorAll('.popup-overlay').forEach(p => p.style.display = 'none');
+        };
+
+        window.viewImage = (url) => {
+            const v = document.getElementById('image-viewer');
+            v.style.display = 'flex';
+            document.getElementById('full-img').src = url;
+        };
+
+        window.scalePFP = () => {
+            const url = document.getElementById('header-pfp').src;
+            viewImage(url);
+        };
     </script>
 
     <style>
-        :root { 
-            --bg: #0a0a0a; 
-            --panel: #141414; 
-            --accent: #58a6ff; 
-            --me-bubble: #004d40; 
-            --them-bubble: #1f1f1f; 
-            --text: #ffffff;
-        }
+        :root { --bg: #0a0a0a; --panel: #121212; --accent: #58a6ff; --me: #005c4b; --them: #202c33; }
+        * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
+        body { background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; height: 100dvh; display: flex; flex-direction: column; overflow: hidden; position: fixed; width: 100%; }
 
-        * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-        
-        body { 
-            background: var(--bg); font-family: -apple-system, sans-serif; 
-            height: 100dvh; display: flex; flex-direction: column; overflow: hidden;
-            position: fixed; width: 100%; color: var(--text);
-        }
+        /* Header & Profile */
+        header { background: var(--panel); padding: 10px 16px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #222; z-index: 100; cursor: pointer; }
+        .pfp-wrap { width: 40px; height: 40px; border-radius: 50%; overflow: hidden; border: 1.5px solid var(--accent); }
+        .pfp-wrap img { width: 100%; height: 100%; object-fit: cover; }
+        .h-info h2 { font-size: 1rem; color: var(--accent); }
+        .h-info p { font-size: 0.65rem; color: #888; }
 
-        header { 
-            background: var(--panel); padding: 10px 16px; display: flex; align-items: center; 
-            gap: 12px; border-bottom: 1px solid #222; cursor: pointer; flex-shrink: 0;
-        }
-        .pfp { width: 40px; height: 40px; border-radius: 50%; border: 1.5px solid var(--accent); object-fit: cover; }
-        .ht h2 { font-size: 0.95rem; color: var(--accent); font-weight: 600; }
-        .ht p { font-size: 0.65rem; color: #777; }
+        /* Admin Approval Bar */
+        #approval-bar { background: #1a1a1a; padding: 8px 16px; display: none; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--accent); animation: slideDown 0.3s; }
+        #approval-bar span { font-size: 0.8rem; color: var(--accent); font-weight: bold; }
+        #approval-bar button { background: var(--accent); border: none; padding: 4px 12px; border-radius: 4px; color: white; font-size: 0.75rem; cursor: pointer; }
 
-        /* Admin Request Panel */
-        #admin-req-panel {
-            background: #1c1c1c; padding: 8px 16px; display: none; 
-            justify-content: space-between; align-items: center;
-            border-bottom: 1px solid var(--accent);
-        }
-        #admin-req-panel span { font-size: 0.8rem; color: var(--accent); }
-        #admin-req-panel button { 
-            background: var(--accent); color: white; border: none; 
-            padding: 4px 12px; border-radius: 4px; font-size: 0.75rem; font-weight: bold;
-        }
+        /* Chat Background Doodle */
+        #chat-box { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding: 15px; background-image: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M10 10l2 2m20 0h4m20 10l-2 2m-40 20h3m40 20l2 2' stroke='%2358a6ff' stroke-width='0.5' fill='none' opacity='0.05'/%3E%3C/svg%3E"); }
 
-        #chat-box { 
-            flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding: 15px;
-            background-color: var(--bg);
-            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%2358a6ff' fill-opacity='0.04'%3E%3Cpath d='M5 5l2 2m20 0h4m10 10l-2 2m-30 20h3m20 20l2 2' stroke='%2358a6ff' stroke-width='0.5'/%3E%3Ccircle cx='30' cy='30' r='1'/%3E%3C/g%3E%3C/svg%3E");
-        }
-
-        .msg-row { display: flex; width: 100%; margin-bottom: 2px; }
+        /* Bubbles */
+        .msg-row { display: flex; width: 100%; }
         .msg-row.me { justify-content: flex-end; }
-        .bubble { max-width: 85%; padding: 6px 10px 4px 10px; border-radius: 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.4); }
-        .me .bubble { background: var(--me-bubble); border-top-right-radius: 0; }
-        .them .bubble { background: var(--them-bubble); border-top-left-radius: 0; }
-        
-        .st { font-size: 0.72rem; font-weight: 800; color: var(--accent); margin-bottom: 2px; }
-        .msg-txt { font-size: 0.92rem; }
-        .mt { font-size: 0.6rem; color: rgba(255,255,255,0.5); text-align: right; margin-top: 3px; }
-        
-        .ci { width: 100%; border-radius: 8px; margin: 4px 0; border: 1px solid #333; }
-        audio { height: 32px; width: 200px; filter: invert(1) opacity(0.8); }
+        .bubble { max-width: 80%; padding: 8px 12px; border-radius: 12px; position: relative; box-shadow: 0 1px 2px rgba(0,0,0,0.5); }
+        .me .bubble { background: var(--me); border-top-right-radius: 0; }
+        .them .bubble { background: var(--them); border-top-left-radius: 0; }
+        .sender-name { font-size: 0.7rem; font-weight: bold; color: var(--accent); margin-bottom: 4px; }
+        .txt { font-size: 0.95rem; line-height: 1.4; }
+        .msg-meta { display: flex; justify-content: flex-end; align-items: center; gap: 4px; margin-top: 4px; font-size: 0.6rem; color: rgba(255,255,255,0.6); }
+        .chat-img { width: 100%; border-radius: 8px; margin: 4px 0; }
+        .doc-link { color: var(--accent); text-decoration: none; font-size: 0.85rem; display: block; padding: 8px; background: rgba(255,255,255,0.05); border-radius: 6px; }
 
-        footer { background: var(--panel); padding: 8px 12px; display: flex; align-items: center; gap: 8px; border-top: 1px solid #222; flex-shrink: 0; }
-        .ib { flex: 1; background: #1c1c1c; border-radius: 22px; padding: 0 14px; display: flex; align-items: center; border: 1px solid #333; }
-        #msg-input { flex: 1; background: transparent; border: none; color: white; padding: 10px 0; outline: none; font-size: 0.95rem; }
-        
-        .btn { width: 42px; height: 42px; background: var(--accent); border-radius: 50%; border: none; color: white; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-        .rec { background: #ff4444 !important; animation: pulse 1s infinite; }
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        /* Footer */
+        footer { background: var(--panel); padding: 10px; display: flex; align-items: center; gap: 8px; border-top: 1px solid #222; }
+        .input-pill { flex: 1; background: #1e1e1e; border-radius: 24px; padding: 0 12px; display: flex; align-items: center; border: 1px solid #333; }
+        #msg-input { flex: 1; background: transparent; border: none; color: white; padding: 12px 0; outline: none; font-size: 1rem; }
+        .icon-btn { font-size: 1.3rem; color: #888; cursor: pointer; padding: 5px; }
+        .send-pill { width: 45px; height: 45px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; border: none; color: white; cursor: pointer; }
+        .recording { background: #ff3b30 !important; transform: scale(1.1); animation: pulse 1s infinite; }
+
+        /* Popups */
+        .popup-overlay { position: fixed; inset:0; background: rgba(0,0,0,0.85); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; }
+        .menu-card { background: #1e1e1e; width: 80%; border-radius: 12px; overflow: hidden; border: 1px solid #333; }
+        .menu-opt { padding: 15px; border-bottom: 1px solid #333; color: white; text-align: center; cursor: pointer; }
+        .menu-opt.danger { color: #ff3b30; }
+
+        #full-img { max-width: 95%; max-height: 80%; border-radius: 8px; }
+        .close-btn { position: absolute; top: 40px; left: 20px; font-size: 1.5rem; }
+
+        @keyframes slideDown { from { transform: translateY(-100%); } to { transform: translateY(0); } }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
     </style>
 </head>
 <body>
 
-    <header onclick="window.location.href='info.html'">
-        <img id="dp" src="" class="pfp">
-        <div class="ht">
-            <h2 id="dn">Lounge</h2>
-            <p id="di">Lounge Code: 000000</p>
+    <header>
+        <div class="pfp-wrap" onclick="scalePFP()">
+            <img id="header-pfp" src="">
+        </div>
+        <div class="h-info" onclick="window.location.href='info.html'">
+            <h2 id="header-name">Lounge</h2>
+            <p id="lounge-code-text">Lounge Code: ...</p>
         </div>
     </header>
 
-    <div id="admin-req-panel">
-        <span id="req-count">0 Join Request(s)</span>
-        <button onclick="acceptAll()">ACCEPT ALL</button>
+    <div id="approval-bar">
+        <span id="req-text">Pending Requests</span>
+        <button onclick="showRequests()">MANAGE</button>
     </div>
 
     <div id="chat-box"></div>
 
     <footer>
-        <div class="ib">
-            <label for="img" style="margin-right:10px; cursor:pointer; font-size: 1.1rem; opacity: 0.8;">📷</label>
-            <input type="file" id="img" hidden accept="image/*" onchange="upImg(this)">
-            <input type="text" id="msg-input" placeholder="Message..." autocomplete="off" oninput="toggleIcons(this.value.trim().length > 0)">
+        <div class="input-pill">
+            <label for="doc-upload" class="icon-btn">📎</label>
+            <input type="file" id="doc-upload" hidden multiple onchange="uploadDocs(this)">
+            <input type="text" id="msg-input" placeholder="Message" autocomplete="off" oninput="toggleInput(this.value.trim().length > 0)">
+            <label for="img-upload" class="icon-btn">📷</label>
+            <input type="file" id="img-upload" hidden accept="image/*" onchange="upImg(this)">
         </div>
         
-        <button id="mic" class="btn" 
-                ontouchstart="startRec()" ontouchend="stopRec()" 
-                onmousedown="startRec()" onmouseup="stopRec()">🎤</button>
+        <button id="mic-btn" class="send-pill" 
+                onmousedown="startVoice()" onmouseup="stopVoice()"
+                ontouchstart="startVoice()" ontouchend="stopVoice()">🎤</button>
         
-        <button id="send" class="btn" style="display:none" onmousedown="sendTxt(event)">➤</button>
+        <button id="send-btn" class="send-pill" style="display:none" onmousedown="sendText(event)">➤</button>
     </footer>
+
+    <div id="msg-menu" class="popup-overlay" onclick="closePopups()">
+        <div class="menu-card" onclick="event.stopPropagation()">
+            <div class="menu-opt" id="edit-opt">Edit Message</div>
+            <div class="menu-opt danger" id="delete-everyone" onclick="deleteMsg('everyone')">Delete for Everyone</div>
+            <div class="menu-opt danger" onclick="deleteMsg('me')">Delete for Me</div>
+            <div class="menu-opt" onclick="closePopups()">Cancel</div>
+        </div>
+    </div>
+
+    <div id="image-viewer" class="popup-overlay">
+        <span class="close-btn" onclick="closePopups()">✕</span>
+        <img id="full-img" src="">
+        <button style="margin-top:20px; padding: 10px 20px; background: var(--accent); border:none; border-radius:5px; color:white;" onclick="window.open(document.getElementById('full-img').src)">Download</button>
+    </div>
 
 </body>
 </html>
