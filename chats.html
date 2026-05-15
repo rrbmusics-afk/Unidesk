@@ -30,213 +30,214 @@
         let mediaRecorder;
         let audioChunks = [];
 
-        document.addEventListener('DOMContentLoaded', () => {
-            // 1. Header Sync
-            onSnapshot(doc(db, "lounges", loungeId), (snap) => {
-                if (!snap.exists()) return;
-                const data = snap.data();
-                document.getElementById('lounge-name').innerText = data.loungeName || "Secure Lounge";
-                document.getElementById('header-pfp').src = data.photo || "https://cdn-icons-png.flaticon.com/512/149/149071.png";
-                document.getElementById('lounge-code-text').innerText = `ID: ${loungeId}`;
-            });
+        // --- Core Functions ---
+        async function pushMessage(type, payload, fileName = "") {
+            const msgData = {
+                sender: userName,
+                type: type,
+                timestamp: serverTimestamp(),
+                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            };
+            if (type === 'text') msgData.text = payload;
+            else msgData.url = payload;
+            if (fileName) msgData.fileName = fileName;
 
-            // 2. Chat Sync
-            const q = query(collection(db, "lounges", loungeId, "messages"), orderBy("timestamp", "asc"));
-            onSnapshot(q, (snap) => {
-                const box = document.getElementById('chat-box');
-                box.innerHTML = '';
-                snap.forEach(d => renderBubble(d.data()));
-                box.scrollTo(0, box.scrollHeight);
-            });
-        });
-
-        function renderBubble(msg) {
-            const isMe = msg.sender === userName;
-            const div = document.createElement('div');
-            div.className = `msg-row ${isMe ? 'me' : 'them'}`;
-            
-            let content = `<div class="bubble">`;
-            if(!isMe) content += `<span class="sender-name">${msg.sender}</span>`;
-            
-            if(msg.type === 'text') content += `<p>${msg.text}</p>`;
-            else if(msg.type === 'audio') content += `<audio controls src="${msg.url}"></audio>`;
-            else if(msg.type === 'image') content += `<img src="${msg.url}" class="preview-img">`;
-
-            content += `<span class="timestamp">${msg.time || ''}</span></div>`;
-            div.innerHTML = content;
-            document.getElementById('chat-box').appendChild(div);
+            try {
+                await addDoc(collection(db, "lounges", loungeId, "messages"), msgData);
+            } catch (e) { console.error("Write error:", e); }
         }
 
-        // Voice Engine
         window.startVoice = async () => {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            mediaRecorder = new MediaRecorder(stream);
-            audioChunks = [];
-            mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-            mediaRecorder.onstop = async () => {
-                const blob = new Blob(audioChunks, { type: 'audio/webm' });
-                const fRef = ref(storage, `lounges/${loungeId}/v_${Date.now()}`);
-                await uploadBytes(fRef, blob);
-                const url = await getDownloadURL(fRef);
-                sendMessage('audio', url);
-            };
-            mediaRecorder.start();
-            document.getElementById('mic-btn').classList.add('rec-active');
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+                mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+                mediaRecorder.onstop = async () => {
+                    const blob = new Blob(audioChunks, { type: 'audio/webm' });
+                    const fileRef = ref(storage, `media/${loungeId}/v_${Date.now()}`);
+                    const upload = await uploadBytes(fileRef, blob);
+                    const url = await getDownloadURL(upload.ref);
+                    pushMessage('audio', url);
+                };
+                mediaRecorder.start();
+                document.getElementById('mic-btn').classList.add('recording');
+            } catch (err) { alert("Mic required for voice notes."); }
         };
 
         window.stopVoice = () => {
-            if(mediaRecorder) { 
-                mediaRecorder.stop(); 
-                document.getElementById('mic-btn').classList.remove('rec-active');
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                mediaRecorder.stop();
+                document.getElementById('mic-btn').classList.remove('recording');
             }
         };
-
-        async function sendMessage(type, val) {
-            const data = {
-                sender: userName, type, timestamp: serverTimestamp(),
-                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-            };
-            type === 'text' ? data.text = val : data.url = val;
-            await addDoc(collection(db, "lounges", loungeId, "messages"), data);
-        }
 
         window.sendText = () => {
-            const inp = document.getElementById('msg-input');
-            if(inp.value.trim()) { 
-                sendMessage('text', inp.value); 
-                inp.value = ''; 
-                toggleBtn(false);
+            const input = document.getElementById('msg-input');
+            if (input.value.trim()) {
+                pushMessage('text', input.value.trim());
+                input.value = '';
+                updateUIState(false);
             }
         };
 
-        window.toggleBtn = (isTyping) => {
-            document.getElementById('mic-btn').style.display = isTyping ? 'none' : 'flex';
-            document.getElementById('send-btn').style.display = isTyping ? 'flex' : 'none';
+        window.uploadMedia = async (el) => {
+            const file = el.files[0];
+            if (!file) return;
+            const type = file.type.startsWith('image') ? 'image' : 'doc';
+            const fileRef = ref(storage, `media/${loungeId}/${Date.now()}_${file.name}`);
+            const upload = await uploadBytes(fileRef, file);
+            const url = await getDownloadURL(upload.ref);
+            pushMessage(type, url, file.name);
+        };
+
+        // --- Listeners ---
+        onSnapshot(doc(db, "lounges", loungeId), (snap) => {
+            if (!snap.exists()) return;
+            document.getElementById('group-name').innerText = snap.data().loungeName;
+            document.getElementById('group-pfp').src = snap.data().photo || 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
+            document.getElementById('group-id').innerText = `ID: ${loungeId}`;
+        });
+
+        const q = query(collection(db, "lounges", loungeId, "messages"), orderBy("timestamp", "asc"));
+        onSnapshot(q, (snap) => {
+            const chatBox = document.getElementById('chat-box');
+            chatBox.innerHTML = '';
+            snap.forEach(d => {
+                const m = d.data();
+                const isMe = m.sender === userName;
+                const row = document.createElement('div');
+                row.className = `msg-row ${isMe ? 'me' : 'them'}`;
+                
+                let inner = `<div class="bubble">`;
+                if(!isMe) inner += `<div class="sender-name">${m.sender}</div>`;
+                if(m.type === 'text') inner += `<p>${m.text}</p>`;
+                else if(m.type === 'image') inner += `<img src="${m.url}" class="chat-img" onclick="window.open('${m.url}')">`;
+                else if(m.type === 'audio') inner += `<audio controls src="${m.url}"></audio>`;
+                else if(m.type === 'doc') inner += `<div class="doc-msg">📄 ${m.fileName}</div>`;
+                
+                inner += `<div class="time">${m.time || ''}</div></div>`;
+                row.innerHTML = inner;
+                chatBox.appendChild(row);
+            });
+            chatBox.scrollTo(0, chatBox.scrollHeight);
+        });
+
+        window.updateUIState = (typing) => {
+            document.getElementById('mic-btn').style.display = typing ? 'none' : 'flex';
+            document.getElementById('send-btn').style.display = typing ? 'flex' : 'none';
         };
     </script>
 
     <style>
         :root {
-            --wa-bg: #0b141a;
-            --wa-header: #202c33;
-            --wa-accent: #58a6ff;
-            --wa-me: #005c4b;
-            --wa-them: #202c33;
-            --wa-text: #e9edef;
-            --wa-dim: #8696a0;
+            --bg: #05070a;
+            --panel: #0d1117;
+            --accent: #58a6ff;
+            --me: #005c4b;
+            --them: #21262d;
+            --text: #c9d1d9;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { 
-            background: var(--wa-bg); 
-            font-family: 'Segoe UI', Roboto, sans-serif; 
+            background: var(--bg); 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica; 
             height: 100dvh; display: grid; grid-template-rows: auto 1fr auto; 
             overflow: hidden; 
         }
 
-        /* Fixed Header */
+        /* HEADER */
         header { 
-            background: var(--wa-header); 
-            padding: calc(10px + env(safe-area-inset-top)) 16px 10px; 
+            background: var(--panel); padding: 10px 16px; 
             display: flex; align-items: center; gap: 12px;
-            z-index: 10; border-bottom: 1px solid #30363d;
+            border-bottom: 1px solid #30363d; cursor: pointer;
         }
+        .pfp-img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 1px solid var(--accent); }
+        .meta h2 { font-size: 1rem; color: var(--accent); }
+        .meta p { font-size: 0.7rem; color: #8b949e; }
 
-        .pfp-box { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--wa-accent); overflow: hidden; }
-        .pfp-box img { width: 100%; height: 100%; object-fit: cover; }
-        .meta-info { flex: 1; cursor: pointer; }
-        .meta-info h2 { font-size: 1rem; color: var(--wa-accent); font-weight: 500; }
-        .meta-info p { font-size: 0.7rem; color: var(--wa-dim); }
-
-        /* Unique Doodle Background */
+        /* DOODLE BACKGROUND */
         #chat-box { 
-            padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;
-            background-color: var(--wa-bg);
-            background-image: url("https://www.transparenttextures.com/patterns/carbon-fibre.png"); /* Professional Aether Pattern */
-            position: relative;
+            padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px;
+            background-color: var(--bg);
+            background-image: 
+                radial-gradient(var(--accent) 0.5px, transparent 0.5px),
+                radial-gradient(var(--accent) 0.5px, #05070a 0.5px);
+            background-size: 30px 30px;
+            background-position: 0 0, 15px 15px;
+            opacity: 0.9;
         }
 
+        /* BUBBLES */
         .msg-row { display: flex; width: 100%; }
         .msg-row.me { justify-content: flex-end; }
         .bubble { 
-            max-width: 85%; padding: 8px 12px; border-radius: 12px; 
-            box-shadow: 0 2px 4px rgba(0,0,0,0.4); position: relative;
+            max-width: 80%; padding: 8px 12px; border-radius: 12px; 
+            box-shadow: 0 1px 2px rgba(0,0,0,0.5); position: relative;
         }
-        .me .bubble { background: var(--wa-me); border-top-right-radius: 0; }
-        .them .bubble { background: var(--wa-them); border-top-left-radius: 0; }
+        .me .bubble { background: var(--me); border-top-right-radius: 0; }
+        .them .bubble { background: var(--them); border-top-left-radius: 0; }
         
-        .sender-name { font-size: 0.75rem; color: #f1c40f; font-weight: bold; display: block; margin-bottom: 3px; }
-        .timestamp { font-size: 0.65rem; color: var(--wa-dim); float: right; margin-top: 4px; margin-left: 10px; }
-        .preview-img { width: 100%; border-radius: 8px; margin-top: 5px; }
-        audio { height: 35px; width: 220px; filter: invert(1); }
+        .sender-name { font-size: 0.7rem; font-weight: bold; color: var(--accent); margin-bottom: 4px; }
+        .time { font-size: 0.6rem; color: #8b949e; text-align: right; margin-top: 4px; }
+        .chat-img { width: 100%; border-radius: 8px; margin: 4px 0; }
+        audio { height: 35px; width: 200px; filter: invert(1); }
 
-        /* Footer Input Bar */
+        /* FOOTER */
         footer { 
-            background: var(--wa-header); 
-            padding: 10px 10px calc(10px + env(safe-area-inset-bottom)); 
-            display: flex; align-items: center; gap: 10px;
+            background: var(--panel); padding: 10px; 
+            display: flex; align-items: center; gap: 10px; 
+            border-top: 1px solid #30363d;
         }
-
-        .input-pill { 
-            flex: 1; background: #2a3942; border-radius: 25px; 
-            padding: 0 15px; display: flex; align-items: center;
+        .input-wrap { 
+            flex: 1; background: #161b22; border-radius: 24px; 
+            padding: 0 15px; display: flex; align-items: center; border: 1px solid #30363d;
         }
-
         #msg-input { 
             flex: 1; background: transparent; border: none; 
-            color: #fff; padding: 12px 0; outline: none; font-size: 1rem; 
+            color: white; padding: 12px 0; outline: none; font-size: 1rem; 
         }
-
-        .circle-btn { 
-            width: 48px; height: 48px; background: var(--wa-accent); 
-            border: none; border-radius: 50%; color: white;
-            display: flex; align-items: center; justify-content: center;
+        .icon-btn { 
+            width: 45px; height: 45px; background: var(--accent); 
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            border: none; color: white; cursor: pointer;
         }
-
-        .rec-active { background: #ff3b30 !important; animation: pulse 1s infinite; }
-        @keyframes pulse { 0% { scale: 1; } 50% { scale: 1.1; } 100% { scale: 1; } }
+        .recording { background: #f85149 !important; animation: pulse 1.2s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
     </style>
 </head>
 <body>
 
     <header onclick="window.location.href='info.html'">
-        <div class="pfp-box"><img id="header-pfp" src=""></div>
-        <div class="meta-info">
-            <h2 id="lounge-name">Loading...</h2>
-            <p id="lounge-code-text">Syncing Secure ID...</p>
+        <img id="group-pfp" src="" class="pfp-img">
+        <div class="meta">
+            <h2 id="group-name">Lounge</h2>
+            <p id="group-id">ID: 000000</p>
         </div>
     </header>
 
     <div id="chat-box"></div>
 
     <footer>
-        <div class="input-pill">
-            <span onclick="document.getElementById('attach').click()" style="padding-right:12px; cursor:pointer">📎</span>
-            <input type="file" id="attach" hidden onchange="handleFile(this)">
-            <input type="text" id="msg-input" placeholder="Secure Message" oninput="toggleBtn(this.value.length > 0)">
+        <div class="input-wrap">
+            <label for="file-up" style="cursor:pointer; margin-right:10px;">📎</label>
+            <input type="file" id="file-up" hidden onchange="uploadMedia(this)">
+            
+            <input type="text" id="msg-input" placeholder="Message" 
+                   oninput="updateUIState(this.value.trim().length > 0)">
         </div>
 
-        <button id="mic-btn" class="circle-btn" 
+        <button id="mic-btn" class="icon-btn" 
                 ontouchstart="startVoice()" 
                 ontouchend="stopVoice()">🎤</button>
         
-        <button id="send-btn" class="circle-btn" style="display:none" onclick="sendText()">
+        <button id="send-btn" class="icon-btn" style="display:none" onclick="sendText()">
             <svg viewBox="0 0 24 24" width="24" height="24" fill="white">
                 <path d="M1.101 21.757L23.8 12.028 1.101 2.3l.011 7.912 13.623 1.816-13.623 1.817-.011 7.912z"></path>
             </svg>
         </button>
     </footer>
 
-    <script>
-        async function handleFile(el) {
-            if(!el.files[0]) return;
-            const f = el.files[0];
-            const type = f.type.startsWith('image') ? 'image' : 'doc';
-            const fRef = ref(storage, `lounges/${loungeId}/${Date.now()}_${f.name}`);
-            await uploadBytes(fRef, f);
-            const url = await getDownloadURL(fRef);
-            sendMessage(type, url);
-        }
-    </script>
 </body>
 </html>
