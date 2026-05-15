@@ -2,13 +2,87 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>AetherCore | Elite Lounge</title>
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>AetherCore | Lounge Access</title>
+    <style>
+        :root {
+            --bg: #05070a;
+            --card: #0d1117;
+            --accent: #58a6ff;
+            --text: #ffffff;
+            --dim: #8b949e;
+            --border: #30363d;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background: var(--bg); color: var(--text); display: flex; justify-content: center; align-items: center; min-height: 100dvh; overflow: hidden; }
+
+        .container { width: 90%; max-width: 400px; text-align: center; }
+        .logo { font-size: 1.6rem; letter-spacing: 2px; color: var(--accent); margin-bottom: 5px; font-weight: 800; }
+        .subtitle { font-size: 0.65rem; letter-spacing: 4px; color: var(--dim); text-transform: uppercase; margin-bottom: 2.5rem; }
+
+        .lounge-card { background: var(--card); border: 1px solid var(--border); border-radius: 28px; padding: 2rem; box-shadow: 0 25px 50px rgba(0,0,0,0.5); }
+        
+        .tabs { display: flex; gap: 10px; margin-bottom: 2rem; background: #161b22; padding: 5px; border-radius: 16px; }
+        .tab-btn { flex: 1; background: transparent; border: none; color: var(--dim); padding: 12px; border-radius: 12px; cursor: pointer; font-weight: 700; transition: 0.3s; }
+        .tab-btn.active { background: var(--accent); color: white; }
+
+        .input-group { margin-bottom: 1.2rem; text-align: left; }
+        label { font-size: 0.75rem; color: var(--dim); margin: 0 0 8px 5px; display: block; font-weight: 600; }
+        input { width: 100%; background: #161b22; border: 1px solid var(--border); border-radius: 14px; padding: 14px; color: white; outline: none; transition: 0.3s; font-size: 1rem; }
+        input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.2); }
+
+        .action-btn { width: 100%; padding: 16px; border-radius: 16px; border: none; background: var(--accent); color: white; font-weight: 800; font-size: 1rem; cursor: pointer; margin-top: 10px; }
+        
+        #toast { visibility: hidden; background: #ff4d4d; color: white; padding: 16px; border-radius: 12px; position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 1000; font-weight: 600; }
+        #toast.show { visibility: visible; animation: pop 0.4s ease-out; }
+        @keyframes pop { from { bottom: 0; opacity: 0; } to { bottom: 30px; opacity: 1; } }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1 class="logo">AETHERCORE</h1>
+        <p class="subtitle">Secure Discussion Lounge</p>
+
+        <div class="lounge-card">
+            <div class="tabs">
+                <button class="tab-btn active" id="t-create" onclick="switchTab('create')">CREATE</button>
+                <button class="tab-btn" id="t-join" onclick="switchTab('join')">JOIN</button>
+            </div>
+
+            <div id="section-create">
+                <div class="input-group">
+                    <label>YOUR NAME</label>
+                    <input type="text" id="c-user" placeholder="Enter name">
+                </div>
+                <div class="input-group">
+                    <label>LOUNGE NAME</label>
+                    <input type="text" id="c-lounge" placeholder="Group Subject">
+                </div>
+                <button class="action-btn" onclick="initLounge('create')">CREATE & START</button>
+            </div>
+
+            <div id="section-join" class="hidden">
+                <div class="input-group">
+                    <label>YOUR NAME</label>
+                    <input type="text" id="j-user" placeholder="Enter name">
+                </div>
+                <div class="input-group">
+                    <label>6-DIGIT CODE</label>
+                    <input type="text" id="j-code" placeholder="000000" maxlength="6">
+                </div>
+                <button class="action-btn" onclick="initLounge('join')">SEND JOIN REQUEST</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast">Error Message</div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, doc, onSnapshot, collection, addDoc, updateDoc, deleteDoc, query, orderBy, serverTimestamp, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+        import { getFirestore, doc, setDoc, getDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDbfmd0zmv_mFV0CG2OrhKPPeU3zPYGOBg",
@@ -21,240 +95,57 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-        const storage = getStorage(app);
 
-        const session = JSON.parse(localStorage.getItem('unidesk_session'));
-        if (!session) window.location.href = 'page.html';
-        const { user: userName, lounge: loungeId } = session;
+        window.switchTab = (mode) => {
+            document.getElementById('section-create').classList.toggle('hidden', mode !== 'create');
+            document.getElementById('section-join').classList.toggle('hidden', mode !== 'join');
+            document.getElementById('t-create').classList.toggle('active', mode === 'create');
+            document.getElementById('t-join').classList.toggle('active', mode === 'join');
+        };
 
-        let mediaRecorder;
-        let audioChunks = [];
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.innerText = msg;
+            t.className = 'show';
+            setTimeout(() => t.className = '', 3000);
+        }
 
-        // --- Header & Admin Logic ---
-        onSnapshot(doc(db, "lounges", loungeId), (snap) => {
-            if (!snap.exists()) return;
-            const data = snap.data();
-            document.getElementById('h-name').innerText = data.loungeName;
-            document.getElementById('h-code').innerText = "Lounge Code: " + loungeId;
-            document.getElementById('h-pfp').src = data.photo || 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
-            document.getElementById('full-pfp-src').src = data.photo || 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
+        window.initLounge = async (type) => {
+            const user = document.getElementById(type === 'create' ? 'c-user' : 'j-user').value.trim();
+            const target = document.getElementById(type === 'create' ? 'c-lounge' : 'j-code').value.trim();
 
-            const adminBar = document.getElementById('admin-req-bar');
-            if (data.admin === userName && data.pending?.length > 0) {
-                adminBar.style.display = 'flex';
-                document.getElementById('req-notif').innerText = `${data.pending.length} New Requests`;
-                window.viewPending = () => {
-                    const list = document.getElementById('pending-list');
-                    list.innerHTML = '';
-                    data.pending.forEach(u => {
-                        const div = document.createElement('div');
-                        div.className = 'req-item';
-                        div.innerHTML = `<span>${u}</span><button onclick="approve('${u}')">Approve</button>`;
-                        list.appendChild(div);
-                    });
-                    document.getElementById('modal-req').style.display = 'flex';
-                };
+            if (!user || !target) return showToast("All fields are required.");
+
+            if (type === 'create') {
+                const loungeId = Math.floor(100000 + Math.random() * 900000).toString();
+                await setDoc(doc(db, "lounges", loungeId), {
+                    loungeName: target,
+                    admin: user, // Point 1: Creator is Admin
+                    members: [user],
+                    pending: [],
+                    createdAt: new Date().getTime()
+                });
+                
+                localStorage.setItem('unidesk_session', JSON.stringify({ user, lounge: loungeId }));
+                window.location.href = 'chat.html';
             } else {
-                adminBar.style.display = 'none';
-            }
-        });
+                const loungeRef = doc(db, "lounges", target);
+                const snap = await getDoc(loungeRef);
 
-        window.approve = async (u) => {
-            await updateDoc(doc(db, "lounges", loungeId), { members: arrayUnion(u), pending: arrayRemove(u) });
-            if(document.getElementById('pending-list').children.length === 1) closeModals();
-        };
+                if (!snap.exists()) return showToast("Invalid Lounge Code.");
 
-        // --- Chat logic ---
-        const q = query(collection(db, "lounges", loungeId, "messages"), orderBy("timestamp", "asc"));
-        onSnapshot(q, (snap) => {
-            const box = document.getElementById('chat-box');
-            box.innerHTML = '';
-            snap.forEach(d => {
-                const m = d.data();
-                const isMe = m.sender === userName;
-                const div = document.createElement('div');
-                div.className = `msg-row ${isMe ? 'me' : 'them'}`;
+                // Point 2 & 5: Add user to pending list (knocking)
+                await updateDoc(loungeRef, {
+                    pending: arrayUnion(user)
+                });
+
+                showToast("Request sent! Wait for Admin approval.");
                 
-                let content = `<div class="bubble">`;
-                if(!isMe) content += `<div class="s-name">${m.sender}</div>`;
-                if(m.type === 'text') content += `<p>${m.text}</p>`;
-                else if(m.type === 'image') content += `<img src="${m.url}" class="thumb" onclick="openMedia('${m.url}')">`;
-                else if(m.type === 'audio') content += `<audio controls src="${m.url}"></audio>`;
-                else if(m.type === 'doc') content += `<div class="doc-file" onclick="window.open('${m.url}')">📄 ${m.fileName}</div>`;
-                
-                content += `<div class="time">${m.time}</div></div>`;
-                div.innerHTML = content;
-                box.appendChild(div);
-            });
-            box.scrollTo(0, box.scrollHeight);
-        });
-
-        // --- Media Handlers ---
-        window.sendDoc = async (el) => {
-            const files = Array.from(el.files).slice(0, 10);
-            for(let f of files) {
-                const r = ref(storage, `docs/${loungeId}/${Date.now()}_${f.name}`);
-                const s = await uploadBytes(r, f);
-                pushMsg({ type: 'doc', url: await getDownloadURL(s.ref), fileName: f.name });
+                // Store session, but chat.html will block them until they are in 'members' array
+                localStorage.setItem('unidesk_session', JSON.stringify({ user, lounge: target }));
+                setTimeout(() => window.location.href = 'chat.html', 2000);
             }
         };
-
-        window.startAudio = async () => {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            mediaRecorder = new MediaRecorder(stream);
-            audioChunks = [];
-            mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-            mediaRecorder.onstop = async () => {
-                const blob = new Blob(audioChunks, { type: 'audio/webm' });
-                const r = ref(storage, `audio/${loungeId}/${Date.now()}`);
-                const snap = await uploadBytes(r, blob);
-                pushMsg({ type: 'audio', url: await getDownloadURL(snap.ref) });
-            };
-            mediaRecorder.start();
-            document.getElementById('mic').classList.add('recording');
-        };
-
-        window.stopAudio = () => { if(mediaRecorder) { mediaRecorder.stop(); document.getElementById('mic').classList.remove('recording'); } };
-
-        async function pushMsg(extra) {
-            await addDoc(collection(db, "lounges", loungeId, "messages"), {
-                sender: userName, timestamp: serverTimestamp(),
-                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                ...extra
-            });
-        }
-
-        window.sendText = () => {
-            const inp = document.getElementById('msg-inp');
-            if(!inp.value.trim()) return;
-            pushMsg({ type: 'text', text: inp.value.trim() });
-            inp.value = ''; toggle(false);
-        };
-
-        window.toggle = (t) => {
-            document.getElementById('mic').style.display = t ? 'none' : 'flex';
-            document.getElementById('send').style.display = t ? 'flex' : 'none';
-        };
-
-        window.closeModals = () => { document.querySelectorAll('.overlay').forEach(o => o.style.display='none'); };
-        window.openMedia = (u) => { document.getElementById('full-img').src = u; document.getElementById('media-viewer').style.display='flex'; };
-
     </script>
-
-    <style>
-        :root { --bg: #0b141a; --panel: #202c33; --accent: #58a6ff; --me: #005c4b; --them: #232d36; }
-        * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
-        
-        body { background: var(--bg); color: white; font-family: -apple-system, sans-serif; height: 100dvh; display: flex; flex-direction: column; overflow: hidden; position: fixed; width: 100%; }
-
-        /* HEADER */
-        header { background: var(--panel); padding: 8px 14px; display: flex; align-items: center; gap: 12px; flex-shrink: 0; z-index: 100; }
-        .h-pfp-wrap { width: 42px; height: 42px; border-radius: 50%; overflow: hidden; border: 1.5px solid var(--accent); flex-shrink: 0; }
-        .h-pfp-wrap img { width: 100%; height: 100%; object-fit: cover; }
-        .h-info h2 { font-size: 1rem; font-weight: 600; }
-        .h-info p { font-size: 0.7rem; color: var(--accent); }
-
-        /* ADMIN BAR - Pinned below header */
-        #admin-req-bar { background: #1a1d21; padding: 10px 15px; display: none; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--accent); flex-shrink: 0; }
-        #req-notif { font-size: 0.85rem; font-weight: bold; color: var(--accent); }
-        .btn-approve { background: var(--accent); border: none; color: white; padding: 6px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; }
-
-        /* CHAT AREA */
-        #chat-box { 
-            flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 6px;
-            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M10 10l2 2' stroke='%2358a6ff' stroke-width='0.5' fill='none' opacity='0.05'/%3E%3C/svg%3E");
-        }
-        .msg-row { display: flex; width: 100%; }
-        .msg-row.me { justify-content: flex-end; }
-        .bubble { max-width: 80%; padding: 6px 10px; border-radius: 8px; position: relative; }
-        .me .bubble { background: var(--me); border-top-right-radius: 0; }
-        .them .bubble { background: var(--them); border-top-left-radius: 0; }
-        .s-name { font-size: 0.72rem; font-weight: bold; color: var(--accent); }
-        .time { font-size: 0.6rem; color: rgba(255,255,255,0.4); text-align: right; margin-top: 4px; }
-        .thumb { width: 100%; border-radius: 6px; margin: 4px 0; }
-        .doc-file { background: rgba(0,0,0,0.2); padding: 8px; border-radius: 6px; font-size: 0.8rem; }
-
-        /* FOOTER FIX - PREVENTS STRETCHING */
-        footer { background: var(--panel); padding: 8px 8px 25px 8px; display: flex; align-items: flex-end; gap: 8px; flex-shrink: 0; width: 100%; }
-        .input-wrapper { flex: 1; background: #2a3942; border-radius: 24px; display: flex; align-items: center; padding: 0 8px; min-height: 48px; min-width: 0; /* Important */ }
-        #msg-inp { flex: 1; background: transparent; border: none; color: white; padding: 12px 4px; outline: none; font-size: 1rem; min-width: 0; }
-        
-        .f-ico { padding: 8px; color: #8696a0; flex-shrink: 0; display: flex; align-items: center; }
-        .f-ico svg { width: 22px; height: 22px; fill: currentColor; }
-
-        .action-slot { width: 48px; height: 48px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
-        .circle-btn { width: 48px; height: 48px; border-radius: 50%; background: var(--accent); border: none; display: flex; align-items: center; justify-content: center; }
-        .circle-btn svg { width: 24px; height: 24px; fill: white; }
-        .recording { background: #ff3b30 !important; animation: pulse 1s infinite; }
-
-        /* OVERLAYS */
-        .overlay { position: fixed; inset:0; background: rgba(0,0,0,0.9); display: none; z-index: 1000; align-items: center; justify-content: center; }
-        .m-box { background: #1e1e1e; width: 85%; border-radius: 12px; padding: 20px; }
-        .req-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #333; }
-        .pfp-scale { width: 85vw; height: 85vw; object-fit: cover; border-radius: 50%; border: 4px solid var(--accent); }
-
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
-    </style>
-</head>
-<body>
-
-    <header>
-        <div class="h-pfp-wrap" onclick="document.getElementById('pfp-view').style.display='flex'">
-            <img id="h-pfp" src="">
-        </div>
-        <div class="h-info" onclick="window.location.href='info.html'">
-            <h2 id="h-name">...</h2>
-            <p id="h-code">Lounge Code: ...</p>
-        </div>
-    </header>
-
-    <div id="admin-req-bar">
-        <span id="req-notif">0 New Requests</span>
-        <button class="btn-approve" onclick="viewPending()">VIEW</button>
-    </div>
-
-    <div id="chat-box"></div>
-
-    <footer>
-        <div class="input-wrapper">
-            <label for="doc-up" class="f-ico">
-                <svg viewBox="0 0 24 24"><path d="M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5c0-1.38 1.12-2.5 2.5-2.5s2.5 1.12 2.5 2.5v10.5c0 .55-.45 1-1 1s-1-.45-1-1V6H10v9.5c0 1.66 1.34 3 3 3s3-1.34 3-3V5c0-2.48-2.02-4.5-4.5-4.5S7 2.52 7 5v12.5c0 3.59 2.91 6.5 6.5 6.5s6.5-2.91 6.5-6.5V6h-1.5z"/></svg>
-            </label>
-            <input type="file" id="doc-up" hidden multiple onchange="sendDoc(this)">
-
-            <input type="text" id="msg-inp" placeholder="Aether Message" autocomplete="off" oninput="toggle(this.value.trim().length > 0)">
-            
-            <label for="img-up" class="f-ico">
-                <svg viewBox="0 0 24 24"><path d="M20 5h-3.17L15 3H9L7.17 5H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 14H4V7h16v12zM12 9c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4z"/></svg>
-            </label>
-            <input type="file" id="img-up" hidden accept="image/*" onchange="upImg(this)">
-        </div>
-
-        <div class="action-slot">
-            <button id="mic" class="circle-btn" onmousedown="startAudio()" onmouseup="stopAudio()" ontouchstart="startAudio()" ontouchend="stopAudio()">
-                <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
-            </button>
-            <button id="send" class="circle-btn" style="display:none" onclick="sendText()">
-                <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
-            </button>
-        </div>
-    </footer>
-
-    <div id="pfp-view" class="overlay" onclick="closeModals()">
-        <img id="full-pfp-src" class="pfp-scale">
-    </div>
-
-    <div id="modal-req" class="overlay" onclick="closeModals()">
-        <div class="m-box" onclick="event.stopPropagation()">
-            <h3 style="color:var(--accent); margin-bottom:15px">Lounge Requests</h3>
-            <div id="pending-list"></div>
-        </div>
-    </div>
-
-    <div id="media-viewer" class="overlay" onclick="closeModals()">
-        <img id="full-img" style="max-width:95%; max-height:70%; border-radius:10px">
-        <button class="btn-approve" style="margin-top:20px" onclick="window.open(document.getElementById('full-img').src)">Download</button>
-    </div>
-
 </body>
 </html>
