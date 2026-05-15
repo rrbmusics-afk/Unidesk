@@ -25,52 +25,49 @@
         if (!session) window.location.href = 'page.html';
         const { user: userName, lounge: loungeId } = session;
 
-        // --- 1. LOUNGE SYNC & ADMIN CONTROLS ---
+        // --- 1. LOUNGE & PERMANENT ADMIN NOTIFICATION ---
         onSnapshot(doc(db, "lounges", loungeId), (snap) => {
             if (!snap.exists()) return;
             const data = snap.data();
             
-            // UI Updates
             document.getElementById('h-name').innerText = data.loungeName;
             document.getElementById('h-code').innerText = "Code: " + loungeId;
             document.getElementById('h-pfp').src = data.photo || 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
 
-            // ADMIN ONLY: Listen for Knocking Requests
+            // Show permanent notification icon ONLY if current user is Admin
             if (data.admin === userName) {
-                const reqQuery = query(collection(db, "lounges", loungeId, "requests"), where("status", "==", "pending"));
+                document.getElementById('admin-nav-btn').style.display = 'flex';
                 
+                const reqQuery = query(collection(db, "lounges", loungeId, "requests"), where("status", "==", "pending"));
                 onSnapshot(reqQuery, (reqSnap) => {
-                    const bar = document.getElementById('admin-req-bar');
-                    if (reqSnap.size > 0) {
-                        bar.style.display = 'flex';
-                        document.getElementById('req-count').innerText = reqSnap.size;
+                    const badge = document.getElementById('req-badge');
+                    const count = reqSnap.size;
+                    badge.innerText = count;
+                    badge.style.display = count > 0 ? 'flex' : 'none';
+
+                    window.viewPending = () => {
+                        const list = document.getElementById('pending-list');
+                        list.innerHTML = '';
+                        if(reqSnap.size === 0) list.innerHTML = '<p style="text-align:center; opacity:0.5; padding:20px;">No pending requests</p>';
                         
-                        window.viewPending = () => {
-                            const list = document.getElementById('pending-list');
-                            list.innerHTML = '';
-                            reqSnap.forEach(d => {
-                                const r = d.data();
-                                const div = document.createElement('div');
-                                div.className = 'req-item';
-                                div.innerHTML = `
-                                    <span>${r.name}</span>
-                                    <div style="display:flex; gap:8px;">
-                                        <button class="reject-btn" onclick="handleDecision('${d.id}', 'rejected')">REJECT</button>
-                                        <button class="accept-btn" onclick="handleDecision('${d.id}', 'accepted', '${r.name}')">ACCEPT</button>
-                                    </div>`;
-                                list.appendChild(div);
-                            });
-                            document.getElementById('modal-req').style.display = 'flex';
-                        };
-                    } else { 
-                        bar.style.display = 'none'; 
-                        closeModals(); 
-                    }
+                        reqSnap.forEach(d => {
+                            const r = d.data();
+                            const div = document.createElement('div');
+                            div.className = 'req-item';
+                            div.innerHTML = `
+                                <span>${r.name}</span>
+                                <div style="display:flex; gap:8px;">
+                                    <button class="reject-btn" onclick="handleDecision('${d.id}', 'rejected')">REJECT</button>
+                                    <button class="accept-btn" onclick="handleDecision('${d.id}', 'accepted', '${r.name}')">ACCEPT</button>
+                                </div>`;
+                            list.appendChild(div);
+                        });
+                        document.getElementById('modal-req').style.display = 'flex';
+                    };
                 });
             }
         });
 
-        // Decision Handler (Accept/Reject)
         window.handleDecision = async (reqId, status, requesterName) => {
             await updateDoc(doc(db, "lounges", loungeId, "requests", reqId), { status: status });
             if (status === 'accepted') {
@@ -78,12 +75,12 @@
             }
         };
 
-        // --- 2. JOINER PROTECTION (Kicked if Rejected) ---
+        // --- 2. SECURITY CHECK FOR JOINERS ---
         const myReqQuery = query(collection(db, "lounges", loungeId, "requests"), where("name", "==", userName));
         onSnapshot(myReqQuery, (snap) => {
             snap.forEach(d => {
                 if (d.data().status === 'rejected') {
-                    alert("Admin has declined your entry.");
+                    alert("Admin declined your entry.");
                     window.location.href = 'page.html';
                 }
             });
@@ -131,15 +128,16 @@
         html, body { height: 100%; width: 100%; overflow: hidden; position: fixed; background: var(--bg); color: white; font-family: -apple-system, sans-serif; }
         #app-container { display: flex; flex-direction: column; height: 100%; width: 100%; }
 
-        header { background: var(--panel); padding: 10px 15px; display: flex; align-items: center; gap: 12px; height: 60px; flex-shrink: 0; }
-        .h-pfp-wrap { width: 38px; height: 38px; border-radius: 50%; overflow: hidden; border: 1.5px solid var(--accent); }
+        header { background: var(--panel); padding: 0 15px; display: flex; align-items: center; justify-content: space-between; height: 65px; flex-shrink: 0; z-index: 10; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .h-left { display: flex; align-items: center; gap: 12px; }
+        .h-pfp-wrap { width: 40px; height: 40px; border-radius: 50%; overflow: hidden; border: 1.5px solid var(--accent); }
         .h-pfp-wrap img { width: 100%; height: 100%; object-fit: cover; }
-        .h-info h2 { font-size: 0.9rem; }
-        .h-info p { font-size: 0.7rem; color: var(--accent); opacity: 0.8; }
+        .h-info h2 { font-size: 0.95rem; }
+        .h-info p { font-size: 0.7rem; color: var(--accent); }
 
-        #admin-req-bar { background: #1e2a32; padding: 0 15px; height: 44px; display: none; align-items: center; justify-content: space-between; border-bottom: 2px solid var(--accent); flex-shrink: 0; }
-        .req-txt { font-size: 0.7rem; font-weight: bold; color: var(--accent); letter-spacing: 0.5px; }
-        .view-btn { background: var(--accent); border: none; color: white; padding: 4px 10px; border-radius: 4px; font-size: 0.65rem; font-weight: bold; }
+        /* Permanent Admin Button Style */
+        #admin-nav-btn { display: none; position: relative; background: rgba(88, 166, 255, 0.1); width: 42px; height: 42px; border-radius: 10px; align-items: center; justify-content: center; border: 1px solid rgba(88, 166, 255, 0.2); }
+        #req-badge { position: absolute; top: -5px; right: -5px; background: var(--error); color: white; font-size: 0.65rem; min-width: 18px; height: 18px; border-radius: 10px; display: none; align-items: center; justify-content: center; font-weight: bold; padding: 2px; border: 2px solid var(--panel); }
 
         #chat-box { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 8px; }
         .msg-row { display: flex; width: 100%; }
@@ -157,29 +155,31 @@
         .circle-btn { width: 42px; height: 42px; border-radius: 50%; background: var(--accent); border: none; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
         .circle-btn svg { width: 22px; height: 22px; fill: white; }
 
-        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; z-index: 2000; align-items: center; justify-content: center; }
-        .m-box { background: #1e2a32; width: 88%; border-radius: 12px; padding: 20px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
-        .req-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.1); }
-        .accept-btn { background: var(--success); border: none; color: white; padding: 6px 12px; border-radius: 4px; font-weight: bold; font-size: 0.7rem; }
-        .reject-btn { background: transparent; border: 1px solid var(--error); color: var(--error); padding: 6px 12px; border-radius: 4px; font-weight: bold; font-size: 0.7rem; }
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; z-index: 2000; align-items: center; justify-content: center; }
+        .m-box { background: #1e2a32; width: 90%; max-width: 350px; border-radius: 15px; padding: 20px; }
+        .req-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .accept-btn { background: var(--success); border: none; color: white; padding: 7px 14px; border-radius: 6px; font-weight: bold; font-size: 0.7rem; }
+        .reject-btn { background: transparent; border: 1px solid var(--error); color: var(--error); padding: 7px 14px; border-radius: 6px; font-weight: bold; font-size: 0.7rem; }
     </style>
 </head>
 <body>
 
     <div id="app-container">
         <header>
-            <div class="h-pfp-wrap"><img id="h-pfp" src=""></div>
-            <div class="h-info">
-                <h2 id="h-name">Lounge</h2>
-                <p id="h-code">Code: ------</p>
+            <div class="h-left">
+                <div class="h-pfp-wrap"><img id="h-pfp" src=""></div>
+                <div class="h-info">
+                    <h2 id="h-name">Lounge</h2>
+                    <p id="h-code">Code: ------</p>
+                </div>
+            </div>
+            
+            <!-- Permanent Header Notification Button -->
+            <div id="admin-nav-btn" onclick="viewPending()">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--accent);"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
+                <div id="req-badge">0</div>
             </div>
         </header>
-
-        <!-- Admin Access Bar -->
-        <div id="admin-req-bar">
-            <span class="req-txt"><span id="req-count">0</span> PENDING REQUESTS</span>
-            <button class="view-btn" onclick="viewPending()">VIEW ALL</button>
-        </div>
 
         <div id="chat-box"></div>
 
@@ -199,7 +199,7 @@
     <!-- Request Modal -->
     <div id="modal-req" class="overlay" onclick="closeModals()">
         <div class="m-box" onclick="event.stopPropagation()">
-            <h3 style="color:var(--accent); margin-bottom:15px; font-size: 0.85rem; text-align: center;">NEW ACCESS REQUESTS</h3>
+            <h3 style="color:var(--accent); margin-bottom:15px; font-size: 0.9rem; text-align: center;">Entry Requests</h3>
             <div id="pending-list"></div>
         </div>
     </div>
