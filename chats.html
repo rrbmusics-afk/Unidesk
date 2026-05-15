@@ -30,7 +30,7 @@
         let mediaRecorder;
         let audioChunks = [];
 
-        // Dynamic Data Binding
+        // Dynamic Header Sync
         onSnapshot(doc(db, "lounges", loungeId), (snap) => {
             if (!snap.exists()) return;
             const data = snap.data();
@@ -39,7 +39,7 @@
             document.getElementById('display-id').innerText = `ID: ${loungeId}`;
         });
 
-        // Chat Engine
+        // Chat Listener
         const q = query(collection(db, "lounges", loungeId, "messages"), orderBy("timestamp", "asc"));
         onSnapshot(q, (snap) => {
             const container = document.getElementById('chat-box');
@@ -63,7 +63,15 @@
             container.scrollTo(0, container.scrollHeight);
         });
 
-        async function push(type, val) {
+        // Static Keyboard Fix
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', () => {
+                document.body.style.height = window.visualViewport.height + 'px';
+                window.scrollTo(0, 0);
+            });
+        }
+
+        async function pushMsg(type, val) {
             await addDoc(collection(db, "lounges", loungeId, "messages"), {
                 sender: userName, type, timestamp: serverTimestamp(),
                 time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
@@ -73,14 +81,14 @@
 
         window.sendTxt = () => {
             const el = document.getElementById('msg-input');
-            if(el.value.trim()){ push('text', el.value.trim()); el.value = ''; toggle(false); }
+            if(el.value.trim()){ pushMsg('text', el.value.trim()); el.value = ''; toggle(false); }
         };
 
         window.upImg = async (el) => {
             const f = el.files[0]; if(!f) return;
             const r = ref(storage, `media/${loungeId}/${Date.now()}`);
             const s = await uploadBytes(r, f);
-            push('image', await getDownloadURL(s.ref));
+            pushMsg('image', await getDownloadURL(s.ref));
         };
 
         window.startRec = async () => {
@@ -92,7 +100,7 @@
                 const b = new Blob(audioChunks, { type: 'audio/webm' });
                 const r = ref(storage, `media/${loungeId}/v_${Date.now()}`);
                 const snap = await uploadBytes(r, b);
-                push('audio', await getDownloadURL(snap.ref));
+                pushMsg('audio', await getDownloadURL(snap.ref));
             };
             mediaRecorder.start();
             document.getElementById('mic').classList.add('rec');
@@ -111,32 +119,30 @@
         
         body { 
             background: var(--bg); font-family: sans-serif; 
-            height: 100dvh; display: grid; grid-template-rows: auto 1fr auto; overflow: hidden; 
+            height: 100dvh; display: flex; flex-direction: column; overflow: hidden;
+            position: fixed; width: 100%;
         }
 
-        /* HEADER - REDIRECTS TO INFO.HTML */
         header { 
             background: var(--panel); padding: 12px 16px; display: flex; align-items: center; 
-            gap: 12px; border-bottom: 1px solid #30363d; cursor: pointer; z-index: 10;
+            gap: 12px; border-bottom: 1px solid #30363d; cursor: pointer; flex-shrink: 0;
         }
-        .pfp { width: 42px; height: 42px; border-radius: 50%; border: 1px solid var(--accent); object-fit: cover; }
+        .pfp { width: 42px; height: 42px; border-radius: 50%; border: 1.5px solid var(--accent); object-fit: cover; }
         .h-text h2 { font-size: 1rem; color: var(--accent); }
         .h-text p { font-size: 0.7rem; color: #8b949e; }
 
-        /* DOODLE BACKGROUND */
+        /* TRUE WHATSAPP-STYLE DOODLE BACKGROUND */
         #chat-box { 
-            padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px;
+            flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding: 15px;
             background-color: var(--bg);
             background-image: 
-                radial-gradient(var(--accent) 0.5px, transparent 0.5px), 
-                linear-gradient(rgba(88, 166, 255, 0.03) 1px, transparent 1px), 
-                linear-gradient(90deg, rgba(88, 166, 255, 0.03) 1px, transparent 1px);
-            background-size: 20px 20px;
+                url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M10 10l2 2m20 5h4m10 20l-3 3m40 10l2 2m-60 30h5m30-10l3 3m20-40h4m-50 50l2 2' stroke='%2358a6ff' stroke-width='0.5' fill='none' opacity='0.2'/%3E%3Ccircle cx='50' cy='10' r='1' fill='%2358a6ff' opacity='0.2'/%3E%3Crect x='80' y='80' width='2' height='2' fill='%2358a6ff' opacity='0.2'/%3E%3C/svg%3E");
+            background-size: 120px 120px;
         }
 
         .msg-row { display: flex; width: 100%; }
         .msg-row.me { justify-content: flex-end; }
-        .bubble { max-width: 80%; padding: 8px 12px; border-radius: 12px; box-shadow: 0 1px 2px #000; position: relative; color: white; }
+        .bubble { max-width: 82%; padding: 8px 12px; border-radius: 12px; box-shadow: 0 1px 2px #000; position: relative; color: white; }
         .me .bubble { background: var(--me); border-top-right-radius: 0; }
         .them .bubble { background: var(--them); border-top-left-radius: 0; }
         
@@ -145,11 +151,11 @@
         .chat-img { width: 100%; border-radius: 8px; margin: 4px 0; }
         audio { height: 35px; width: 200px; filter: invert(1); }
 
-        footer { background: var(--panel); padding: 10px; display: flex; align-items: center; gap: 10px; border-top: 1px solid #30363d; }
+        footer { background: var(--panel); padding: 10px; display: flex; align-items: center; gap: 10px; border-top: 1px solid #30363d; flex-shrink: 0; }
         .input-box { flex: 1; background: #161b22; border-radius: 24px; padding: 0 15px; display: flex; align-items: center; border: 1px solid #30363d; }
         #msg-input { flex: 1; background: transparent; border: none; color: white; padding: 12px 0; outline: none; font-size: 1rem; }
         
-        .btn { width: 46px; height: 46px; background: var(--accent); border-radius: 50%; border: none; color: white; display: flex; align-items: center; justify-content: center; }
+        .btn { width: 46px; height: 46px; background: var(--accent); border-radius: 50%; border: none; color: white; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
         .rec { background: #ff3b30 !important; animation: pulse 1s infinite; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
     </style>
