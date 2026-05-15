@@ -2,8 +2,9 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>UNIDESK | Gateway</title>
+    
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, doc, getDoc, setDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
@@ -26,129 +27,108 @@
         const { user: userName, lounge: loungeId, mode, uid: userUid } = session;
 
         document.addEventListener('DOMContentLoaded', async () => {
-            const displayId = document.getElementById('target-id');
-            if(displayId) displayId.innerText = loungeId;
-
             if (mode === 'create') {
-                handleCreate();
+                // --- ADMIN FAST TRACK ---
+                await setDoc(doc(db, "lounges", loungeId), {
+                    admin: userName,
+                    adminUid: userUid,
+                    createdAt: serverTimestamp(),
+                    loungeName: session.loungeName || "Aether Lounge"
+                }, { merge: true });
+                
+                window.location.replace('chats.html');
             } else {
-                handleJoin();
+                // --- MEMBER VERIFICATION & KNOCK ---
+                handleJoinProcess();
             }
         });
 
-        async function handleCreate() {
-            // Admin creates the lounge and enters immediately
-            await setDoc(doc(db, "lounges", loungeId), {
-                admin: userName,
-                adminUid: userUid,
-                createdAt: serverTimestamp(),
-                loungeName: session.loungeName || loungeId 
-            }, { merge: true });
-            
-            window.location.href = 'chats.html';
-        }
-
-        async function handleJoin() {
+        async function handleJoinProcess() {
             const loungeRef = doc(db, "lounges", loungeId);
             const loungeSnap = await getDoc(loungeRef);
 
-            if (loungeSnap.exists()) {
-                // 1. Show the "Waiting" UI
-                document.getElementById('loading-state').style.display = 'none';
-                document.getElementById('knocking-screen').style.display = 'flex';
-                
-                // 2. Create/Update the request in the 'requests' sub-collection
-                // We use the user's UID as the document ID so it's unique and trackable
-                const reqRef = doc(db, "lounges", loungeId, "requests", userUid);
-                await setDoc(reqRef, {
-                    name: userName,
-                    uid: userUid,
-                    status: 'pending',
-                    timestamp: serverTimestamp()
-                });
-
-                // 3. Listen for changes (Live Gatekeeping)
-                onSnapshot(reqRef, (snap) => {
-                    if (snap.exists()) {
-                        const data = snap.data();
-                        if (data.status === 'accepted') {
-                            window.location.href = 'chats.html';
-                        } else if (data.status === 'rejected') {
-                            showRejected();
-                        }
-                    }
-                });
-            } else {
-                showError();
+            // 1. Check if lounge exists
+            if (!loungeSnap.exists()) {
+                alert("Lounge Not Found: The code entered does not match any active sessions.");
+                window.location.replace('page.html');
+                return;
             }
-        }
 
-        function showRejected() {
-            document.getElementById('knocking-screen').style.display = 'none';
-            document.getElementById('rejected-screen').style.display = 'flex';
-            setTimeout(() => {
-                localStorage.removeItem('unidesk_session');
-                window.location.href = 'page.html';
-            }, 4000);
-        }
-
-        function showError() {
+            // 2. Show UI for knocking
             document.getElementById('loading-state').style.display = 'none';
-            document.getElementById('error-screen').style.display = 'flex';
-            setTimeout(() => { window.location.href = 'page.html'; }, 3000);
+            document.getElementById('knocking-screen').style.display = 'flex';
+
+            // 3. Send Request to Admin
+            const reqRef = doc(db, "lounges", loungeId, "requests", userUid);
+            await setDoc(reqRef, {
+                name: userName,
+                uid: userUid,
+                status: 'pending',
+                timestamp: serverTimestamp()
+            });
+
+            // 4. Live listen for Approval/Rejection
+            onSnapshot(reqRef, (snap) => {
+                if (snap.exists()) {
+                    const status = snap.data().status;
+                    if (status === 'accepted') {
+                        window.location.replace('chats.html');
+                    } else if (status === 'rejected') {
+                        document.getElementById('knocking-screen').style.display = 'none';
+                        document.getElementById('rejected-screen').style.display = 'flex';
+                        
+                        setTimeout(() => {
+                            localStorage.removeItem('unidesk_session');
+                            window.location.replace('page.html');
+                        }, 4000);
+                    }
+                }
+            });
         }
     </script>
+
     <style>
-        :root { --bg: #05070a; --accent: #58a6ff; --error: #ff4d4d; --text-dim: #8b949e; --warn: #f1c40f; }
+        :root { --bg: #05070a; --accent: #58a6ff; --error: #ff4d4d; --text: #8b949e; --warn: #f1c40f; }
         body { 
             margin: 0; background: var(--bg); color: white; 
-            font-family: 'Inter', -apple-system, sans-serif;
-            display: flex; align-items: center; justify-content: center;
-            height: 100vh; text-align: center; overflow: hidden;
+            font-family: 'Inter', sans-serif; height: 100vh;
+            display: flex; align-items: center; justify-content: center; text-align: center;
         }
-        .container { padding: 20px; width: 90%; max-width: 400px; }
+        .container { width: 90%; max-width: 400px; padding: 20px; }
         .spinner {
-            width: 40px; height: 40px; border: 3px solid #30363d;
-            border-top-color: var(--accent); border-radius: 50%;
+            width: 40px; height: 40px; border: 3px solid #161b22;
+            border-radius: 50%; border-top-color: var(--accent);
             animation: spin 1s linear infinite; margin: 0 auto 20px;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
-        .overlay { display: none; flex-direction: column; align-items: center; animation: fadeIn 0.4s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        h2 { letter-spacing: 1px; font-size: 1.2rem; margin-bottom: 10px; text-transform: uppercase; }
-        p { color: var(--text-dim); font-size: 0.9rem; line-height: 1.5; }
+        .view { display: none; flex-direction: column; align-items: center; }
+        h2 { font-size: 1.3rem; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
+        p { color: var(--text); font-size: 0.95rem; line-height: 1.5; }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <!-- Initial Loader -->
+        <!-- Loader during code check -->
         <div id="loading-state">
             <div class="spinner"></div>
-            <h2 style="color: var(--accent);">Verifying Session</h2>
-            <p>Scanning AetherCore for Lounge: <span id="target-id" style="color:white">#</span></p>
+            <h2 style="color: var(--accent);">Synchronizing</h2>
+            <p>Accessing AetherCore database...</p>
         </div>
 
-        <!-- Knocking (Waiting for Admin) -->
-        <div id="knocking-screen" class="overlay">
+        <!-- Waiting for Admin -->
+        <div id="knocking-screen" class="view">
             <div class="spinner" style="border-top-color: var(--warn);"></div>
             <h2 style="color: var(--warn);">Knocking...</h2>
-            <p>Lounge found. Waiting for the Admin to grant you access to the session.</p>
+            <p>Verification successful. Please wait for the Lounge Admin to approve your entry request.</p>
         </div>
 
-        <!-- Rejected State -->
-        <div id="rejected-screen" class="overlay">
-            <div style="font-size: 3rem; margin-bottom: 20px;">⚠️</div>
-            <h2 style="color: var(--error);">Access Denied</h2>
-            <p>The Admin has rejected your request to join this lounge.</p>
-            <p style="margin-top: 20px; font-size: 0.8rem;">Redirecting to Lobby...</p>
-        </div>
-
-        <!-- Error State -->
-        <div id="error-screen" class="overlay">
+        <!-- Professional Rejection Message -->
+        <div id="rejected-screen" class="view">
             <div style="font-size: 3rem; margin-bottom: 20px;">🚫</div>
-            <h2 style="color: var(--error);">Invalid Code</h2>
-            <p>This lounge does not exist or the session has expired.</p>
+            <h2 style="color: var(--error);">Access Denied</h2>
+            <p>We apologize, but your request to join this session has been declined by the administrator.</p>
+            <p style="margin-top: 15px; font-size: 0.8rem; opacity: 0.6;">You will be redirected to the lobby momentarily.</p>
         </div>
     </div>
 
