@@ -26,16 +26,10 @@
 
         document.addEventListener('DOMContentLoaded', async () => {
             if (mode === 'create') {
-                // ADMIN: Fast track to creating the lounge
-                await setDoc(doc(db, "lounges", loungeId), {
-                    admin: userName,
-                    adminUid: userUid,
-                    createdAt: serverTimestamp(),
-                    loungeName: session.loungeName || "Elite Lounge"
-                }, { merge: true });
+                // IMMEDIATE ACCESS FOR CREATOR
                 window.location.replace('chats.html');
             } else {
-                // MEMBER: Join process
+                // VERIFICATION FOR JOINERS
                 handleJoinProcess();
             }
         });
@@ -45,14 +39,14 @@
             const loungeSnap = await getDoc(loungeRef);
 
             if (!loungeSnap.exists()) {
-                alert("Lounge code not found.");
+                alert("Lounge code not found. Please check the code and try again.");
                 window.location.replace('page.html');
                 return;
             }
 
             document.getElementById('gate-ui').style.display = 'flex';
 
-            // Send Knock Request
+            // Send Join Request
             const reqRef = doc(db, "lounges", loungeId, "requests", userUid);
             await setDoc(reqRef, {
                 name: userName,
@@ -61,13 +55,13 @@
                 timestamp: serverTimestamp()
             });
 
-            // Listen for Admin's decision
+            // Monitor Status
             onSnapshot(reqRef, (snap) => {
                 if (snap.exists()) {
                     const status = snap.data().status;
                     if (status === 'accepted') window.location.replace('chats.html');
                     if (status === 'rejected') {
-                        alert("The Admin has declined your entry.");
+                        alert("Entry Declined: The administrator has denied your request.");
                         localStorage.removeItem('unidesk_session');
                         window.location.replace('page.html');
                     }
@@ -76,17 +70,19 @@
         }
     </script>
     <style>
-        body { margin: 0; background: #05070a; color: white; font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; text-align: center; }
+        body { margin: 0; background: #05070a; color: white; font-family: 'Inter', sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; text-align: center; }
         .spinner { width: 40px; height: 40px; border: 3px solid #161b22; border-top-color: #58a6ff; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px; }
         @keyframes spin { to { transform: rotate(360deg); } }
         #gate-ui { display: none; flex-direction: column; }
+        h2 { letter-spacing: 1px; color: #58a6ff; }
+        p { color: #8b949e; }
     </style>
 </head>
 <body>
     <div id="gate-ui">
         <div class="spinner"></div>
-        <h2>Knocking...</h2>
-        <p>Waiting for the Lounge Admin to let you in.</p>
+        <h2>Requesting Entry</h2>
+        <p>Waiting for the Lounge Admin to approve your session...</p>
     </div>
 </body>
 </html>
