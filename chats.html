@@ -2,244 +2,450 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UNIDESK | Chat Session</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>UNIDESK | Professional Lounge</title>
+    
+    <!-- Firebase SDKs -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, doc, getDoc, updateDoc, onSnapshot, collection, addDoc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, addDoc, query, orderBy, serverTimestamp, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDbfmd0zmv_mFV0CG2OrhKPPeU3zPYGOBg",
             authDomain: "unidesk-a70ac.firebaseapp.com",
             projectId: "unidesk-a70ac",
-            storageBucket: "unidesk-a70ac.firebasestorage.app",
+            storageBucket: "unidesk-a70ac.appspot.com",
             messagingSenderId: "882535016432",
             appId: "1:882535016432:web:6eca2645a47a827e779f35"
         };
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        const storage = getStorage(app);
 
+        // --- Session Verification ---
         const session = JSON.parse(localStorage.getItem('unidesk_session'));
         if (!session) window.location.href = 'page.html';
-
         const { user: userName, lounge: loungeId, mode } = session;
-        const isAdmin = mode === 'create';
 
+        // --- Global State ---
+        let isAdmin = false;
+        let loungeData = null;
+        let mediaRecorder;
+        let audioChunks = [];
+        let longPressTimer;
+
+        // --- Initialization ---
         document.addEventListener('DOMContentLoaded', async () => {
-            // 1. Display the 6-digit code immediately
-            document.getElementById('display-lounge-code').innerText = `ID: ${loungeId}`;
-
-            // 2. Fetch the Lounge Name from Firebase
-            const loungeRef = doc(db, "lounges", loungeId);
-            const loungeSnap = await getDoc(loungeRef);
-            
-            if (loungeSnap.exists()) {
-                document.getElementById('display-lounge-name').innerText = loungeSnap.data().loungeName;
-            } else {
-                document.getElementById('display-lounge-name').innerText = "Student Lounge";
-            }
-
-            if (isAdmin) {
-                initAdminPanel();
-            }
+            initLoungeSync();
             listenForMessages();
+            setupInputListeners();
+            setupMediaUploads();
         });
 
-        // --- Message Handling ---
-        window.sendMsg = async () => {
-            const input = document.getElementById('msg-input');
-            const text = input.value.trim();
-            if (!text) return;
+        // 1. Sync Lounge State (Admin check, Deletion check, Name/Photo)
+        function initLoungeSync() {
+            onSnapshot(doc(db, "lounges", loungeId), (snap) => {
+                if (!snap.exists()) {
+                    alert("This lounge has been deleted by the admin.");
+                    window.location.href = 'page.html';
+                    return;
+                }
+                loungeData = snap.data();
+                isAdmin = (loungeData.admin === userName);
+                
+                // Update UI Header
+                document.getElementById('header-name').innerText = loungeData.loungeName;
+                document.getElementById('header-id').innerText = `ID: ${loungeId}`;
+                if(loungeData.photo) document.getElementById('header-pfp').src = loungeData.photo;
 
-            await addDoc(collection(db, "lounges", loungeId, "messages"), {
-                sender: userName,
-                text: text,
-                timestamp: serverTimestamp()
+                updateLoungeInfoUI();
+                if(isAdmin) listenForRequests();
             });
-            input.value = '';
-        };
+        }
 
+        // 2. Real-time Messaging with Long-Press Options
         function listenForMessages() {
             const q = query(collection(db, "lounges", loungeId, "messages"), orderBy("timestamp", "asc"));
             onSnapshot(q, (snapshot) => {
                 const box = document.getElementById('chat-box');
                 box.innerHTML = '';
                 snapshot.forEach(d => {
-                    const data = d.data();
-                    const isMe = data.sender === userName;
-                    const div = document.createElement('div');
-                    div.className = `msg ${isMe ? 'sent' : 'received'}`;
-                    div.innerHTML = `
-                        <small>${data.sender}</small>
-                        <div class="bubble">${data.text}</div>
-                    `;
-                    box.appendChild(div);
+                    const msg = { id: d.id, ...d.data() };
+                    renderMessage(msg);
                 });
                 box.scrollTop = box.scrollHeight;
             });
         }
 
-        // --- Admin Management (Knocking Requests) ---
-        function initAdminPanel() {
-            document.getElementById('admin-tools').style.display = 'block';
-            onSnapshot(collection(db, "lounges", loungeId, "requests"), (snapshot) => {
-                const list = document.getElementById('req-list');
-                const badge = document.getElementById('req-count');
-                let count = 0;
-                list.innerHTML = '';
+        function renderMessage(msg) {
+            const box = document.getElementById('chat-box');
+            const isMe = msg.sender === userName;
+            const div = document.createElement('div');
+            div.className = `msg-container ${isMe ? 'me' : 'them'}`;
+            div.onmousedown = () => startLongPress(msg);
+            div.ontouchstart = () => startLongPress(msg);
+            div.onmouseup = clearLongPress;
+            div.ontouchend = clearLongPress;
 
-                snapshot.forEach(d => {
-                    const data = d.data();
-                    if (data.status === 'pending') {
-                        count++;
-                        const div = document.createElement('div');
-                        div.className = 'req-item';
-                        div.innerHTML = `
-                            <span>${data.name} wants to join</span>
-                            <button onclick="acceptEntry('${d.id}')">ACCEPT</button>
-                        `;
-                        list.appendChild(div);
-                    }
-                });
-                badge.innerText = count;
-                badge.style.display = count > 0 ? 'flex' : 'none';
-            });
+            let content = `<div class="bubble">`;
+            if(!isMe) content += `<small class="sender-name">${msg.sender}</small>`;
+            
+            if(msg.type === 'image') content += `<img src="${msg.url}" class="chat-img" onclick="viewImage('${msg.url}')">`;
+            else if(msg.type === 'audio') content += `<audio controls src="${msg.url}"></audio>`;
+            else if(msg.type === 'doc') content += `<a href="${msg.url}" target="_blank" class="doc-link">📄 ${msg.fileName}</a>`;
+            else content += `<p>${msg.text}</p>`;
+            
+            content += `<span class="time">${msg.time || ''} ${isMe ? '✓✓' : ''}</span></div>`;
+            div.innerHTML = content;
+            box.appendChild(div);
         }
 
-        window.acceptEntry = async (id) => {
-            await updateDoc(doc(db, "lounges", loungeId, "requests", id), { status: 'accepted' });
+        // 3. Audio & Media Logic (Real Functionality)
+        async function startRecording() {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            mediaRecorder = new MediaRecorder(stream);
+            audioChunks = [];
+            mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+            mediaRecorder.onstop = async () => {
+                const blob = new Blob(audioChunks, { type: 'audio/webm' });
+                const fileRef = ref(storage, `lounges/${loungeId}/audio/${Date.now()}.webm`);
+                await uploadBytes(fileRef, blob);
+                const url = await getDownloadURL(fileRef);
+                sendMessage({ type: 'audio', url });
+            };
+            mediaRecorder.start();
+            document.getElementById('mic-btn').classList.add('recording');
+        }
+
+        function stopRecording() {
+            if(mediaRecorder) {
+                mediaRecorder.stop();
+                document.getElementById('mic-btn').classList.remove('recording');
+            }
+        }
+
+        // 4. Admin Options (Delete, Rename, Photo)
+        window.deleteLounge = async () => {
+            if(!isAdmin) return;
+            if(confirm("Permanently delete this lounge for everyone?")) {
+                await deleteDoc(doc(db, "lounges", loungeId));
+                window.location.href = 'page.html';
+            }
         };
 
-        window.toggleReqPopup = () => {
-            const pop = document.getElementById('req-popup');
-            pop.classList.toggle('active');
+        window.updateLoungePhoto = async (input) => {
+            if(!isAdmin || !input.files[0]) return;
+            const file = input.files[0];
+            const fileRef = ref(storage, `lounges/${loungeId}/profile.jpg`);
+            await uploadBytes(fileRef, file);
+            const url = await getDownloadURL(fileRef);
+            await updateDoc(doc(db, "lounges", loungeId), { photo: url });
         };
+
+        // --- Logic UI Helpers ---
+        function setupInputListeners() {
+            const input = document.getElementById('msg-input');
+            const micBtn = document.getElementById('mic-btn');
+            const sendBtn = document.getElementById('send-btn');
+
+            input.oninput = () => {
+                if(input.value.trim().length > 0) {
+                    micBtn.style.display = 'none';
+                    sendBtn.style.display = 'flex';
+                } else {
+                    micBtn.style.display = 'flex';
+                    sendBtn.style.display = 'none';
+                }
+            };
+        }
+
+        function startLongPress(msg) {
+            longPressTimer = setTimeout(() => {
+                showMsgMenu(msg);
+            }, 600);
+        }
+        function clearLongPress() { clearTimeout(longPressTimer); }
+
+        window.sendMessage = async (data) => {
+            const base = {
+                sender: userName,
+                timestamp: serverTimestamp(),
+                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            };
+            await addDoc(collection(db, "lounges", loungeId, "messages"), { ...base, ...data });
+        }
     </script>
+
     <style>
         :root {
-            --bg: #0b141a;
-            --panel: #111b21;
-            --header: #202c33;
-            --accent: #00a884;
-            --me: #005c4b;
-            --them: #202c33;
-            --text: #e9edef;
-            --dim: #8696a0;
+            --wa-bg: #0b141a;
+            --wa-header: #202c33;
+            --wa-me: #005c4b;
+            --wa-them: #202c33;
+            --wa-accent: #00a884;
+            --wa-text: #e9edef;
+            --wa-dim: #8696a0;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
-        body { background: var(--bg); color: var(--text); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
-
-        header {
-            background: var(--header);
-            padding: 10px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-            z-index: 100;
+        body, html { 
+            height: 100%; margin: 0; 
+            background: var(--wa-bg); 
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            color: var(--wa-text);
+            overflow: hidden;
         }
 
-        .lounge-info h3 { font-size: 1rem; color: var(--text); text-transform: uppercase; }
-        .lounge-info p { font-size: 0.75rem; color: var(--accent); font-weight: bold; letter-spacing: 1px; }
-
+        /* Unique Doodle Background */
         #chat-box {
-            flex: 1;
+            height: calc(100% - 130px);
             overflow-y: auto;
-            padding: 20px;
+            padding: 15px;
+            background-color: #0b141a;
+            background-image: url('https://www.transparenttextures.com/patterns/cubes.png'); /* Doodle Style */
             display: flex;
             flex-direction: column;
+            gap: 8px;
+        }
+
+        /* Header */
+        header {
+            background: var(--wa-header);
+            padding: 10px 15px;
+            display: flex;
+            align-items: center;
             gap: 12px;
-            background-color: var(--bg);
-            /* WhatsApp-style wallpaper pattern could be added here */
+            height: 65px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.4);
         }
 
-        .msg { max-width: 80%; display: flex; flex-direction: column; }
-        .msg small { font-size: 0.65rem; color: var(--accent); font-weight: bold; margin-bottom: 2px; margin-left: 5px; }
-        .bubble { padding: 8px 12px; border-radius: 8px; font-size: 0.95rem; line-height: 1.4; }
-        
-        .sent { align-self: flex-end; }
-        .sent .bubble { background: var(--me); border-top-right-radius: 0; }
-        .sent small { align-self: flex-end; margin-right: 5px; }
+        .pfp-container { width: 40px; height: 40px; position: relative; }
+        .pfp-container img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
 
-        .received { align-self: flex-start; }
-        .received .bubble { background: var(--them); border-top-left-radius: 0; }
+        .lounge-meta { flex: 1; }
+        .lounge-meta h2 { font-size: 1rem; margin: 0; }
+        .lounge-meta p { font-size: 0.7rem; color: var(--wa-accent); margin: 0; font-weight: bold; }
 
-        footer { background: var(--header); padding: 12px 20px; display: flex; align-items: center; gap: 15px; }
-        #msg-input {
-            flex: 1;
-            background: #2a3942;
-            border: none;
-            padding: 12px 15px;
-            border-radius: 8px;
-            color: white;
-            outline: none;
-        }
-
-        .send-btn {
-            background: transparent;
-            border: none;
-            color: var(--accent);
+        /* Request Bar - Aesthetic & Floating */
+        #request-bar {
+            background: #182229;
+            padding: 8px 15px;
+            display: none;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #2a3942;
+            color: var(--wa-accent);
+            font-size: 0.85rem;
+            font-weight: 600;
             cursor: pointer;
         }
 
-        /* Admin/Bell Styles */
-        #admin-tools { position: relative; }
-        .bell-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; position: relative; }
-        #req-count {
-            position: absolute; top: -2px; right: -2px;
-            background: #f15c6d; color: white;
-            font-size: 10px; width: 18px; height: 18px;
-            border-radius: 50%; display: none; align-items: center; justify-content: center;
+        /* Message Bubbles */
+        .msg-container { display: flex; width: 100%; margin-bottom: 4px; }
+        .msg-container.me { justify-content: flex-end; }
+        .msg-container.them { justify-content: flex-start; }
+        
+        .bubble { 
+            padding: 6px 10px; 
+            border-radius: 8px; 
+            max-width: 85%; 
+            position: relative;
+            box-shadow: 0 1px 1px rgba(0,0,0,0.2);
+        }
+        .me .bubble { background: var(--wa-me); border-top-right-radius: 0; }
+        .them .bubble { background: var(--wa-them); border-top-left-radius: 0; }
+
+        .sender-name { color: #f1c40f; font-size: 0.7rem; font-weight: bold; display: block; margin-bottom: 3px; }
+        .time { font-size: 0.6rem; color: var(--wa-dim); float: right; margin-top: 5px; margin-left: 10px; }
+
+        /* Footer */
+        footer {
+            background: var(--wa-header);
+            padding: 8px 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            position: fixed;
+            bottom: 0; width: 100%;
         }
 
-        #req-popup {
-            position: absolute; top: 50px; right: 0;
-            background: var(--panel); width: 280px;
-            border-radius: 8px; border: 1px solid #3b4a54;
-            display: none; flex-direction: column; padding: 15px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+        .input-wrapper {
+            flex: 1; background: #2a3942;
+            border-radius: 25px; display: flex;
+            align-items: center; padding: 0 15px;
         }
-        #req-popup.active { display: flex; }
-        .req-item {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 10px 0; border-bottom: 1px solid #3b4a54;
+
+        #msg-input {
+            flex: 1; border: none; background: transparent;
+            color: white; padding: 12px 0; outline: none;
+            font-size: 1rem;
         }
-        .req-item span { font-size: 0.85rem; }
-        .req-item button {
-            background: var(--accent); border: none; color: white;
-            padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.7rem;
+
+        .icon-btn { color: var(--wa-dim); cursor: pointer; display: flex; align-items: center; }
+        .send-circle {
+            background: var(--wa-accent); width: 45px; height: 45px;
+            border-radius: 50%; display: flex; justify-content: center;
+            align-items: center; color: white; border: none;
         }
+
+        /* Modals */
+        .modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); z-index: 1000; flex-direction: column;
+        }
+        .info-panel { background: var(--wa-bg); width: 100%; height: 100%; overflow-y: auto; }
+        
+        .large-pfp { width: 100%; aspect-ratio: 1/1; object-fit: cover; }
+        
+        /* Utility */
+        .recording { color: #ff4b4b !important; animation: pulse 1s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        .chat-img { max-width: 100%; border-radius: 5px; margin-top: 5px; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <header>
-        <div class="lounge-info">
-            <h3 id="display-lounge-name">Loading...</h3>
-            <p id="display-lounge-code">ID: 000000</p>
+    <!-- Header Section -->
+    <header onclick="openLoungeInfo()">
+        <div class="pfp-container">
+            <img id="header-pfp" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="Profile">
         </div>
-        
-        <div id="admin-tools" style="display: none;">
-            <button class="bell-btn" onclick="toggleReqPopup()">
-                🔔<span id="req-count">0</span>
-            </button>
-            <div id="req-popup">
-                <p style="font-size: 0.7rem; color: var(--dim); margin-bottom: 10px;">ENTRY REQUESTS</p>
-                <div id="req-list"></div>
-            </div>
+        <div class="lounge-meta">
+            <h2 id="header-name">Lounge Name</h2>
+            <p id="header-id">ID: 000000</p>
         </div>
     </header>
 
+    <!-- Admin Approval Bar -->
+    <div id="request-bar" onclick="openApprovalModal()">
+        <span>Pending Requests</span>
+        <span id="request-count">0</span>
+    </div>
+
+    <!-- Chat Messages -->
     <div id="chat-box"></div>
 
+    <!-- Footer Input -->
     <footer>
-        <input type="text" id="msg-input" placeholder="Type a message" onkeypress="if(event.key === 'Enter') sendMsg()">
-        <button class="send-btn" onclick="sendMsg()">
-            <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M1.101 21.757L23.8 12.028 1.101 2.3l.011 7.912 13.623 1.816-13.623 1.817-.011 7.912z"></path></svg>
+        <div class="input-wrapper">
+            <label class="icon-btn" style="margin-right: 10px;">
+                📎<input type="file" id="doc-upload" multiple hidden onchange="handleDocs(this)">
+            </label>
+            <input type="text" id="msg-input" placeholder="Message">
+            <label class="icon-btn" id="img-label">
+                📷<input type="file" id="img-upload" accept="image/*" hidden onchange="handleImage(this)">
+            </label>
+        </div>
+        
+        <!-- Record / Send Button -->
+        <button id="mic-btn" class="send-circle" 
+                onmousedown="startRecording()" onmouseup="stopRecording()"
+                ontouchstart="startRecording()" ontouchend="stopRecording()">
+            🎤
+        </button>
+        <button id="send-btn" class="send-circle" style="display: none;" onclick="sendTextMessage()">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="white"><path d="M1.101 21.757L23.8 12.028 1.101 2.3l.011 7.912 13.623 1.816-13.623 1.817-.011 7.912z"></path></svg>
         </button>
     </footer>
 
+    <!-- LOUNGE INFO MODAL -->
+    <div id="info-modal" class="modal">
+        <div class="info-panel">
+            <header style="background: #111b21;">
+                <span onclick="closeModal('info-modal')" style="font-size: 1.5rem;">←</span>
+                <h2 style="margin-left: 20px;">Lounge Info</h2>
+            </header>
+            
+            <div style="position: relative;">
+                <img id="info-pfp" class="large-pfp" src="https://cdn-icons-png.flaticon.com/512/149/149071.png">
+                <label id="edit-pfp-btn" style="position: absolute; bottom: 20px; right: 20px; background: var(--wa-accent); padding: 15px; border-radius: 50%; display: none;">
+                    ✏️ <input type="file" accept="image/*" hidden onchange="updateLoungePhoto(this)">
+                </label>
+            </div>
+
+            <div style="padding: 20px; background: #111b21; margin-top: 10px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h1 id="info-name" style="font-size: 1.4rem;">Lounge Name</h1>
+                    <span id="rename-btn" style="display: none;" onclick="renameLounge()">✏️</span>
+                </div>
+                <p id="info-code" style="color: var(--wa-dim); margin-top: 5px;"></p>
+            </div>
+
+            <div id="admin-options" style="padding: 20px; display: none;">
+                <button onclick="deleteLounge()" style="color: #ff4b4b; background: none; border: none; font-size: 1rem; cursor: pointer;">🗑️ Delete Lounge</button>
+            </div>
+            
+            <div style="padding: 20px;">
+                <button onclick="leaveLounge()" style="color: #ff4b4b; background: none; border: none; font-size: 1rem; cursor: pointer;">🚪 Leave Lounge</button>
+            </div>
+
+            <div style="padding: 20px;">
+                <p style="color: var(--wa-accent); font-weight: bold; margin-bottom: 15px;">Members</p>
+                <div id="member-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- IMAGE VIEW MODAL -->
+    <div id="image-view" class="modal" onclick="closeModal('image-view')">
+        <div style="padding: 20px; display: flex; justify-content: space-between; width: 100%;">
+            <span style="font-size: 1.5rem;">←</span>
+            <a id="download-link" href="#" download style="color: white; text-decoration: none;">Download</a>
+        </div>
+        <img id="full-image" style="width: 100%; margin: auto;">
+    </div>
+
+    <script>
+        // --- Navigation & UI Interactions ---
+        window.openLoungeInfo = () => {
+            document.getElementById('info-modal').style.display = 'flex';
+            document.getElementById('info-name').innerText = loungeData.loungeName;
+            document.getElementById('info-code').innerText = `Lounge Code: ${loungeId}`;
+            document.getElementById('info-pfp').src = loungeData.photo || document.getElementById('header-pfp').src;
+            
+            if(isAdmin) {
+                document.getElementById('admin-options').style.display = 'block';
+                document.getElementById('edit-pfp-btn').style.display = 'block';
+                document.getElementById('rename-btn').style.display = 'block';
+            }
+        };
+
+        window.closeModal = (id) => { document.getElementById(id).style.display = 'none'; };
+
+        window.sendTextMessage = () => {
+            const input = document.getElementById('msg-input');
+            const text = input.value.trim();
+            if(text) {
+                sendMessage({ type: 'text', text });
+                input.value = '';
+                input.dispatchEvent(new Event('input'));
+            }
+        };
+
+        window.viewImage = (url) => {
+            document.getElementById('image-view').style.display = 'flex';
+            document.getElementById('full-image').src = url;
+            document.getElementById('download-link').href = url;
+        };
+
+        async function handleImage(input) {
+            if(!input.files[0]) return;
+            const fileRef = ref(storage, `lounges/${loungeId}/images/${Date.now()}.jpg`);
+            await uploadBytes(fileRef, input.files[0]);
+            const url = await getDownloadURL(fileRef);
+            sendMessage({ type: 'image', url });
+        }
+
+        async function handleDocs(input) {
+            const files = Array.from(input.files).slice(0, 10);
+            for(let file of files) {
+                const fileRef = ref(storage, `lounges/${loungeId}/docs/${file.name}`);
+                await uploadBytes(fileRef, file);
+                const url = await getDownloadURL(fileRef);
+                sendMessage({ type: 'doc', url, fileName: file.name });
+            }
+        }
+    </script>
 </body>
 </html>
