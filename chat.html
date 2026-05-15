@@ -2,14 +2,12 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UNIDESK | Gateway</title>
-    
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, doc, getDoc, setDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyDbfmd0zmv_mFV0CG2OrhKPPeU3zPYGOBg",
             authDomain: "unidesk-a70ac.firebaseapp.com",
@@ -22,99 +20,62 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // 1. Get Session from page.html
         const session = JSON.parse(localStorage.getItem('unidesk_session'));
         if (!session) window.location.href = 'page.html';
-
         const { user: userName, lounge: loungeId, mode, uid: userUid } = session;
 
         document.addEventListener('DOMContentLoaded', async () => {
             if (mode === 'create') {
-                // --- ADMIN FAST TRACK ---
-                // We go straight to chats.html; chats.html will handle the database creation.
+                // Admin bypasses the knocking phase entirely
                 window.location.replace('chats.html');
             } else {
-                // --- MEMBER VERIFICATION ---
-                verifyAndKnock();
+                const loungeRef = doc(db, "lounges", loungeId);
+                const loungeSnap = await getDoc(loungeRef);
+
+                if (!loungeSnap.exists()) {
+                    alert("Lounge not found.");
+                    window.location.replace('page.html');
+                    return;
+                }
+
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('knocking').style.display = 'block';
+
+                // CREATE A UNIQUE REQUEST FOR THIS USER
+                const myReqRef = doc(db, "lounges", loungeId, "requests", userUid);
+                await setDoc(myReqRef, {
+                    name: userName,
+                    uid: userUid,
+                    status: 'pending',
+                    timestamp: serverTimestamp()
+                });
+
+                // LISTEN ONLY TO MY OWN REQUEST STATUS
+                onSnapshot(myReqRef, (snap) => {
+                    if (snap.exists()) {
+                        const status = snap.data().status;
+                        if (status === 'accepted') window.location.replace('chats.html');
+                        if (status === 'rejected') {
+                            alert("Entry denied by Admin.");
+                            window.location.replace('page.html');
+                        }
+                    }
+                });
             }
         });
-
-        async function verifyAndKnock() {
-            const loungeRef = doc(db, "lounges", loungeId);
-            const loungeSnap = await getDoc(loungeRef);
-
-            // 1. Check if lounge even exists
-            if (!loungeSnap.exists()) {
-                alert("Lounge Not Found: The code entered does not exist.");
-                window.location.replace('page.html');
-                return;
-            }
-
-            // 2. Show the "Waiting" UI
-            document.getElementById('loading-screen').style.display = 'none';
-            document.getElementById('knocking-screen').style.display = 'flex';
-
-            // 3. Send "Knock" request to Admin
-            const reqRef = doc(db, "lounges", loungeId, "requests", userUid);
-            await setDoc(reqRef, {
-                name: userName,
-                uid: userUid,
-                status: 'pending',
-                timestamp: serverTimestamp()
-            });
-
-            // 4. Live listen for Admin's response
-            onSnapshot(reqRef, (snap) => {
-                if (snap.exists()) {
-                    const status = snap.data().status;
-                    if (status === 'accepted') {
-                        window.location.replace('chats.html');
-                    } else if (status === 'rejected') {
-                        alert("Access Denied: The admin has rejected your request.");
-                        localStorage.removeItem('unidesk_session');
-                        window.location.replace('page.html');
-                    }
-                }
-            });
-        }
     </script>
-
     <style>
-        :root { --bg: #05070a; --accent: #58a6ff; --text: #8b949e; }
-        body { 
-            margin: 0; background: var(--bg); color: white; 
-            font-family: 'Inter', sans-serif; height: 100vh;
-            display: flex; align-items: center; justify-content: center; text-align: center;
-        }
-        .container { width: 90%; max-width: 400px; }
-        .spinner {
-            width: 40px; height: 40px; border: 3px solid #161b22;
-            border-radius: 50%; border-top-color: var(--accent);
-            animation: spin 1s linear infinite; margin: 0 auto 20px;
-        }
+        body { background: #05070a; color: white; font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; text-align: center; }
+        .spinner { width: 40px; height: 40px; border: 3px solid #161b22; border-top-color: #58a6ff; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px; }
         @keyframes spin { to { transform: rotate(360deg); } }
-        .view { display: flex; flex-direction: column; align-items: center; }
-        h2 { font-size: 1.2rem; margin-bottom: 8px; color: var(--accent); letter-spacing: 1px; }
-        p { color: var(--text); font-size: 0.9rem; }
     </style>
 </head>
 <body>
-
-    <div class="container">
-        <!-- Initial Check -->
-        <div id="loading-screen" class="view">
-            <div class="spinner"></div>
-            <h2>Validating Code</h2>
-            <p>Syncing with AetherCore Servers...</p>
-        </div>
-
-        <!-- Waiting for Admin (Knocking) -->
-        <div id="knocking-screen" class="view" style="display: none;">
-            <div class="spinner" style="border-top-color: #f1c40f;"></div>
-            <h2 style="color: #f1c40f;">Waiting for Admin</h2>
-            <p>You've knocked. Please stay on this page until the admin approves your entry.</p>
-        </div>
+    <div id="loading">Validating...</div>
+    <div id="knocking" style="display:none;">
+        <div class="spinner"></div>
+        <h2>Knocking...</h2>
+        <p>Waiting for the Admin to let you in.</p>
     </div>
-
 </body>
 </html>
