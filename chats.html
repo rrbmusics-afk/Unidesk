@@ -25,49 +25,52 @@
         if (!session) window.location.href = 'page.html';
         const { user: userName, lounge: loungeId } = session;
 
-        // --- 1. CORE SYNC & IDENTITY ---
+        // --- 1. GLOBAL STATE ---
+        let userIsAdmin = false;
+
+        // --- 2. INITIALIZE SESSION & ROLE ---
         onSnapshot(doc(db, "lounges", loungeId), (snap) => {
             if (!snap.exists()) return;
             const data = snap.data();
             
-            const isAdmin = (data.admin === userName);
+            // Critical: Set the global admin status first
+            userIsAdmin = (data.admin === userName);
 
             document.getElementById('h-name').innerText = data.loungeName;
             document.getElementById('h-code').innerText = "Code: " + loungeId;
             document.getElementById('h-pfp').src = data.photo || 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
 
-            if (isAdmin) {
+            if (userIsAdmin) {
                 document.getElementById('admin-nav-btn').classList.add('visible');
-                setupAdminPanel();
+                setupAdminLogic();
             } else {
-                // ONLY GUESTS listen for rejection. This prevents the Admin refresh bug.
-                setupRejectionListener();
+                setupGuestSecurity();
             }
         });
 
-        // --- 2. ADMIN RECEPTION LOGIC ---
-        function setupAdminPanel() {
-            const reqQuery = query(collection(db, "lounges", loungeId, "requests"), where("status", "==", "pending"));
-            onSnapshot(reqQuery, (reqSnap) => {
+        // --- 3. ADMIN ONLY: Manage the queue ---
+        function setupAdminLogic() {
+            const q = query(collection(db, "lounges", loungeId, "requests"), where("status", "==", "pending"));
+            onSnapshot(q, (snap) => {
                 const badge = document.getElementById('req-badge');
-                badge.innerText = reqSnap.size;
-                badge.style.transform = reqSnap.size > 0 ? "scale(1)" : "scale(0)";
+                badge.innerText = snap.size;
+                badge.style.transform = snap.size > 0 ? "scale(1)" : "scale(0)";
 
                 window.viewPending = () => {
                     const list = document.getElementById('pending-list');
                     list.innerHTML = '';
-                    if(reqSnap.empty) list.innerHTML = '<div class="empty-state">No pending requests</div>';
+                    if(snap.empty) list.innerHTML = '<div class="empty-state">No pending requests</div>';
                     
-                    reqSnap.forEach(d => {
+                    snap.forEach(d => {
                         const r = d.data();
                         const div = document.createElement('div');
-                        div.id = `req-${d.id}`;
+                        div.id = `req-row-${d.id}`;
                         div.className = 'req-item anim-slide-in';
                         div.innerHTML = `
                             <span>${r.name}</span>
                             <div class="req-actions">
-                                <button class="reject-btn" onclick="handleEntry('${d.id}', 'rejected', '${r.name}')">DECLINE</button>
-                                <button class="accept-btn" onclick="handleEntry('${d.id}', 'accepted', '${r.name}')">APPROVE</button>
+                                <button class="reject-btn" onclick="updateEntry('${d.id}', 'rejected', '${r.name}')">DECLINE</button>
+                                <button class="accept-btn" onclick="updateEntry('${d.id}', 'accepted', '${r.name}')">APPROVE</button>
                             </div>`;
                         list.appendChild(div);
                     });
@@ -76,35 +79,40 @@
             });
         }
 
-        window.handleEntry = async (reqId, status, requesterName) => {
-            // Immediate Admin UI feedback
-            const el = document.getElementById(`req-${reqId}`);
-            if(el) el.style.animation = "slideOut 0.3s forwards";
+        window.updateEntry = async (reqId, status, targetName) => {
+            const row = document.getElementById(`req-row-${reqId}`);
+            if(row) row.style.animation = "slideOut 0.25s forwards";
 
             const reqRef = doc(db, "lounges", loungeId, "requests", reqId);
             await updateDoc(reqRef, { status: status });
             
             if (status === 'accepted') {
-                await updateDoc(doc(db, "lounges", loungeId), { members: arrayUnion(requesterName) });
+                await updateDoc(doc(db, "lounges", loungeId), { members: arrayUnion(targetName) });
             }
         };
 
-        // --- 3. GUEST PROTECTION LOGIC (FIXED) ---
-        function setupRejectionListener() {
-            const qRejection = query(collection(db, "lounges", loungeId, "requests"), where("name", "==", userName));
-            onSnapshot(qRejection, (snap) => {
-                snap.forEach(d => {
-                    if (d.data().status === 'rejected') {
-                        localStorage.removeItem('unidesk_session');
-                        window.location.replace('decline.html'); // Use replace to prevent back-button
-                    }
-                });
+        // --- 4. GUEST ONLY: Listen for rejection ---
+        function setupGuestSecurity() {
+            // Safety Check: Double verify we aren't the admin before starting this listener
+            if (userIsAdmin) return; 
+
+            const q = query(collection(db, "lounges", loungeId, "requests"), 
+                            where("name", "==", userName), 
+                            where("status", "==", "rejected"));
+
+            onSnapshot(q, (snap) => {
+                if (!snap.empty) {
+                    // This block ONLY executes for the specific user who was rejected
+                    localStorage.removeItem('unidesk_session');
+                    window.stop(); // Stop all other JS processes
+                    window.location.replace('decline.html');
+                }
             });
         }
 
-        // --- 4. CHAT SYSTEM ---
-        const qChat = query(collection(db, "lounges", loungeId, "messages"), orderBy("timestamp", "asc"));
-        onSnapshot(qChat, (snap) => {
+        // --- 5. CHAT ENGINE ---
+        const chatQ = query(collection(db, "lounges", loungeId, "messages"), orderBy("timestamp", "asc"));
+        onSnapshot(chatQ, (snap) => {
             const box = document.getElementById('chat-box');
             box.innerHTML = '';
             snap.forEach(d => {
@@ -150,20 +158,21 @@
         #app-container { display: flex; flex-direction: column; height: 100%; }
 
         header { background: var(--panel); padding: 0 16px; display: flex; align-items: center; justify-content: space-between; height: 65px; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .h-pfp-wrap { width: 40px; height: 40px; border-radius: 50%; overflow: hidden; border: 2px solid var(--accent); }
-        .h-info h2 { font-size: 0.9rem; font-weight: 600; }
+        .h-pfp-wrap { width: 40px; height: 40px; border-radius: 50%; overflow: hidden; border: 2.5px solid var(--accent); }
+        .h-info h2 { font-size: 0.9rem; }
         .h-info p { font-size: 0.7rem; color: var(--accent); }
 
         #admin-nav-btn { opacity: 0; transform: scale(0.8); transition: var(--trans); pointer-events: none; position: relative; width: 40px; height: 40px; background: rgba(88,166,255,0.1); border-radius: 10px; display: flex; align-items: center; justify-content: center; }
         #admin-nav-btn.visible { opacity: 1; transform: scale(1); pointer-events: auto; }
-        #req-badge { position: absolute; top: -5px; right: -5px; background: var(--error); font-size: 0.6rem; min-width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid var(--panel); transform: scale(0); transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        #req-badge { position: absolute; top: -5px; right: -5px; background: var(--error); font-size: 0.6rem; min-width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid var(--panel); transform: scale(0); transition: 0.4s; }
 
-        #chat-box { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 8px; }
+        #chat-box { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
         .msg-row { display: flex; width: 100%; opacity: 0; }
         .msg-row.me { justify-content: flex-end; }
-        .bubble { max-width: 75%; padding: 10px 14px; border-radius: 12px; font-size: 0.9rem; position: relative; }
+        .bubble { max-width: 78%; padding: 10px 14px; border-radius: 14px; font-size: 0.92rem; }
         .me .bubble { background: var(--me); border-bottom-right-radius: 2px; }
         .them .bubble { background: var(--them); border-bottom-left-radius: 2px; }
+        .s-name { font-size: 0.7rem; font-weight: bold; color: var(--accent); margin-bottom: 2px; }
         .time { font-size: 0.6rem; color: rgba(255,255,255,0.3); text-align: right; margin-top: 4px; }
 
         footer { background: var(--panel); padding: 10px 12px 30px; display: flex; align-items: center; gap: 10px; }
@@ -173,30 +182,31 @@
 
         .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: var(--trans); z-index: 1000; }
         .overlay.active { opacity: 1; pointer-events: auto; }
-        .m-box { background: #1e2a32; width: 88%; max-width: 350px; border-radius: 20px; padding: 24px; transform: translateY(20px); transition: var(--trans); }
+        .m-box { background: #1e2a32; width: 88%; max-width: 350px; border-radius: 20px; padding: 24px; transform: translateY(30px); transition: var(--trans); }
         .overlay.active .m-box { transform: translateY(0); }
         
-        .req-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .req-item { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
         .accept-btn { background: var(--success); border: none; color: white; padding: 8px 14px; border-radius: 8px; font-weight: bold; font-size: 0.7rem; }
         .reject-btn { background: transparent; border: 1px solid var(--error); color: var(--error); padding: 8px 14px; border-radius: 8px; font-weight: bold; font-size: 0.7rem; }
 
         @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .anim-fade-up { animation: fadeUp 0.4s ease-out forwards; }
+        .anim-fade-up { animation: fadeUp 0.4s forwards; }
         @keyframes slideIn { from { opacity: 0; transform: translateX(-15px); } to { opacity: 1; transform: translateX(0); } }
-        .anim-slide-in { animation: slideIn 0.3s ease-out forwards; }
+        .anim-slide-in { animation: slideIn 0.3s forwards; }
         @keyframes slideOut { to { opacity: 0; transform: translateX(40px); } }
+        .empty-state { text-align: center; padding: 20px; opacity: 0.4; font-size: 0.85rem; }
     </style>
 </head>
 <body>
 
     <div id="app-container">
         <header>
-            <div style="display:flex; align-items:center; gap:10px;">
+            <div style="display:flex; align-items:center; gap:12px;">
                 <div class="h-pfp-wrap"><img id="h-pfp" style="width:100%; height:100%; object-fit:cover;"></div>
                 <div class="h-info"><h2 id="h-name">Lounge</h2><p id="h-code">#---</p></div>
             </div>
             <div id="admin-nav-btn" onclick="viewPending()">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent);"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent);"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
                 <div id="req-badge">0</div>
             </div>
         </header>
@@ -204,7 +214,7 @@
         <div id="chat-box"></div>
 
         <footer>
-            <div class="input-wrapper"><input type="text" id="msg-inp" placeholder="Message..." oninput="toggle(this.value.trim().length > 0)"></div>
+            <div class="input-wrapper"><input type="text" id="msg-inp" placeholder="Type message..." oninput="toggle(this.value.trim().length > 0)"></div>
             <button id="mic" class="circle-btn"><svg width="20" viewBox="0 0 24 24" fill="white"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg></button>
             <button id="send" class="circle-btn" style="display:none" onclick="sendText()"><svg width="20" viewBox="0 0 24 24" fill="white"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg></button>
         </footer>
@@ -212,7 +222,7 @@
 
     <div id="modal-req" class="overlay" onclick="closeModals()">
         <div class="m-box" onclick="event.stopPropagation()">
-            <h3 style="color:var(--accent); margin-bottom:15px; font-size: 0.9rem; text-align: center; text-transform: uppercase;">Entry Queue</h3>
+            <h3 style="color:var(--accent); margin-bottom:15px; font-size: 0.95rem; text-align: center; text-transform: uppercase; font-weight: 800;">Entrance Requests</h3>
             <div id="pending-list"></div>
         </div>
     </div>
