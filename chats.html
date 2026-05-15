@@ -30,13 +30,13 @@
         let mediaRecorder;
         let audioChunks = [];
 
-        // Dynamic Header Sync
+        // Header Sync
         onSnapshot(doc(db, "lounges", loungeId), (snap) => {
             if (!snap.exists()) return;
             const data = snap.data();
-            document.getElementById('display-name').innerText = data.loungeName || "Secure Lounge";
-            document.getElementById('display-pfp').src = data.photo || 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
-            document.getElementById('display-id').innerText = `ID: ${loungeId}`;
+            document.getElementById('dn').innerText = data.loungeName || "Secure Lounge";
+            document.getElementById('dp').src = data.photo || 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
+            document.getElementById('di').innerText = `ID: ${loungeId}`;
         });
 
         // Chat Listener
@@ -49,46 +49,44 @@
                 const isMe = m.sender === userName;
                 const row = document.createElement('div');
                 row.className = `msg-row ${isMe ? 'me' : 'them'}`;
-                
                 let content = `<div class="bubble">`;
-                if(!isMe) content += `<div class="sender-tag">${m.sender}</div>`;
+                if(!isMe) content += `<div class="st">${m.sender}</div>`;
                 if(m.type === 'text') content += `<p>${m.text}</p>`;
-                else if(m.type === 'image') content += `<img src="${m.url}" class="chat-img" onclick="window.open('${m.url}')">`;
+                else if(m.type === 'image') content += `<img src="${m.url}" class="ci" onclick="window.open('${m.url}')">`;
                 else if(m.type === 'audio') content += `<audio controls src="${m.url}"></audio>`;
-                content += `<div class="msg-time">${m.time || ''}</div></div>`;
-                
+                content += `<div class="mt">${m.time || ''}</div></div>`;
                 row.innerHTML = content;
                 container.appendChild(row);
             });
             container.scrollTo(0, container.scrollHeight);
         });
 
-        // Static Keyboard Fix
-        if (window.visualViewport) {
-            window.visualViewport.addEventListener('resize', () => {
-                document.body.style.height = window.visualViewport.height + 'px';
-                window.scrollTo(0, 0);
-            });
-        }
-
-        async function pushMsg(type, val) {
-            await addDoc(collection(db, "lounges", loungeId, "messages"), {
-                sender: userName, type, timestamp: serverTimestamp(),
-                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                ...(type === 'text' ? {text: val} : {url: val})
-            });
-        }
-
-        window.sendTxt = () => {
+        // KEEP KEYBOARD OPEN LOGIC
+        window.sendTxt = (e) => {
+            if(e) e.preventDefault(); // Prevents focus loss
             const el = document.getElementById('msg-input');
-            if(el.value.trim()){ pushMsg('text', el.value.trim()); el.value = ''; toggle(false); }
+            const val = el.value.trim();
+            if(val){
+                addDoc(collection(db, "lounges", loungeId, "messages"), {
+                    sender: userName, type: 'text', text: val, timestamp: serverTimestamp(),
+                    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                });
+                el.value = '';
+                toggle(false);
+                el.focus(); // Force focus back
+            }
         };
 
+        // Standard Media Logic
         window.upImg = async (el) => {
             const f = el.files[0]; if(!f) return;
             const r = ref(storage, `media/${loungeId}/${Date.now()}`);
             const s = await uploadBytes(r, f);
-            pushMsg('image', await getDownloadURL(s.ref));
+            const url = await getDownloadURL(s.ref);
+            addDoc(collection(db, "lounges", loungeId, "messages"), {
+                sender: userName, type: 'image', url, timestamp: serverTimestamp(),
+                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            });
         };
 
         window.startRec = async () => {
@@ -100,7 +98,11 @@
                 const b = new Blob(audioChunks, { type: 'audio/webm' });
                 const r = ref(storage, `media/${loungeId}/v_${Date.now()}`);
                 const snap = await uploadBytes(r, b);
-                pushMsg('audio', await getDownloadURL(snap.ref));
+                const url = await getDownloadURL(snap.ref);
+                addDoc(collection(db, "lounges", loungeId, "messages"), {
+                    sender: userName, type: 'audio', url, timestamp: serverTimestamp(),
+                    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                });
             };
             mediaRecorder.start();
             document.getElementById('mic').classList.add('rec');
@@ -111,6 +113,13 @@
             document.getElementById('mic').style.display = typing ? 'none' : 'flex';
             document.getElementById('send').style.display = typing ? 'flex' : 'none';
         };
+
+        // Visual Viewport Fix for Mobile Keyboards
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', () => {
+                document.body.style.height = window.visualViewport.height + 'px';
+            });
+        }
     </script>
 
     <style>
@@ -128,16 +137,14 @@
             gap: 12px; border-bottom: 1px solid #30363d; cursor: pointer; flex-shrink: 0;
         }
         .pfp { width: 42px; height: 42px; border-radius: 50%; border: 1.5px solid var(--accent); object-fit: cover; }
-        .h-text h2 { font-size: 1rem; color: var(--accent); }
-        .h-text p { font-size: 0.7rem; color: #8b949e; }
+        .ht h2 { font-size: 1rem; color: var(--accent); }
+        .ht p { font-size: 0.7rem; color: #8b949e; }
 
-        /* TRUE WHATSAPP-STYLE DOODLE BACKGROUND */
+        /* WHATSAPP DOODLE IN AETHER THEME */
         #chat-box { 
             flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding: 15px;
             background-color: var(--bg);
-            background-image: 
-                url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M10 10l2 2m20 5h4m10 20l-3 3m40 10l2 2m-60 30h5m30-10l3 3m20-40h4m-50 50l2 2' stroke='%2358a6ff' stroke-width='0.5' fill='none' opacity='0.2'/%3E%3Ccircle cx='50' cy='10' r='1' fill='%2358a6ff' opacity='0.2'/%3E%3Crect x='80' y='80' width='2' height='2' fill='%2358a6ff' opacity='0.2'/%3E%3C/svg%3E");
-            background-size: 120px 120px;
+            background-image: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%2358a6ff' fill-opacity='0.08'%3E%3Cpath d='M10 10l2 2M30 10l-2 2M10 30l2-2M30 30l-2-2M20 20m-2 0a2 2 0 1 0 4 0 2 2 0 1 0-4 0M50 50l5 5m10-5l-5 5M50 70l5-5m10 5l-5-5' stroke='%2358a6ff' stroke-width='0.5'/%3E%3Ccircle cx='60' cy='20' r='1'/%3E%3Crect x='15' y='55' width='3' height='3' rx='1'/%3E%3C/g%3E%3C/svg%3E");
         }
 
         .msg-row { display: flex; width: 100%; }
@@ -146,13 +153,13 @@
         .me .bubble { background: var(--me); border-top-right-radius: 0; }
         .them .bubble { background: var(--them); border-top-left-radius: 0; }
         
-        .sender-tag { font-size: 0.7rem; font-weight: bold; color: var(--accent); margin-bottom: 3px; }
-        .msg-time { font-size: 0.6rem; color: #8b949e; text-align: right; margin-top: 4px; }
-        .chat-img { width: 100%; border-radius: 8px; margin: 4px 0; }
+        .st { font-size: 0.7rem; font-weight: bold; color: var(--accent); margin-bottom: 3px; }
+        .mt { font-size: 0.6rem; color: #8b949e; text-align: right; margin-top: 4px; }
+        .ci { width: 100%; border-radius: 8px; margin: 4px 0; }
         audio { height: 35px; width: 200px; filter: invert(1); }
 
         footer { background: var(--panel); padding: 10px; display: flex; align-items: center; gap: 10px; border-top: 1px solid #30363d; flex-shrink: 0; }
-        .input-box { flex: 1; background: #161b22; border-radius: 24px; padding: 0 15px; display: flex; align-items: center; border: 1px solid #30363d; }
+        .ib { flex: 1; background: #161b22; border-radius: 24px; padding: 0 15px; display: flex; align-items: center; border: 1px solid #30363d; }
         #msg-input { flex: 1; background: transparent; border: none; color: white; padding: 12px 0; outline: none; font-size: 1rem; }
         
         .btn { width: 46px; height: 46px; background: var(--accent); border-radius: 50%; border: none; color: white; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
@@ -163,23 +170,23 @@
 <body>
 
     <header onclick="window.location.href='info.html'">
-        <img id="display-pfp" src="" class="pfp">
-        <div class="h-text">
-            <h2 id="display-name">Loading...</h2>
-            <p id="display-id">ID: 000000</p>
+        <img id="dp" src="" class="pfp">
+        <div class="ht">
+            <h2 id="dn">Loading...</h2>
+            <p id="di">ID: 000000</p>
         </div>
     </header>
 
     <div id="chat-box"></div>
 
     <footer>
-        <div class="input-box">
+        <div class="ib">
             <label for="img" style="margin-right:10px; cursor:pointer">📷</label>
             <input type="file" id="img" hidden accept="image/*" onchange="upImg(this)">
             <input type="text" id="msg-input" placeholder="Message" oninput="toggle(this.value.trim().length > 0)">
         </div>
         <button id="mic" class="btn" ontouchstart="startRec()" ontouchend="stopRec()" onmousedown="startRec()" onmouseup="stopRec()">🎤</button>
-        <button id="send" class="btn" style="display:none" onclick="sendTxt()">➤</button>
+        <button id="send" class="btn" style="display:none" onmousedown="sendTxt(event)">➤</button>
     </footer>
 
 </body>
