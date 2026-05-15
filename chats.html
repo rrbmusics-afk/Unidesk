@@ -39,18 +39,20 @@
             document.getElementById('h-pfp').src = data.photo || 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
             document.getElementById('full-pfp-src').src = data.photo || 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
 
+            // Check if current user is Admin
             if (data.admin === userName) {
                 listenForRequests();
             }
         });
 
+        // Listen for "Knocking" requests in the sub-collection
         function listenForRequests() {
             const reqQuery = query(collection(db, "lounges", loungeId, "requests"), where("status", "==", "pending"));
             onSnapshot(reqQuery, (snap) => {
                 const adminBar = document.getElementById('admin-req-bar');
                 if (snap.size > 0) {
                     adminBar.style.display = 'flex';
-                    document.getElementById('req-notif').innerText = `${snap.size} New Join Request(s)`;
+                    document.getElementById('req-notif').innerText = `${snap.size} Join Request(s)`;
                     
                     window.viewPending = () => {
                         const list = document.getElementById('pending-list');
@@ -76,15 +78,8 @@
             });
         }
 
-        // Logic to update the requester's status in Firebase
         window.handleReq = async (reqId, newStatus) => {
-            try {
-                await updateDoc(doc(db, "lounges", loungeId, "requests", reqId), { 
-                    status: newStatus 
-                });
-            } catch (e) {
-                console.error("Error handling request:", e);
-            }
+            await updateDoc(doc(db, "lounges", loungeId, "requests", reqId), { status: newStatus });
         };
 
         // --- Chat logic ---
@@ -112,7 +107,35 @@
             box.scrollTo(0, box.scrollHeight);
         });
 
-        // --- Message Push logic ---
+        // --- Media/Message Handlers ---
+        window.sendDoc = async (el) => {
+            const files = Array.from(el.files).slice(0, 10);
+            for(let f of files) {
+                const r = ref(storage, `docs/${loungeId}/${Date.now()}_${f.name}`);
+                const s = await uploadBytes(r, f);
+                pushMsg({ type: 'doc', url: await getDownloadURL(s.ref), fileName: f.name });
+            }
+        };
+
+        window.startAudio = async () => {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+                mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+                mediaRecorder.onstop = async () => {
+                    const blob = new Blob(audioChunks, { type: 'audio/webm' });
+                    const r = ref(storage, `audio/${loungeId}/${Date.now()}`);
+                    const snap = await uploadBytes(r, blob);
+                    pushMsg({ type: 'audio', url: await getDownloadURL(snap.ref) });
+                };
+                mediaRecorder.start();
+                document.getElementById('mic').classList.add('recording');
+            } catch(e) { alert("Microphone access denied"); }
+        };
+
+        window.stopAudio = () => { if(mediaRecorder) { mediaRecorder.stop(); document.getElementById('mic').classList.remove('recording'); } };
+
         async function pushMsg(extra) {
             await addDoc(collection(db, "lounges", loungeId, "messages"), {
                 sender: userName, timestamp: serverTimestamp(),
@@ -150,32 +173,45 @@
         .h-info h2 { font-size: 1rem; font-weight: 600; }
         .h-info p { font-size: 0.7rem; color: var(--accent); }
 
-        #admin-req-bar { background: #1a1d21; padding: 12px 16px; display: none; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--accent); flex-shrink: 0; }
-        #req-notif { font-size: 0.85rem; font-weight: bold; color: var(--accent); }
+        /* ADMIN REQUEST BAR */
+        #admin-req-bar { background: #1a1d21; padding: 12px 16px; display: none; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--accent); flex-shrink: 0; animation: slideDown 0.3s ease; }
+        #req-notif { font-size: 0.85rem; font-weight: bold; color: var(--accent); letter-spacing: 0.5px; }
         .btn-view { background: var(--accent); border: none; color: white; padding: 6px 14px; border-radius: 8px; font-size: 0.75rem; font-weight: bold; cursor: pointer; }
 
-        #chat-box { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 6px; }
+        @keyframes slideDown { from { transform: translateY(-100%); } to { transform: translateY(0); } }
+
+        /* CHAT AREA */
+        #chat-box { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 6px; background-color: var(--bg); }
         .msg-row { display: flex; width: 100%; }
         .msg-row.me { justify-content: flex-end; }
-        .bubble { max-width: 80%; padding: 6px 10px; border-radius: 8px; position: relative; }
-        .me .bubble { background: var(--me); }
-        .them .bubble { background: var(--them); }
+        .bubble { max-width: 80%; padding: 6px 10px; border-radius: 8px; position: relative; box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
+        .me .bubble { background: var(--me); border-top-right-radius: 0; }
+        .them .bubble { background: var(--them); border-top-left-radius: 0; }
         .s-name { font-size: 0.72rem; font-weight: bold; color: var(--accent); margin-bottom: 2px; }
         .time { font-size: 0.6rem; color: rgba(255,255,255,0.4); text-align: right; margin-top: 4px; }
+        .thumb { width: 100%; border-radius: 6px; margin: 4px 0; }
+        .doc-file { background: rgba(0,0,0,0.2); padding: 8px; border-radius: 6px; font-size: 0.8rem; cursor: pointer; }
 
         footer { background: var(--panel); padding: 10px 10px 25px 10px; display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
         .input-wrapper { flex: 1; background: #2a3942; border-radius: 24px; display: flex; align-items: center; padding: 0 10px; }
         #msg-inp { flex: 1; background: transparent; border: none; color: white; padding: 12px 5px; outline: none; font-size: 1rem; }
+        .f-ico { padding: 8px; color: #8696a0; cursor: pointer; }
+        .f-ico svg { width: 22px; height: 22px; fill: currentColor; }
 
-        .circle-btn { width: 45px; height: 45px; border-radius: 50%; background: var(--accent); border: none; display: flex; align-items: center; justify-content: center; }
+        .circle-btn { width: 45px; height: 45px; border-radius: 50%; background: var(--accent); border: none; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
         .circle-btn svg { width: 22px; height: 22px; fill: white; }
+        .recording { background: var(--error) !important; animation: pulse 1s infinite; }
 
+        /* MODALS & REQ ITEMS */
         .overlay { position: fixed; inset:0; background: rgba(0,0,0,0.85); display: none; z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
-        .m-box { background: #1e1e1e; width: 90%; max-width: 350px; border-radius: 16px; padding: 20px; }
+        .m-box { background: #1e1e1e; width: 90%; max-width: 350px; border-radius: 16px; padding: 20px; border: 1px solid #333; }
         .req-item { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #2a2a2a; }
+        .req-item span { font-weight: 500; font-size: 0.95rem; }
         .btn-action { border: none; padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; cursor: pointer; }
         .btn-action.accept { background: var(--success); color: white; }
         .btn-action.reject { background: var(--error); color: white; }
+
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
     </style>
 </head>
 <body>
@@ -190,6 +226,7 @@
         </div>
     </header>
 
+    <!-- Dedicated Request Button Bar -->
     <div id="admin-req-bar">
         <span id="req-notif">0 New Requests</span>
         <button class="btn-view" onclick="viewPending()">VIEW REQUESTS</button>
@@ -199,10 +236,21 @@
 
     <footer>
         <div class="input-wrapper">
+            <label for="doc-up" class="f-ico">
+                <svg viewBox="0 0 24 24"><path d="M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5c0-1.38 1.12-2.5 2.5-2.5s2.5 1.12 2.5 2.5v10.5c0 .55-.45 1-1 1s-1-.45-1-1V6H10v9.5c0 1.66 1.34 3 3 3s3-1.34 3-3V5c0-2.48-2.02-4.5-4.5-4.5S7 2.52 7 5v12.5c0 3.59 2.91 6.5 6.5 6.5s6.5-2.91 6.5-6.5V6h-1.5z"/></svg>
+            </label>
+            <input type="file" id="doc-up" hidden multiple onchange="sendDoc(this)">
+
             <input type="text" id="msg-inp" placeholder="Type a message..." autocomplete="off" oninput="toggle(this.value.trim().length > 0)">
+            
+            <label for="img-up" class="f-ico">
+                <svg viewBox="0 0 24 24"><path d="M20 5h-3.17L15 3H9L7.17 5H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 14H4V7h16v12zM12 9c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4z"/></svg>
+            </label>
+            <input type="file" id="img-up" hidden accept="image/*" onchange="upImg(this)">
         </div>
+
         <div class="action-slot">
-            <button id="mic" class="circle-btn">
+            <button id="mic" class="circle-btn" onmousedown="startAudio()" onmouseup="stopAudio()" ontouchstart="startAudio()" ontouchend="stopAudio()">
                 <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
             </button>
             <button id="send" class="circle-btn" style="display:none" onclick="sendText()">
@@ -211,11 +259,23 @@
         </div>
     </footer>
 
+    <!-- Profile Viewer -->
+    <div id="pfp-view" class="overlay" onclick="closeModals()">
+        <img id="full-pfp-src" style="width:80vw; height:80vw; object-fit:cover; border-radius:50%; border:3px solid var(--accent)">
+    </div>
+
+    <!-- Join Requests Modal -->
     <div id="modal-req" class="overlay" onclick="closeModals()">
         <div class="m-box" onclick="event.stopPropagation()">
-            <h3 style="color:var(--accent); margin-bottom:15px; font-size:1rem">LOUNGE REQUESTS</h3>
+            <h3 style="color:var(--accent); margin-bottom:15px; text-transform:uppercase; letter-spacing:1px; font-size:1rem">Lounge Requests</h3>
             <div id="pending-list"></div>
         </div>
+    </div>
+
+    <!-- Media Viewer -->
+    <div id="media-viewer" class="overlay" onclick="closeModals()">
+        <img id="full-img" style="max-width:95%; max-height:70%; border-radius:10px">
+        <button class="btn-view" style="margin-top:20px" onclick="window.open(document.getElementById('full-img').src)">Download</button>
     </div>
 
 </body>
