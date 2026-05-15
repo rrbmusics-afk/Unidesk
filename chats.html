@@ -25,17 +25,20 @@
         if (!session) window.location.href = 'page.html';
         const { user: userName, lounge: loungeId } = session;
 
-        // --- Admin Request & Security Logic ---
+        // --- 1. LOUNGE SYNC & ADMIN CONTROLS ---
         onSnapshot(doc(db, "lounges", loungeId), (snap) => {
             if (!snap.exists()) return;
             const data = snap.data();
+            
+            // UI Updates
             document.getElementById('h-name').innerText = data.loungeName;
             document.getElementById('h-code').innerText = "Code: " + loungeId;
             document.getElementById('h-pfp').src = data.photo || 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
 
-            // ADMIN ONLY: Listen for "Knocking" requests
+            // ADMIN ONLY: Listen for Knocking Requests
             if (data.admin === userName) {
                 const reqQuery = query(collection(db, "lounges", loungeId, "requests"), where("status", "==", "pending"));
+                
                 onSnapshot(reqQuery, (reqSnap) => {
                     const bar = document.getElementById('admin-req-bar');
                     if (reqSnap.size > 0) {
@@ -52,8 +55,8 @@
                                 div.innerHTML = `
                                     <span>${r.name}</span>
                                     <div style="display:flex; gap:8px;">
-                                        <button class="reject-btn" onclick="handleReq('${d.id}', '${r.name}', 'rejected')">REJECT</button>
-                                        <button class="accept-btn" onclick="handleReq('${d.id}', '${r.name}', 'accepted')">APPROVE</button>
+                                        <button class="reject-btn" onclick="handleDecision('${d.id}', 'rejected')">REJECT</button>
+                                        <button class="accept-btn" onclick="handleDecision('${d.id}', 'accepted', '${r.name}')">ACCEPT</button>
                                     </div>`;
                                 list.appendChild(div);
                             });
@@ -67,17 +70,26 @@
             }
         });
 
-        // Function to Approve or Reject
-        window.handleReq = async (reqId, name, newStatus) => {
-            try {
-                await updateDoc(doc(db, "lounges", loungeId, "requests", reqId), { status: newStatus });
-                if (newStatus === 'accepted') {
-                    await updateDoc(doc(db, "lounges", loungeId), { members: arrayUnion(name) });
-                }
-            } catch (e) { console.error("Error updating request:", e); }
+        // Decision Handler (Accept/Reject)
+        window.handleDecision = async (reqId, status, requesterName) => {
+            await updateDoc(doc(db, "lounges", loungeId, "requests", reqId), { status: status });
+            if (status === 'accepted') {
+                await updateDoc(doc(db, "lounges", loungeId), { members: arrayUnion(requesterName) });
+            }
         };
 
-        // --- Chat Logic ---
+        // --- 2. JOINER PROTECTION (Kicked if Rejected) ---
+        const myReqQuery = query(collection(db, "lounges", loungeId, "requests"), where("name", "==", userName));
+        onSnapshot(myReqQuery, (snap) => {
+            snap.forEach(d => {
+                if (d.data().status === 'rejected') {
+                    alert("Admin has declined your entry.");
+                    window.location.href = 'page.html';
+                }
+            });
+        });
+
+        // --- 3. CHAT LOGIC ---
         const q = query(collection(db, "lounges", loungeId, "messages"), orderBy("timestamp", "asc"));
         onSnapshot(q, (snap) => {
             const box = document.getElementById('chat-box');
@@ -113,7 +125,7 @@
     </script>
 
     <style>
-        :root { --bg: #0b141a; --panel: #202c33; --accent: #58a6ff; --me: #005c4b; --them: #232d36; --error: #ff4d4d; }
+        :root { --bg: #0b141a; --panel: #202c33; --accent: #58a6ff; --me: #005c4b; --them: #232d36; --error: #ff4d4d; --success: #2ecc71; }
         * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
         
         html, body { height: 100%; width: 100%; overflow: hidden; position: fixed; background: var(--bg); color: white; font-family: -apple-system, sans-serif; }
@@ -123,16 +135,16 @@
         .h-pfp-wrap { width: 38px; height: 38px; border-radius: 50%; overflow: hidden; border: 1.5px solid var(--accent); }
         .h-pfp-wrap img { width: 100%; height: 100%; object-fit: cover; }
         .h-info h2 { font-size: 0.9rem; }
-        .h-info p { font-size: 0.7rem; color: var(--accent); }
+        .h-info p { font-size: 0.7rem; color: var(--accent); opacity: 0.8; }
 
         #admin-req-bar { background: #1e2a32; padding: 0 15px; height: 44px; display: none; align-items: center; justify-content: space-between; border-bottom: 2px solid var(--accent); flex-shrink: 0; }
-        .req-txt { font-size: 0.75rem; font-weight: bold; color: var(--accent); }
-        .view-btn { background: var(--accent); border: none; color: white; padding: 5px 12px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; }
+        .req-txt { font-size: 0.7rem; font-weight: bold; color: var(--accent); letter-spacing: 0.5px; }
+        .view-btn { background: var(--accent); border: none; color: white; padding: 4px 10px; border-radius: 4px; font-size: 0.65rem; font-weight: bold; }
 
         #chat-box { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 8px; }
         .msg-row { display: flex; width: 100%; }
         .msg-row.me { justify-content: flex-end; }
-        .bubble { max-width: 82%; padding: 8px 12px; border-radius: 12px; font-size: 0.9rem; position: relative; }
+        .bubble { max-width: 82%; padding: 8px 12px; border-radius: 12px; font-size: 0.9rem; }
         .s-name { font-size: 0.7rem; font-weight: bold; color: var(--accent); margin-bottom: 2px; }
         .me .bubble { background: var(--me); border-top-right-radius: 2px; }
         .them .bubble { background: var(--them); border-top-left-radius: 2px; }
@@ -145,13 +157,11 @@
         .circle-btn { width: 42px; height: 42px; border-radius: 50%; background: var(--accent); border: none; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
         .circle-btn svg { width: 22px; height: 22px; fill: white; }
 
-        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; z-index: 2000; align-items: center; justify-content: center; }
-        .m-box { background: #202c33; width: 85%; border-radius: 12px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .req-item { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #333; }
-        .req-item span { font-weight: bold; font-size: 0.9rem; }
-        
-        .accept-btn { background: #2ecc71; border: none; color: white; padding: 8px 12px; border-radius: 6px; font-weight: bold; font-size: 0.7rem; }
-        .reject-btn { background: transparent; border: 1px solid var(--error); color: var(--error); padding: 8px 12px; border-radius: 6px; font-weight: bold; font-size: 0.7rem; }
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; z-index: 2000; align-items: center; justify-content: center; }
+        .m-box { background: #1e2a32; width: 88%; border-radius: 12px; padding: 20px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
+        .req-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .accept-btn { background: var(--success); border: none; color: white; padding: 6px 12px; border-radius: 4px; font-weight: bold; font-size: 0.7rem; }
+        .reject-btn { background: transparent; border: 1px solid var(--error); color: var(--error); padding: 6px 12px; border-radius: 4px; font-weight: bold; font-size: 0.7rem; }
     </style>
 </head>
 <body>
@@ -165,9 +175,10 @@
             </div>
         </header>
 
+        <!-- Admin Access Bar -->
         <div id="admin-req-bar">
-            <span class="req-txt"><span id="req-count">0</span> NEW JOIN REQUESTS</span>
-            <button class="view-btn" onclick="viewPending()">REVIEW</button>
+            <span class="req-txt"><span id="req-count">0</span> PENDING REQUESTS</span>
+            <button class="view-btn" onclick="viewPending()">VIEW ALL</button>
         </div>
 
         <div id="chat-box"></div>
@@ -185,10 +196,10 @@
         </footer>
     </div>
 
-    <!-- Admin Request Modal -->
+    <!-- Request Modal -->
     <div id="modal-req" class="overlay" onclick="closeModals()">
         <div class="m-box" onclick="event.stopPropagation()">
-            <h3 style="color:var(--accent); margin-bottom:15px; font-size: 0.9rem; text-align: center; border-bottom: 1px solid #333; padding-bottom: 10px;">PENDING ACCESS</h3>
+            <h3 style="color:var(--accent); margin-bottom:15px; font-size: 0.85rem; text-align: center;">NEW ACCESS REQUESTS</h3>
             <div id="pending-list"></div>
         </div>
     </div>
