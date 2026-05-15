@@ -67,9 +67,9 @@
 
         .logo {
             font-weight: 700;
-            font-size: 1.5rem; /* Reduced size for a sleeker look */
+            font-size: 1.5rem;
             letter-spacing: 2px;
-            color: var(--accent-blue); /* Matching theme color instead of white */
+            color: var(--accent-blue);
             margin-bottom: 0.3rem;
             text-transform: uppercase;
         }
@@ -227,7 +227,7 @@
                     <label>LOUNGE NAME</label>
                     <input type="text" id="lounge-name" placeholder="e.g. Mechanical Engineering">
                 </div>
-                <button class="action-btn" onclick="handleLounge('create')">CREATE LOUNGE</button>
+                <button class="action-btn" id="create-btn">CREATE LOUNGE</button>
             </div>
 
             <div id="join-section" class="hidden">
@@ -239,28 +239,35 @@
                     <label>LOUNGE CODE</label>
                     <input type="text" id="lounge-code" placeholder="Enter 6-digit code">
                 </div>
-                <button class="action-btn" onclick="handleLounge('join')">JOIN LOUNGE</button>
+                <button class="action-btn" id="join-btn">JOIN LOUNGE</button>
             </div>
         </div>
     </div>
 
     <div id="custom-toast">Please fill in all details</div>
-
     <div class="footer-brand">© 2026 AETHERCORE INTERACTIVE</div>
 
-    <script>
-        function showToast(message) {
-            const toast = document.getElementById("custom-toast");
-            toast.innerText = message;
-            toast.className = "show";
-            setTimeout(() => { toast.className = toast.className.replace("show", ""); }, 3000);
-        }
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js";
+        import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore.js";
 
-        function switchMode(mode) {
+        const firebaseConfig = {
+            apiKey: "AIzaSyDbfmd0zmv_mFV0CG2OrhKPPeU3zPYGOBg",
+            authDomain: "unidesk-a70ac.firebaseapp.com",
+            projectId: "unidesk-a70ac",
+            storageBucket: "unidesk-a70ac.firebasestorage.app",
+            messagingSenderId: "882535016432",
+            appId: "1:882535016432:web:6eca2645a47a827e779f35",
+            measurementId: "G-M26R027F70"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.switchMode = function(mode) {
             const createSec = document.getElementById('create-section');
             const joinSec = document.getElementById('join-section');
             const tabs = document.querySelectorAll('.tab-btn');
-
             if (mode === 'create') {
                 createSec.classList.remove('hidden');
                 joinSec.classList.add('hidden');
@@ -272,64 +279,78 @@
                 tabs[1].classList.add('active');
                 tabs[0].classList.remove('active');
             }
+        };
+
+        function showToast(message) {
+            const toast = document.getElementById("custom-toast");
+            toast.innerText = message;
+            toast.className = "show";
+            setTimeout(() => { toast.className = toast.className.replace("show", ""); }, 3000);
         }
 
-        function handleLounge(type) {
-            let userName, loungeInput;
-            const uniqueId = typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).substr(2);
+        async function handleLounge(type) {
+            let userName, loungeInput, role;
+            // Generates a random unique ID for the user
+            const uniqueId = "U" + Math.floor(Date.now() + Math.random() * 1000);
 
             if (type === 'create') {
                 userName = document.getElementById('create-user').value;
                 loungeInput = document.getElementById('lounge-name').value;
-
-                if (!userName || !loungeInput) {
-                    showToast("Please fill in all details");
-                    return;
-                }
-
-                // Generate a random 6-digit numeric code
+                role = "admin"; // Explicitly setting creator as admin
+                if (!userName || !loungeInput) return showToast("Please fill in all details");
+                
                 const numericCode = Math.floor(100000 + Math.random() * 900000).toString();
+                
+                try {
+                    await setDoc(doc(db, "lounges", numericCode, "members", uniqueId), {
+                        uid: uniqueId,
+                        name: userName,
+                        role: role,
+                        loungeName: loungeInput,
+                        timestamp: new Date().getTime()
+                    });
 
-                const sessionData = {
-                    uid: uniqueId,
-                    role: 'admin',
-                    user: userName,
-                    loungeName: loungeInput, 
-                    lounge: numericCode, // This is the 6-digit key for Firebase
-                    mode: type,
-                    timestamp: new Date().getTime()
-                };
-
-                localStorage.setItem('unidesk_session', JSON.stringify(sessionData));
-                window.location.href = 'chat.html';
+                    localStorage.setItem('unidesk_session', JSON.stringify({ 
+                        uid: uniqueId, 
+                        role: role, 
+                        user: userName, 
+                        lounge: numericCode 
+                    }));
+                    window.location.href = 'chat.html';
+                } catch (e) {
+                    showToast("Error connecting to database");
+                }
 
             } else {
                 userName = document.getElementById('join-user').value;
                 loungeInput = document.getElementById('lounge-code').value;
+                role = "member"; // Explicitly setting joiner as member
+                if (!userName || !loungeInput) return showToast("Please fill in all details");
+                if (loungeInput.length !== 6 || isNaN(loungeInput)) return showToast("Invalid code");
 
-                if (!userName || !loungeInput) {
-                    showToast("Please fill in all details");
-                    return;
+                try {
+                    await setDoc(doc(db, "lounges", loungeInput, "members", uniqueId), {
+                        uid: uniqueId,
+                        name: userName,
+                        role: role,
+                        timestamp: new Date().getTime()
+                    });
+
+                    localStorage.setItem('unidesk_session', JSON.stringify({ 
+                        uid: uniqueId, 
+                        role: role, 
+                        user: userName, 
+                        lounge: loungeInput 
+                    }));
+                    window.location.href = 'chat.html';
+                } catch (e) {
+                    showToast("Error joining lounge");
                 }
-
-                if (loungeInput.length !== 6 || isNaN(loungeInput)) {
-                    showToast("Please enter a valid 6-digit code");
-                    return;
-                }
-
-                const sessionData = {
-                    uid: uniqueId,
-                    role: 'member',
-                    user: userName,
-                    lounge: loungeInput,
-                    mode: type,
-                    timestamp: new Date().getTime()
-                };
-
-                localStorage.setItem('unidesk_session', JSON.stringify(sessionData));
-                window.location.href = 'chat.html';
             }
         }
+
+        document.getElementById('create-btn').addEventListener('click', () => handleLounge('create'));
+        document.getElementById('join-btn').addEventListener('click', () => handleLounge('join'));
     </script>
 </body>
 </html>
