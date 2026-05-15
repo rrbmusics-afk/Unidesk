@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>AetherCore | Elite Lounge</title>
+    <title>AetherCore | Mobile Final</title>
     
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -30,117 +30,85 @@
         let mediaRecorder;
         let audioChunks = [];
 
-        // --- Core Sync Logic ---
+        // SYNC LOUNGE & ADMIN DATA
         onSnapshot(doc(db, "lounges", loungeId), (snap) => {
             if (!snap.exists()) return;
             const data = snap.data();
             
-            // Header Sync
-            document.getElementById('h-name').innerText = data.loungeName || "Lounge";
-            document.getElementById('h-pfp').src = data.photo || 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
-            document.getElementById('h-code').innerText = "Lounge Code: " + loungeId;
+            document.getElementById('lounge-name').innerText = data.loungeName;
+            document.getElementById('lounge-code').innerText = "Lounge Code: " + loungeId;
+            document.getElementById('header-pfp').src = data.photo || 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
 
-            // --- ADMIN REQ BUTTON (Fixed Logic) ---
-            const adminBar = document.getElementById('admin-req-bar');
-            // If current user is the one who created the lounge (admin)
+            // ADMIN APPROVAL BAR LOGIC
+            const adminBar = document.getElementById('admin-action-bar');
             if (data.admin === userName && data.pending && data.pending.length > 0) {
                 adminBar.style.display = 'flex';
-                document.getElementById('req-text').innerText = `${data.pending.length} Requests Pending`;
-                window.openRequests = () => {
-                    const list = document.getElementById('req-list');
+                document.getElementById('req-count').innerText = `${data.pending.length} User(s) knocking...`;
+                
+                window.openApprovals = () => {
+                    const list = document.getElementById('approval-list');
                     list.innerHTML = '';
-                    data.pending.forEach(pUser => {
-                        const row = document.createElement('div');
-                        row.className = 'req-row';
-                        row.innerHTML = `<span>${pUser}</span> <button onclick="handleApproval('${pUser}')">Accept</button>`;
-                        list.appendChild(row);
+                    data.pending.forEach(user => {
+                        const div = document.createElement('div');
+                        div.className = 'approval-item';
+                        div.innerHTML = `<span>${user}</span> <button onclick="accept('${user}')">Accept</button>`;
+                        list.appendChild(div);
                     });
-                    document.getElementById('req-modal').style.display = 'flex';
+                    document.getElementById('approval-modal').style.display = 'flex';
                 };
             } else {
                 adminBar.style.display = 'none';
             }
         });
 
-        window.handleApproval = async (u) => {
-            const lRef = doc(db, "lounges", loungeId);
-            await updateDoc(lRef, {
+        window.accept = async (u) => {
+            await updateDoc(doc(db, "lounges", loungeId), {
                 members: arrayUnion(u),
                 pending: arrayRemove(u)
             });
-            if(document.getElementById('req-list').children.length === 1) closeModals();
+            if (document.getElementById('approval-list').children.length === 1) closeModals();
         };
 
-        // --- Chat & Media ---
+        // MESSAGE LISTENER
         const q = query(collection(db, "lounges", loungeId, "messages"), orderBy("timestamp", "asc"));
         onSnapshot(q, (snap) => {
-            const box = document.getElementById('chat-scroll');
+            const box = document.getElementById('chat-container');
             box.innerHTML = '';
             snap.forEach(d => {
                 const m = d.data();
                 const isMe = m.sender === userName;
-                const row = document.createElement('div');
-                row.className = `msg-row ${isMe ? 'me' : 'them'}`;
-                
-                row.innerHTML = `
+                const div = document.createElement('div');
+                div.className = `msg-row ${isMe ? 'me' : 'them'}`;
+                div.innerHTML = `
                     <div class="bubble">
-                        ${!isMe ? `<div class="s-name">${m.sender}</div>` : ''}
-                        ${m.type==='text' ? `<p>${m.text}</p>` : m.type==='image' ? `<img src="${m.url}" class="c-img" onclick="view('${m.url}')">` : `<audio controls src="${m.url}"></audio>`}
+                        ${!isMe ? `<div class="sender">${m.sender}</div>` : ''}
+                        ${m.type === 'text' ? `<p>${m.text}</p>` : `<img src="${m.url}" class="chat-img" onclick="window.open('${m.url}')">`}
                         <div class="time">${m.time || ''}</div>
                     </div>`;
-                box.appendChild(row);
+                box.appendChild(div);
             });
             box.scrollTo(0, box.scrollHeight);
         });
 
-        window.sendMsg = () => {
-            const el = document.getElementById('msg-in');
-            const val = el.value.trim();
-            if(!val) return;
+        window.sendText = () => {
+            const inp = document.getElementById('msg-input');
+            if(!inp.value.trim()) return;
             addDoc(collection(db, "lounges", loungeId, "messages"), {
-                sender: userName, type: 'text', text: val, timestamp: serverTimestamp(),
+                sender: userName, type: 'text', text: inp.value.trim(), timestamp: serverTimestamp(),
                 time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
             });
-            el.value = '';
-            toggleBtn(false);
+            inp.value = '';
+            toggle(false);
         };
 
-        window.upImg = async (el) => {
-            const file = el.files[0]; if(!file) return;
-            const r = ref(storage, `media/${loungeId}/${Date.now()}`);
-            const s = await uploadBytes(r, file);
-            addDoc(collection(db, "lounges", loungeId, "messages"), {
-                sender: userName, type: 'image', url: await getDownloadURL(s.ref),
-                timestamp: serverTimestamp(), time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-            });
+        window.toggle = (typing) => {
+            document.getElementById('mic-btn').style.display = typing ? 'none' : 'flex';
+            document.getElementById('send-btn').style.display = typing ? 'flex' : 'none';
         };
 
-        window.startRec = async () => {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            mediaRecorder = new MediaRecorder(stream);
-            audioChunks = [];
-            mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-            mediaRecorder.onstop = async () => {
-                const b = new Blob(audioChunks, { type: 'audio/webm' });
-                const r = ref(storage, `media/${loungeId}/v_${Date.now()}`);
-                const snap = await uploadBytes(r, b);
-                addDoc(collection(db, "lounges", loungeId, "messages"), {
-                    sender: userName, type: 'audio', url: await getDownloadURL(snap.ref),
-                    timestamp: serverTimestamp(), time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                });
-            };
-            mediaRecorder.start();
-            document.getElementById('mic').classList.add('rec-active');
-        };
+        window.closeModals = () => document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none');
 
-        window.stopRec = () => { if(mediaRecorder) { mediaRecorder.stop(); document.getElementById('mic').classList.remove('rec-active'); }};
-        window.toggleBtn = (typing) => {
-            document.getElementById('mic').style.display = typing ? 'none' : 'flex';
-            document.getElementById('send').style.display = typing ? 'flex' : 'none';
-        };
-        window.closeModals = () => document.querySelectorAll('.overlay').forEach(o => o.style.display='none');
-        window.view = (u) => { document.getElementById('full-img').src=u; document.getElementById('img-viewer').style.display='flex'; };
-
+        // KEYBOARD OPTIMIZATION
         if (window.visualViewport) {
             window.visualViewport.addEventListener('resize', () => {
                 document.body.style.height = window.visualViewport.height + 'px';
@@ -153,8 +121,9 @@
         * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
         
         body { 
-            background: var(--bg); color: white; font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-            height: 100dvh; width: 100vw; display: flex; flex-direction: column; overflow: hidden; position: fixed;
+            background: var(--bg); color: white; font-family: sans-serif;
+            height: 100dvh; display: flex; flex-direction: column; overflow: hidden;
+            position: fixed; width: 100%;
         }
 
         /* HEADER */
@@ -162,108 +131,91 @@
             background: var(--header); padding: 10px 16px; display: flex; align-items: center; 
             gap: 12px; border-bottom: 1px solid #333; flex-shrink: 0;
         }
-        .pfp { width: 42px; height: 42px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--accent); }
-        .h-info h2 { font-size: 1rem; font-weight: 600; color: white; }
-        .h-info p { font-size: 0.7rem; color: var(--accent); }
+        .pfp-img { width: 42px; height: 42px; border-radius: 50%; border: 1.5px solid var(--accent); object-fit: cover; }
+        .h-txt h2 { font-size: 1rem; color: white; }
+        .h-txt p { font-size: 0.75rem; color: var(--accent); }
 
-        /* ADMIN ACCEPT BUTTON AREA */
-        #admin-req-bar { 
-            background: #1a1d21; padding: 10px 16px; display: none; 
-            justify-content: space-between; align-items: center; border-bottom: 2px solid var(--accent);
-            flex-shrink: 0; z-index: 10;
+        /* ADMIN APPROVAL NOTIFICATION */
+        #admin-action-bar { 
+            background: #1a1d21; padding: 12px 16px; display: none; 
+            justify-content: space-between; align-items: center; 
+            border-bottom: 2px solid var(--accent); flex-shrink: 0;
         }
-        #req-text { font-size: 0.85rem; font-weight: bold; color: var(--accent); }
-        .btn-accept { background: var(--accent); color: white; border: none; padding: 6px 14px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; }
+        #req-count { font-size: 0.85rem; font-weight: bold; color: var(--accent); }
+        .approve-btn { background: var(--accent); color: white; border: none; padding: 6px 16px; border-radius: 20px; font-weight: bold; font-size: 0.75rem; }
 
-        /* CHAT AREA */
-        #chat-scroll { 
-            flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 8px;
+        /* CHAT BOX */
+        #chat-container { 
+            flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 8px;
             background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M10 10l2 2' stroke='%2358a6ff' stroke-width='0.5' fill='none' opacity='0.05'/%3E%3C/svg%3E");
         }
         .msg-row { display: flex; width: 100%; }
         .msg-row.me { justify-content: flex-end; }
-        .bubble { max-width: 82%; padding: 8px 10px; border-radius: 12px; position: relative; box-shadow: 0 1px 2px rgba(0,0,0,0.4); }
+        .bubble { max-width: 85%; padding: 8px 12px; border-radius: 12px; position: relative; box-shadow: 0 1px 2px rgba(0,0,0,0.5); }
         .me .bubble { background: var(--me); border-top-right-radius: 0; }
         .them .bubble { background: var(--them); border-top-left-radius: 0; }
-        .s-name { font-size: 0.72rem; font-weight: 800; color: var(--accent); margin-bottom: 2px; }
-        .time { font-size: 0.6rem; color: rgba(255,255,255,0.5); text-align: right; margin-top: 4px; }
-        .c-img { width: 100%; border-radius: 8px; border: 1px solid #444; margin: 4px 0; }
-        audio { filter: invert(1); height: 32px; width: 200px; }
+        .sender { font-size: 0.75rem; font-weight: bold; color: var(--accent); margin-bottom: 2px; }
+        .time { font-size: 0.6rem; color: #888; text-align: right; margin-top: 4px; }
 
-        /* FOOTER */
-        footer { background: var(--header); padding: 8px 10px; display: flex; align-items: flex-end; gap: 8px; flex-shrink: 0; }
-        .input-box { flex: 1; background: #2a3942; border-radius: 24px; display: flex; align-items: center; padding: 0 12px; min-height: 48px; border: 1px solid #333; }
-        #msg-in { flex: 1; background: transparent; border: none; color: white; padding: 12px 0; outline: none; font-size: 1rem; }
-        
-        .f-icon { padding: 8px; color: #8696a0; cursor: pointer; display: flex; align-items: center; }
-        .f-icon svg { width: 22px; height: 22px; fill: currentColor; }
-        
-        .circle-btn { width: 48px; height: 48px; border-radius: 50%; background: var(--accent); border: none; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-        .circle-btn svg { width: 24px; height: 24px; fill: white; }
-        .rec-active { background: #ff3b30 !important; animation: pulse 1s infinite; }
+        /* FOOTER - MOBILE OPTIMIZED */
+        footer { 
+            background: var(--header); padding: 8px 8px 24px 8px; /* Extra bottom padding for iPhone bar */
+            display: flex; align-items: flex-end; gap: 8px; flex-shrink: 0;
+        }
+        .input-pill { 
+            flex: 1; background: #2a3942; border-radius: 24px; padding: 0 12px; 
+            display: flex; align-items: center; min-height: 48px; border: 1px solid #444;
+        }
+        #msg-input { flex: 1; background: transparent; border: none; color: white; padding: 12px 0; outline: none; font-size: 1rem; }
+        .ico { padding: 8px; color: #8696a0; font-size: 1.3rem; cursor: pointer; }
 
-        /* OVERLAYS */
-        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: none; z-index: 1000; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
-        .modal { background: #1e1e1e; width: 100%; max-width: 350px; border-radius: 15px; padding: 20px; border: 1px solid var(--accent); }
-        .req-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #333; }
-        .req-row span { font-weight: bold; color: var(--accent); }
-        .req-row button { background: var(--accent); border: none; color: white; padding: 6px 12px; border-radius: 5px; font-weight: bold; }
+        .circle-btn { 
+            width: 48px; height: 48px; border-radius: 50%; background: var(--accent); 
+            border: none; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+            color: white; font-size: 1.2rem;
+        }
 
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+        /* MODALS */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+        .modal-box { background: #1e1e1e; width: 100%; max-width: 350px; border-radius: 12px; padding: 20px; border: 1px solid var(--accent); }
+        .approval-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #333; }
     </style>
 </head>
 <body>
 
     <header>
-        <img id="h-pfp" class="pfp" onclick="view(this.src)">
-        <div class="h-info" onclick="window.location.href='info.html'">
-            <h2 id="h-name">Loading...</h2>
-            <p id="h-code">Lounge Code: ...</p>
+        <img id="header-pfp" class="pfp-img">
+        <div class="h-txt">
+            <h2 id="lounge-name">Syncing...</h2>
+            <p id="lounge-code">Lounge Code: 000000</p>
         </div>
     </header>
 
-    <div id="admin-req-bar">
-        <span id="req-text">0 Requests</span>
-        <button class="btn-accept" onclick="openRequests()">APPROVE ALL</button>
+    <div id="admin-action-bar">
+        <span id="req-count">0 Requests</span>
+        <button class="approve-btn" onclick="openApprovals()">ACCEPT ALL</button>
     </div>
 
-    <div id="chat-scroll"></div>
+    <div id="chat-container"></div>
 
     <footer>
-        <div class="input-box">
-            <label for="f-doc" class="f-icon">
-                <svg viewBox="0 0 24 24"><path d="M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5c0-1.38 1.12-2.5 2.5-2.5s2.5 1.12 2.5 2.5v10.5c0 .55-.45 1-1 1s-1-.45-1-1V6H10v9.5c0 1.66 1.34 3 3 3s3-1.34 3-3V5c0-2.48-2.02-4.5-4.5-4.5S7 2.52 7 5v12.5c0 3.59 2.91 6.5 6.5 6.5s6.5-2.91 6.5-6.5V6h-1.5z"/></svg>
-            </label>
-            <input type="file" id="f-doc" hidden multiple>
-
-            <input type="text" id="msg-in" placeholder="Aether Message" autocomplete="off" oninput="toggleBtn(this.value.trim().length > 0)">
-
-            <label for="f-img" class="f-icon">
-                <svg viewBox="0 0 24 24"><path d="M20 5h-3.17L15 3H9L7.17 5H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 14H4V7h16v12zM12 9c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4z"/></svg>
-            </label>
-            <input type="file" id="f-img" hidden accept="image/*" onchange="upImg(this)">
+        <div class="input-pill">
+            <span class="ico">📎</span>
+            <input type="text" id="msg-input" placeholder="Aether Message" autocomplete="off" oninput="toggle(this.value.trim().length > 0)">
+            <label for="img-up" class="ico">📷</label>
+            <input type="file" id="img-up" hidden accept="image/*">
         </div>
-
-        <button id="mic" class="circle-btn" onmousedown="startRec()" onmouseup="stopRec()" ontouchstart="startRec()" ontouchend="stopRec()">
-            <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
-        </button>
-
-        <button id="send" class="circle-btn" style="display:none" onclick="sendMsg()">
-            <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
-        </button>
+        
+        <button id="mic-btn" class="circle-btn">🎤</button>
+        <button id="send-btn" class="circle-btn" style="display:none" onclick="sendText()">➤</button>
     </footer>
 
-    <div id="req-modal" class="overlay" onclick="closeModals()">
-        <div class="modal" onclick="event.stopPropagation()">
-            <h3 style="color:var(--accent); margin-bottom:15px">Member Approval</h3>
-            <div id="req-list"></div>
-            <button onclick="closeModals()" style="width:100%; margin-top:20px; padding:10px; background:#333; color:white; border:none; border-radius:8px">Close</button>
+    <div id="approval-modal" class="modal-overlay" onclick="closeModals()">
+        <div class="modal-box" onclick="event.stopPropagation()">
+            <h3 style="margin-bottom: 15px; color: var(--accent);">Lounge Requests</h3>
+            <div id="approval-list"></div>
+            <button onclick="closeModals()" style="width:100%; margin-top:20px; padding:10px; background:#444; color:white; border:none; border-radius:8px">Close</button>
         </div>
-    </div>
-
-    <div id="img-viewer" class="overlay" onclick="closeModals()">
-        <img id="full-img" src="" style="max-width:95%; max-height:80%; border-radius:10px">
-        <button class="btn-accept" style="margin-top:20px" onclick="window.open(document.getElementById('full-img').src)">Download Original</button>
     </div>
 
 </body>
