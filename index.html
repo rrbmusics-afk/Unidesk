@@ -220,8 +220,12 @@
             </div>
         </div>
 
-        <div class="toolkit-trigger" onclick="openModal()">
+        <div class="toolkit-trigger" onclick="openModal()" style="margin-bottom: 20px;">
             <span class="toolkit-text">Toolkit</span>
+        </div>
+
+        <div class="toolkit-trigger" onclick="openUtilitiesModal()">
+            <span class="toolkit-text">Student Utilities</span>
         </div>
     </div>
 
@@ -231,14 +235,6 @@
                 <div class="icon-dark"><svg style="opacity: 0.5;" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
                 <div><p class="title">Page Forge</p><p class="sub">Image to PDF</p></div>
             </div>
-            <div class="tool-card" onclick="location.href='https://sharanmusician.com/Scientific-calculator-/'">
-                <div class="icon-dark"><svg style="opacity: 0.5;" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10H7v-2h10v2zm0-4H7V7h10v2z"/></svg></div>
-                <div><p class="title">Scientific Calculator</p><p class="sub">Student Utilities</p></div>
-            </div>
-            <div class="tool-card" style="opacity: 0.4;">
-                <div class="icon-dark"><svg style="fill: #b5924d;" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H7c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.04-.42 1.99-1.07 2.75z"/></svg></div>
-                <div><p class="title">CGPA Calculator</p><p class="sub">Student Utilities</p></div>
-            </div>
             <div class="tool-card" style="opacity: 0.4;">
                 <div class="icon-dark"><svg style="fill: #b5924d;" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
                 <div><p class="title">Resume Maker</p><p class="sub">CV Builder</p></div>
@@ -247,10 +243,25 @@
         </div>
     </div>
 
+    <div class="modal-overlay" id="utilities-overlay" onclick="closeUtilitiesModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="tool-card" onclick="location.href='https://sharanmusician.com/Scientific-calculator-/'">
+                <div class="icon-dark"><svg style="opacity: 0.5;" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10H7v-2h10v2zm0-4H7V7h10v2z"/></svg></div>
+                <div><p class="title">Scientific Calculator</p><p class="sub">Calculator Tool</p></div>
+            </div>
+            <div class="tool-card" style="opacity: 0.4;">
+                <div class="icon-dark"><svg style="fill: #b5924d;" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H7c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.04-.42 1.99-1.07 2.75z"/></svg></div>
+                <div><p class="title">CGPA Calculator</p><p class="sub">Grading Suite</p></div>
+            </div>
+            <p class="close-label" onclick="closeUtilitiesModal()">DISMISS</p>
+        </div>
+    </div>
+
     <footer>&copy; 2026 Aethercore Interactive</footer>
 
     <script>
         const overlay = document.getElementById('overlay');
+        const utilitiesOverlay = document.getElementById('utilities-overlay');
         
         // Suppress browser dialogues & context menus
         document.addEventListener('contextmenu', event => event.preventDefault());
@@ -266,6 +277,19 @@
 
         function closeModal() {
             overlay.classList.remove('active');
+        }
+
+        function openUtilitiesModal() {
+            utilitiesOverlay.classList.add('active');
+            if (navigator.vibrate) navigator.vibrate(10);
+        }
+
+        function closeModalUtilities() {
+            utilitiesOverlay.classList.remove('active');
+        }
+        
+        function closeUtilitiesModal() {
+            utilitiesOverlay.classList.remove('active');
         }
     </script>
 </body>
