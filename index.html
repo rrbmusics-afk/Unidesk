@@ -273,24 +273,48 @@
         function openModal() {
             overlay.classList.add('active');
             if (navigator.vibrate) navigator.vibrate(10);
+            history.pushState({ modal: 'toolkit' }, '');
         }
 
         function closeModal() {
-            overlay.classList.remove('active');
+            if (overlay.classList.contains('active')) {
+                overlay.classList.remove('active');
+                if (history.state && history.state.modal === 'toolkit') {
+                    history.back();
+                }
+            }
         }
 
         function openUtilitiesModal() {
             utilitiesOverlay.classList.add('active');
             if (navigator.vibrate) navigator.vibrate(10);
+            history.pushState({ modal: 'utilities' }, '');
         }
 
         function closeModalUtilities() {
-            utilitiesOverlay.classList.remove('active');
+            if (utilitiesOverlay.classList.contains('active')) {
+                utilitiesOverlay.classList.remove('active');
+                if (history.state && history.state.modal === 'utilities') {
+                    history.back();
+                }
+            }
         }
         
         function closeUtilitiesModal() {
-            utilitiesOverlay.classList.remove('active');
+            if (utilitiesOverlay.classList.contains('active')) {
+                utilitiesOverlay.classList.remove('active');
+                if (history.state && history.state.modal === 'utilities') {
+                    history.back();
+                }
+            }
         }
+
+        // Handle structural physical / software back navigation events safely
+        window.addEventListener('popstate', function(event) {
+            // Close active overlays instead of popping page execution
+            overlay.classList.remove('active');
+            utilitiesOverlay.classList.remove('active');
+        });
     </script>
 </body>
 </html>
