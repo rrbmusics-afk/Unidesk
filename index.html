@@ -44,12 +44,15 @@
             font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", sans-serif;
             display: flex;
             flex-direction: column;
-            padding: calc(var(--safe-top) + 40px) 30px calc(var(--safe-bottom) + 80px); /* Increased bottom padding for marquee */
+            padding: calc(var(--safe-top) + 40px) 30px calc(var(--safe-bottom) + 100px);
+            position: relative;
         }
 
         header.brand-core {
             text-align: center;
-            margin-bottom: 50px;
+            margin-bottom: 40px;
+            position: relative;
+            z-index: 5;
         }
 
         .logo {
@@ -74,6 +77,8 @@
             width: 100%;
             max-width: 340px;
             margin: 0 auto;
+            position: relative;
+            z-index: 10; /* Forces buttons above any trailing default body space */
         }
 
         .btn-lounge {
@@ -124,16 +129,18 @@
             text-transform: uppercase;
         }
 
+        /* MODAL CONFIGURATIONS - FIXED HIGHER Z-INDEX LAYER */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0;
             width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.9);
             backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             display: flex;
             justify-content: center;
             align-items: center;
-            z-index: 1000;
+            z-index: 2000; /* Higher than everything else */
             opacity: 0;
             visibility: hidden;
             transition: var(--transition);
@@ -190,8 +197,12 @@
             padding: 15px;
             display: flex;
             align-items: center;
-            margin-bottom: 10px;
+            margin-bottom: 11px;
             cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, 0.02);
+        }
+        .tool-card:active {
+            background: rgba(255, 255, 255, 0.06);
         }
 
         .icon-dark {
@@ -211,7 +222,7 @@
             font-size: 11px;
             text-align: center;
             margin-top: auto;
-            padding: 15px 0 5px;
+            padding: 20px 0 5px;
             color: var(--text-s);
             letter-spacing: 2px;
             font-weight: 700;
@@ -248,53 +259,23 @@
             color: var(--text-s);
         }
 
-        /* --- DYNAMIC TARGET CONTAINER STYLES --- */
-        .exam-link-wrapper {
-            margin-top: 12px;
-            padding-top: 12px;
-            border-top: 1px dashed rgba(255, 255, 255, 0.06);
-        }
-        .exam-link-desc {
-            font-size: 10px;
-            color: var(--text-s);
-            margin-bottom: 6px;
-        }
-        .exam-link-btn {
-            background: rgba(74, 144, 226, 0.1);
-            border: 1px solid rgba(74, 144, 226, 0.25);
-            color: #79b0ff;
-            font-size: 12px;
-            font-weight: 600;
-            text-decoration: none;
-            padding: 10px 14px;
-            border-radius: 12px;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            width: 100%;
-            justify-content: center;
-            transition: var(--transition);
-        }
-        .exam-link-btn:active {
-            background: rgba(74, 144, 226, 0.2);
-            transform: scale(0.98);
-        }
-
         /* --- RUNNING TICKER TAB FOOTER BAR --- */
         .marquee-container {
             position: absolute;
             bottom: calc(var(--safe-bottom) + 38px);
             left: 0;
             width: 100%;
-            background: rgba(18, 24, 31, 0.8);
+            background: rgba(18, 24, 31, 0.95);
             border-top: 1px solid rgba(255, 255, 255, 0.04);
             border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-            padding: 10px 0;
+            padding: 12px 0;
             overflow: hidden;
             cursor: pointer;
             display: flex;
             align-items: center;
             backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            z-index: 15; /* Sits over body, but below custom overlay alerts */
         }
         .marquee-badge {
             background: #e63946;
@@ -306,7 +287,7 @@
             border-radius: 0 15px 15px 0;
             letter-spacing: 1px;
             position: relative;
-            z-index: 10;
+            z-index: 20;
             box-shadow: 5px 0 15px rgba(0,0,0,0.5);
             flex-shrink: 0;
             margin-right: 15px;
@@ -349,6 +330,7 @@
             color: #313a43;
             font-weight: 600;
             text-transform: uppercase;
+            z-index: 5;
         }
 
         svg { width: 20px; height: 20px; fill: white; }
@@ -453,7 +435,7 @@
     <footer>&copy; 2026 Aethercore Interactive</footer>
 
     <script>
-        // --- CENTRALIZED INDEX.JS SIMULATED STRUCTURE ---
+        // --- CENTRALIZED DATA STRUCTURE ---
         const examsData = [
             {
                 title: "BEL Recruitment 2026",
@@ -471,9 +453,7 @@
                 title: "NTPC EET Recruitment 2026",
                 description: "Through GATE 2025 (52 Posts) Online Form, Notification",
                 category: "PSU",
-                date: "18 May 2026",
-                linkDescription: "Official website link is given below.",
-                link: "https://careers.ntpc.co.in/recruitment/login.php"
+                date: "18 May 2026"
             }
         ];
 
@@ -482,28 +462,16 @@
             const marqueeInner = document.getElementById('marquee-inner');
             const modalList = document.getElementById('exams-modal-list');
             
+            if (!marqueeInner || !modalList) return;
+
             let marqueeHTML = '';
             let modalHTML = '';
 
             examsData.forEach(exam => {
-                // Build running tab elements (Title & Date only)
+                // Build running tab elements
                 marqueeHTML += `<div class="marquee-item">📢 ${exam.title} <span>${exam.date}</span></div>`;
                 
-                // Build complete detailed list elements for popup window
-                let linkRowHTML = '';
-                if(exam.link) {
-                    const descText = exam.linkDescription ? exam.linkDescription : 'Access external registration link below:';
-                    linkRowHTML = `
-                        <div class="exam-link-wrapper">
-                            <p class="exam-link-desc">${descText}</p>
-                            <a href="${exam.link}" target="_blank" class="exam-link-btn">
-                                Proceed to Portal
-                                <svg style="width:12px; height:12px; fill:none; stroke:currentColor; stroke-width:2.5;" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h14M15 3h6v6M10 14L21 3"/></svg>
-                            </a>
-                        </div>
-                    `;
-                }
-
+                // Build layout cards for details popup window
                 modalHTML += `
                     <div class="exam-details-card">
                         <p class="title" style="font-size: 14px; margin-bottom: 4px;">${exam.title}</p>
@@ -512,17 +480,16 @@
                             <span class="exam-badge">${exam.category}</span>
                             <span class="exam-date">${exam.date}</span>
                         </div>
-                        ${linkRowHTML}
                     </div>
                 `;
             });
 
-            // Duplicate strings inside ticker content to make a loop look seamless
+            // Double data strings inside ticker content window loop for an infinite seamless scroll
             marqueeInner.innerHTML = marqueeHTML + marqueeHTML;
             modalList.innerHTML = modalHTML;
         }
 
-        // Call the generation handler immediately
+        // Run UI binding immediately
         initializeExamsFeature();
 
         // --- INTERACTION & MODAL ACTIONS ---
@@ -531,4 +498,47 @@
         const examsOverlay = document.getElementById('exams-overlay');
         
         document.addEventListener('contextmenu', event => event.preventDefault());
-        document.addEventListener('touchstart', function(e
+        document.addEventListener('touchstart', function(e) {
+            if (e.touches.length > 1) e.preventDefault();
+        }, {passive: false});
+
+        function openModal() {
+            overlay.classList.add('active');
+            if (navigator.vibrate) navigator.vibrate(10);
+            history.pushState({ modal: 'toolkit' }, '');
+        }
+
+        function closeModal() {
+            overlay.classList.remove('active');
+            if (history.state && history.state.modal === 'toolkit') {
+                history.back();
+            }
+        }
+
+        function openUtilitiesModal() {
+            utilitiesOverlay.classList.add('active');
+            if (navigator.vibrate) navigator.vibrate(10);
+            history.pushState({ modal: 'utilities' }, '');
+        }
+        
+        function closeUtilitiesModal() {
+            utilitiesOverlay.classList.remove('active');
+            if (history.state && history.state.modal === 'utilities') {
+                history.back();
+            }
+        }
+
+        function openExamsModal() {
+            examsOverlay.classList.add('active');
+            if (navigator.vibrate) navigator.vibrate(10);
+            history.pushState({ modal: 'exams' }, '');
+        }
+
+        function closeExamsModal() {
+            examsOverlay.classList.remove('active');
+            if (history.state && history.state.modal === 'exams') {
+                history.back();
+            }
+        }
+
+        // Global S
