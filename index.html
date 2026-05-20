@@ -439,7 +439,9 @@
                 title: "NTPC EET Recruitment 2026",
                 description: "Through GATE 2025 (52 Posts) Online Form, Notification",
                 category: "PSU",
-                date: "18 May 2026"
+                date: "18 May 2026",
+                linkDescription: "Official website link is given below.",
+                link: "https://careers.ntpc.co.in/recruitment/login.php"
             }
         ];
 
@@ -455,12 +457,22 @@
                 // Build running tab elements (Title & Date only)
                 marqueeHTML += `<div class="marquee-item">📢 ${exam.title} <span>${exam.date}</span></div>`;
                 
+                // Check if conditional link parameters exist
+                let linkHTML = '';
+                if (exam.linkDescription && exam.link) {
+                    linkHTML = `
+                        <p class="sub" style="color: #4a90e2; font-size: 11px; margin-top: 6px; font-weight: 500;">${exam.linkDescription}</p>
+                        <a href="${exam.link}" target="_blank" style="display: inline-block; color: #ffffff; font-size: 11px; font-weight: 600; text-decoration: none; background: rgba(74, 144, 226, 0.3); border: 1px solid rgba(74, 144, 226, 0.5); padding: 5px 12px; border-radius: 12px; margin-top: 6px; -webkit-user-select: auto; user-select: auto;">Visit Link</a>
+                    `;
+                }
+
                 // Build complete detailed list elements for popup window
                 modalHTML += `
                     <div class="exam-details-card">
                         <p class="title" style="font-size: 14px; margin-bottom: 4px;">${exam.title}</p>
                         <p class="sub" style="color: #9eb1c9; font-size: 11px; line-height: 1.4; margin-bottom: 8px;">${exam.description}</p>
-                        <div class="exam-meta-row">
+                        ${linkHTML}
+                        <div class="exam-meta-row" style="margin-top: 10px;">
                             <span class="exam-badge">${exam.category}</span>
                             <span class="exam-date">${exam.date}</span>
                         </div>
@@ -512,24 +524,4 @@
             }
         }
 
-        function openExamsModal() {
-            examsOverlay.classList.add('active');
-            if (navigator.vibrate) navigator.vibrate(10);
-            history.pushState({ modal: 'exams' }, '');
-        }
-
-        function closeExamsModal() {
-            if (examsOverlay.classList.contains('active')) {
-                examsOverlay.classList.remove('active');
-                if (history.state && history.state.modal === 'exams') history.back();
-            }
-        }
-
-        window.addEventListener('popstate', function(event) {
-            overlay.classList.remove('active');
-            utilitiesOverlay.classList.remove('active');
-            examsOverlay.classList.remove('active');
-        });
-    </script>
-</body>
-</html>
+        function
