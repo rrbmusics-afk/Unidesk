@@ -35,6 +35,7 @@
 
         html, body {
             height: 100%;
+            width: 100%;
             overflow: hidden;
             background-color: var(--bg);
         }
@@ -44,7 +45,8 @@
             font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", sans-serif;
             display: flex;
             flex-direction: column;
-            padding: calc(var(--safe-top) + 40px) 30px calc(var(--safe-bottom) + 80px); /* Increased bottom padding for marquee */
+            padding: calc(var(--safe-top) + 40px) 30px calc(var(--safe-bottom) + 80px); 
+            position: relative;
         }
 
         header.brand-core {
@@ -74,6 +76,7 @@
             width: 100%;
             max-width: 340px;
             margin: 0 auto;
+            z-index: 10;
         }
 
         .btn-lounge {
@@ -130,6 +133,7 @@
             width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.9);
             backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -233,6 +237,8 @@
             display: flex;
             align-items: center;
             backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            z-index: 95;
         }
         .marquee-content {
             display: flex;
@@ -272,6 +278,7 @@
             color: #313a43;
             font-weight: 600;
             text-transform: uppercase;
+            z-index: 90;
         }
 
         svg { width: 20px; height: 20px; fill: white; }
@@ -402,14 +409,14 @@
             const marqueeInner = document.getElementById('marquee-inner');
             const modalList = document.getElementById('exams-modal-list');
             
+            if (!marqueeInner || !modalList) return;
+            
             let marqueeHTML = '';
             let modalHTML = '';
 
             examsData.forEach(exam => {
-                // Build running tab elements (Title & Date only)
                 marqueeHTML += `<div class="marquee-item">📢 ${exam.title} <span>${exam.date}</span></div>`;
                 
-                // Build complete detailed list elements for popup window
                 modalHTML += `
                     <div class="exam-details-card">
                         <p class="title" style="font-size: 14px; margin-bottom: 4px;">${exam.title}</p>
@@ -422,13 +429,16 @@
                 `;
             });
 
-            // Duplicate strings inside ticker content to make a loop look seamless
             marqueeInner.innerHTML = marqueeHTML + marqueeHTML;
             modalList.innerHTML = modalHTML;
         }
 
-        // Call the generation handler immediately
-        initializeExamsFeature();
+        // Run when DOM structure is entirely ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeExamsFeature);
+        } else {
+            initializeExamsFeature();
+        }
 
         // --- INTERACTION & MODAL ACTIONS ---
         const overlay = document.getElementById('overlay');
@@ -436,61 +446,64 @@
         const examsOverlay = document.getElementById('exams-overlay');
         
         document.addEventListener('contextmenu', event => event.preventDefault());
+        
+        // REPAIRED POINTER GESTURE ASSIGNMENT
         document.addEventListener('touchstart', function(e) {
-            if (e.touches.length > 1) e.preventDefault();
-        }, {passive: false});
+            if (e.touches.length > 1) {
+                e.preventDefault();
+            }
+        }, {passive: true}); // Changed to passive true to prevent rendering thread locking
 
         function openModal() {
-            overlay.classList.add('active');
-            if (navigator.vibrate) navigator.vibrate(10);
-            history.pushState({ modal: 'toolkit' }, '');
+            if(overlay) {
+                overlay.classList.add('active');
+                if (navigator.vibrate) navigator.vibrate(10);
+                history.pushState({ modal: 'toolkit' }, '');
+            }
         }
 
         function closeModal() {
-            if (overlay.classList.contains('active')) {
+            if (overlay && overlay.classList.contains('active')) {
                 overlay.classList.remove('active');
                 if (history.state && history.state.modal === 'toolkit') history.back();
             }
         }
 
         function openUtilitiesModal() {
-            utilitiesOverlay.classList.add('active');
-            if (navigator.vibrate) navigator.vibrate(10);
-            history.pushState({ modal: 'utilities' }, '');
+            if(utilitiesOverlay) {
+                utilitiesOverlay.classList.add('active');
+                if (navigator.vibrate) navigator.vibrate(10);
+                history.pushState({ modal: 'utilities' }, '');
+            }
         }
         
         function closeUtilitiesModal() {
-            if (utilitiesOverlay.classList.contains('active')) {
+            if (utilitiesOverlay && utilitiesOverlay.classList.contains('active')) {
                 utilitiesOverlay.classList.remove('active');
                 if (history.state && history.state.modal === 'utilities') history.back();
             }
         }
 
         function openExamsModal() {
-            examsOverlay.classList.add('active');
-            if (navigator.vibrate) navigator.vibrate(10);
-            history.pushState({ modal: 'exams' }, '');
+            if(examsOverlay) {
+                examsOverlay.classList.add('active');
+                if (navigator.vibrate) navigator.vibrate(10);
+                history.pushState({ modal: 'exams' }, '');
+            }
         }
 
         function closeExamsModal() {
-            if (examsOverlay.classList.contains('active')) {
+            if (examsOverlay && examsOverlay.classList.contains('active')) {
                 examsOverlay.classList.remove('active');
                 if (history.state && history.state.modal === 'exams') history.back();
             }
         }
 
         window.addEventListener('popstate', function(event) {
-            overlay.classList.remove('active');
-            utilitiesOverlay.classList.remove('active');
-            examsOverlay.classList.remove('active');
+            if(overlay) overlay.classList.remove('active');
+            if(utilitiesOverlay) utilitiesOverlay.classList.remove('active');
+            if(examsOverlay) examsOverlay.classList.remove('active');
         });
     </script>
 </body>
 </html>
-
-
-In this code put a badge named "Updates" before the footer running exam details.
-
-Also when tapping the footer you can see a popup opens, make it full screen and scrollable if more updates are updated.
-
-Please integrate this without any bug in the above code.
