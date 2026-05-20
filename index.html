@@ -232,7 +232,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-top: 12px;
+            margin-top: 8px;
         }
         .exam-badge {
             background: rgba(74, 144, 226, 0.15);
@@ -246,39 +246,6 @@
         .exam-date {
             font-size: 10px;
             color: var(--text-s);
-        }
-        
-        /* Tapable Link Styles */
-        .exam-link-container {
-            margin-top: 10px;
-            padding-top: 10px;
-            border-top: 1px solid rgba(255, 255, 255, 0.03);
-        }
-        .exam-link-desc {
-            font-size: 11px;
-            color: var(--text-s);
-            margin-bottom: 6px;
-        }
-        .exam-action-link {
-            display: inline-flex;
-            align-items: center;
-            color: #ffffff;
-            background: rgba(74, 144, 226, 0.25);
-            border: 1px solid rgba(74, 144, 226, 0.4);
-            padding: 6px 14px;
-            font-size: 11px;
-            font-weight: 600;
-            text-decoration: none;
-            border-radius: 12px;
-            transition: var(--transition);
-            
-            /* Re-enabling interaction strictly for links */
-            -webkit-user-select: auto;
-            user-select: auto;
-        }
-        .exam-action-link:active {
-            background: var(--accent);
-            transform: scale(0.96);
         }
 
         /* --- RUNNING TICKER TAB FOOTER BAR --- */
@@ -472,9 +439,7 @@
                 title: "NTPC EET Recruitment 2026",
                 description: "Through GATE 2025 (52 Posts) Online Form, Notification",
                 category: "PSU",
-                date: "18 May 2026",
-                linkDescription: "Official website link is given below.",
-                link: "https://careers.ntpc.co.in/recruitment/login.php"
+                date: "18 May 2026"
             }
         ];
 
@@ -490,25 +455,11 @@
                 // Build running tab elements (Title & Date only)
                 marqueeHTML += `<div class="marquee-item">📢 ${exam.title} <span>${exam.date}</span></div>`;
                 
-                // Build conditional link structure safely
-                let linkHTML = '';
-                if (exam.link && exam.linkDescription) {
-                    linkHTML = `
-                        <div class="exam-link-container">
-                            <p class="exam-link-desc">${exam.linkDescription}</p>
-                            <a href="${exam.link}" target="_blank" rel="noopener noreferrer" class="exam-action-link" onclick="event.stopPropagation();">
-                                Apply Online
-                            </a>
-                        </div>
-                    `;
-                }
-
                 // Build complete detailed list elements for popup window
                 modalHTML += `
                     <div class="exam-details-card">
                         <p class="title" style="font-size: 14px; margin-bottom: 4px;">${exam.title}</p>
                         <p class="sub" style="color: #9eb1c9; font-size: 11px; line-height: 1.4; margin-bottom: 8px;">${exam.description}</p>
-                        ${linkHTML}
                         <div class="exam-meta-row">
                             <span class="exam-badge">${exam.category}</span>
                             <span class="exam-date">${exam.date}</span>
@@ -532,8 +483,53 @@
         
         document.addEventListener('contextmenu', event => event.preventDefault());
         document.addEventListener('touchstart', function(e) {
-            // Keep swipe to scroll operational inside links or inputs
             if (e.touches.length > 1) e.preventDefault();
         }, {passive: false});
 
-      
+        function openModal() {
+            overlay.classList.add('active');
+            if (navigator.vibrate) navigator.vibrate(10);
+            history.pushState({ modal: 'toolkit' }, '');
+        }
+
+        function closeModal() {
+            if (overlay.classList.contains('active')) {
+                overlay.classList.remove('active');
+                if (history.state && history.state.modal === 'toolkit') history.back();
+            }
+        }
+
+        function openUtilitiesModal() {
+            utilitiesOverlay.classList.add('active');
+            if (navigator.vibrate) navigator.vibrate(10);
+            history.pushState({ modal: 'utilities' }, '');
+        }
+        
+        function closeUtilitiesModal() {
+            if (utilitiesOverlay.classList.contains('active')) {
+                utilitiesOverlay.classList.remove('active');
+                if (history.state && history.state.modal === 'utilities') history.back();
+            }
+        }
+
+        function openExamsModal() {
+            examsOverlay.classList.add('active');
+            if (navigator.vibrate) navigator.vibrate(10);
+            history.pushState({ modal: 'exams' }, '');
+        }
+
+        function closeExamsModal() {
+            if (examsOverlay.classList.contains('active')) {
+                examsOverlay.classList.remove('active');
+                if (history.state && history.state.modal === 'exams') history.back();
+            }
+        }
+
+        window.addEventListener('popstate', function(event) {
+            overlay.classList.remove('active');
+            utilitiesOverlay.classList.remove('active');
+            examsOverlay.classList.remove('active');
+        });
+    </script>
+</body>
+</html>
