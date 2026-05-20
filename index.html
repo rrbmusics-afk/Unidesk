@@ -44,7 +44,7 @@
             font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", sans-serif;
             display: flex;
             flex-direction: column;
-            padding: calc(var(--safe-top) + 40px) 30px calc(var(--safe-bottom) + 85px); /* Structured gap for ticker element */
+            padding: calc(var(--safe-top) + 40px) 30px calc(var(--safe-bottom) + 80px); /* Increased bottom padding for marquee */
         }
 
         header.brand-core {
@@ -124,7 +124,7 @@
             text-transform: uppercase;
         }
 
-        /* --- STANDARD UTILITY OVERLAYS --- */
+        /* --- OVERLAYS & MODALS --- */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0;
@@ -151,9 +151,36 @@
             padding: 25px;
             transform: scale(0.9) translateY(20px);
             transition: var(--transition);
+            max-height: 75vh;
+            overflow-y: auto;
         }
 
         .modal-overlay.active .modal-content { transform: scale(1) translateY(0); }
+
+        /* --- FULL SCREEN MODAL VARIANT FOR EXAMS --- */
+        #exams-overlay .modal-content {
+            width: 100%;
+            max-width: 100%;
+            height: 100%;
+            max-height: 100vh;
+            border: none;
+            border-radius: 0;
+            background: var(--bg);
+            padding: calc(var(--safe-top) + 30px) 24px calc(var(--safe-bottom) + 40px);
+            display: flex;
+            flex-direction: column;
+            transform: translateY(100%); /* Elegant slide-up transition */
+        }
+
+        #exams-overlay.active .modal-content { transform: translateY(0); }
+
+        #exams-modal-list {
+            flex: 1;
+            overflow-y: auto;
+            margin-top: 20px;
+            padding-bottom: 20px;
+            -webkit-overflow-scrolling: touch; /* Smooth iOS momentum scrolling */
+        }
 
         .tool-card {
             background: rgba(255, 255, 255, 0.02);
@@ -188,140 +215,102 @@
             cursor: pointer;
         }
 
-        /* --- PREMIUM FULL SCREEN INTERACTIVE PANEL --- */
-        .full-screen-overlay {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: var(--bg);
-            z-index: 2000;
-            display: flex;
-            flex-direction: column;
-            padding: calc(var(--safe-top) + 25px) 25px calc(var(--safe-bottom) + 20px);
-            opacity: 0;
-            visibility: hidden;
-            transform: translateY(100%);
-            transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
+        /* Full Screen Close CTA Tuning */
+        #exams-overlay .close-label {
+            margin-top: auto;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 12px;
+            letter-spacing: 2px;
+            color: var(--accent);
         }
 
-        .full-screen-overlay.active {
-            opacity: 1;
-            visibility: visible;
-            transform: translateY(0);
-        }
-
-        .scroll-container {
-            flex: 1;
-            overflow-y: auto;
-            margin-top: 25px;
-            padding-right: 4px;
-            -webkit-overflow-scrolling: touch; /* Fast iOS momentum mechanics */
-        }
-
-        .scroll-container::-webkit-scrollbar { width: 3px; }
-        .scroll-container::-webkit-scrollbar-track { background: transparent; }
-        .scroll-container::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
-
+        /* --- EXAM LIVE UPDATES DIALOG STYLING --- */
         .exam-details-card {
-            background: var(--surface);
-            border: 1px solid rgba(255, 255, 255, 0.04);
-            border-radius: 24px;
-            padding: 20px;
-            margin-bottom: 15px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 16px;
+            margin-bottom: 12px;
             text-align: left;
         }
-
         .exam-meta-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-top: 14px;
-            padding-top: 12px;
-            border-top: 1px solid rgba(255, 255, 255, 0.03);
+            margin-top: 8px;
         }
-
         .exam-badge {
-            background: rgba(74, 144, 226, 0.12);
+            background: rgba(74, 144, 226, 0.15);
             color: var(--accent);
             font-size: 9px;
-            padding: 4px 10px;
+            padding: 3px 8px;
             border-radius: 8px;
             font-weight: 700;
             text-transform: uppercase;
         }
-
         .exam-date {
-            font-size: 11px;
+            font-size: 10px;
             color: var(--text-s);
-            font-weight: 500;
         }
 
-        /* --- STATIC WRAPPER WITH FIXED UPDATES TAG & ANIMATED TICKER --- */
-        .marquee-footer-wrapper {
+        /* --- RUNNING TICKER TAB FOOTER BAR --- */
+        .marquee-container {
             position: absolute;
             bottom: calc(var(--safe-bottom) + 38px);
             left: 0;
             width: 100%;
-            background: #11171e;
+            background: rgba(18, 24, 31, 0.8);
             border-top: 1px solid rgba(255, 255, 255, 0.04);
             border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-            display: flex;
-            align-items: center;
-            height: 38px;
+            padding: 10px 0;
             overflow: hidden;
             cursor: pointer;
+            display: flex;
+            align-items: center;
             backdrop-filter: blur(10px);
-            z-index: 100;
         }
 
-        .updates-tag {
+        /* "UPDATES" BADGE DESIGN */
+        .marquee-tag {
             background: var(--accent);
-            color: #ffffff;
+            color: #000000;
             font-size: 9px;
             font-weight: 800;
-            letter-spacing: 1px;
-            padding: 0 14px;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
             text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 5px 10px;
+            margin-left: 15px;
+            border-radius: 6px;
+            z-index: 5;
             position: relative;
-            z-index: 110;
-            box-shadow: 6px 0 12px rgba(0, 0, 0, 0.4);
-        }
-
-        .marquee-container {
-            flex: 1;
-            overflow: hidden;
-            display: flex;
-            align-items: center;
+            box-shadow: 0 0 15px rgba(74, 144, 226, 0.3);
+            flex-shrink: 0;
         }
 
         .marquee-content {
             display: flex;
             white-space: nowrap;
-            gap: 60px;
-            animation: scroll-left 28s linear infinite;
+            gap: 50px;
             padding-left: 20px;
+            animation: scroll-left 25s linear infinite;
         }
-
         .marquee-item {
             display: flex;
             align-items: center;
             font-size: 11px;
-            font-weight: 600;
-            letter-spacing: 0.1px;
-            color: var(--text-p);
-        }
-
-        .marquee-item span {
-            color: var(--text-s);
             font-weight: 500;
+            letter-spacing: 0.2px;
+        }
+        .marquee-item span {
+            color: var(--accent);
+            font-weight: 700;
             margin-left: 8px;
             font-size: 10px;
+            background: rgba(74, 144, 226, 0.1);
+            padding: 1px 6px;
+            border-radius: 5px;
         }
-
         @keyframes scroll-left {
             0% { transform: translateX(0); }
             100% { transform: translateX(-50%); }
@@ -420,32 +409,29 @@
         </div>
     </div>
 
-    <!-- FULL SCREEN INTERACTIVE PANEL: Live Exam Updates Overlay -->
-    <div class="full-screen-overlay" id="exams-overlay">
-        <h3 style="font-size: 24px; font-weight: 800; text-align: left; letter-spacing: -0.5px; color: #ffffff; margin-top: 10px;">Live Updates</h3>
-        <p style="font-size: 12px; color: var(--text-s); text-align: left; margin-top: 4px;">Active exam boards, vacancy listings, and real-time PSU recruitments.</p>
-        
-        <div class="scroll-container" id="exams-modal-list">
-            <!-- Dynamically populated from structural JS data below -->
+    <!-- Live Updates Full Screen Modal Pop-up -->
+    <div class="modal-overlay" id="exams-overlay" onclick="closeExamsModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <h3 style="font-size: 18px; margin-top: 10px; text-align: center; letter-spacing: 0.5px; color: var(--accent); font-weight: 800;">LIVE EXAM UPDATES</h3>
+            <div id="exams-modal-list">
+                <!-- Injected dynamically via index.js logic below -->
+            </div>
+            <p class="close-label" onclick="closeExamsModal()">CLOSE PANEL</p>
         </div>
-        
-        <p class="close-label" onclick="closeExamsModal()" style="margin-top: 15px; background: rgba(255,255,255,0.03); padding: 16px; border-radius: 22px; color: #ffffff; font-weight: 700; letter-spacing: 0.5px;">CLOSE INTERFACE</p>
     </div>
 
-    <!-- Pin-Wrapped Bottom Running Element -->
-    <div class="marquee-footer-wrapper" onclick="openExamsModal()">
-        <div class="updates-tag">Updates</div>
-        <div class="marquee-container">
-            <div class="marquee-content" id="marquee-inner">
-                <!-- Dynamically populated from structural JS data below -->
-            </div>
+    <!-- Running Tab (Marquee Footer Feature with Static Badge) -->
+    <div class="marquee-container" onclick="openExamsModal()">
+        <div class="marquee-tag">Updates</div>
+        <div class="marquee-content" id="marquee-inner">
+            <!-- Injected dynamically via index.js logic below -->
         </div>
     </div>
 
     <footer>&copy; 2026 Aethercore Interactive</footer>
 
     <script>
-        // --- CENTRALIZED EXAM ENGINE DATABASE ---
+        // --- CENTRALIZED INDEX.JS SIMULATED STRUCTURE ---
         const examsData = [
             {
                 title: "BEL Recruitment 2026",
@@ -467,7 +453,7 @@
             }
         ];
 
-        // --- CORE UI RENDERING MANAGER ---
+        // --- DOM RENDER FUNCTION ON LAUNCH ---
         function initializeExamsFeature() {
             const marqueeInner = document.getElementById('marquee-inner');
             const modalList = document.getElementById('exams-modal-list');
@@ -476,14 +462,14 @@
             let modalHTML = '';
 
             examsData.forEach(exam => {
-                // Ticker Structure
-                marqueeHTML += `<div class="marquee-item">🔹 ${exam.title} <span>(${exam.date})</span></div>`;
+                // Build running tab elements (Title & Date only)
+                marqueeHTML += `<div class="marquee-item">📢 ${exam.title} <span>${exam.date}</span></div>`;
                 
-                // Dashboard Card Structure
+                // Build complete detailed list elements for popup window
                 modalHTML += `
                     <div class="exam-details-card">
-                        <p class="title" style="font-size: 16px; font-weight: 700; margin-bottom: 6px; color: var(--accent);">${exam.title}</p>
-                        <p class="sub" style="color: #cbd5e1; font-size: 12px; line-height: 1.5; margin-bottom: 12px;">${exam.description}</p>
+                        <p class="title" style="font-size: 14px; margin-bottom: 4px;">${exam.title}</p>
+                        <p class="sub" style="color: #9eb1c9; font-size: 11px; line-height: 1.4; margin-bottom: 8px;">${exam.description}</p>
                         <div class="exam-meta-row">
                             <span class="exam-badge">${exam.category}</span>
                             <span class="exam-date">${exam.date}</span>
@@ -492,15 +478,15 @@
                 `;
             });
 
-            // Double string arrays inside the canvas to allow seamless loop continuity
+            // Duplicate strings inside ticker content to make a loop look seamless
             marqueeInner.innerHTML = marqueeHTML + marqueeHTML;
             modalList.innerHTML = modalHTML;
         }
 
-        // Initialize lists immediately
+        // Call the generation handler immediately
         initializeExamsFeature();
 
-        // --- NAVIGATION & INTERACTIVE STATE ROUTER ---
+        // --- INTERACTION & MODAL ACTIONS ---
         const overlay = document.getElementById('overlay');
         const utilitiesOverlay = document.getElementById('utilities-overlay');
         const examsOverlay = document.getElementById('exams-overlay');
@@ -538,4 +524,17 @@
 
         function openExamsModal() {
             examsOverlay.classList.add('active');
-            if (navigator.vibrate) naviga
+            if (navigator.vibrate) navigator.vibrate(10);
+            history.pushState({ modal: 'exams' }, '');
+        }
+
+        function closeExamsModal() {
+            if (examsOverlay.classList.contains('active')) {
+                examsOverlay.classList.remove('active');
+                if (history.state && history.state.modal === 'exams') history.back();
+            }
+        }
+
+        window.addEventListener('popstate', function(event) {
+            overlay.classList.remove('active');
+            ut
