@@ -44,7 +44,7 @@
             font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", sans-serif;
             display: flex;
             flex-direction: column;
-            padding: calc(var(--safe-top) + 40px) 30px calc(var(--safe-bottom) + 80px); /* Clear space for bottom bar */
+            padding: calc(var(--safe-top) + 40px) 30px calc(var(--safe-bottom) + 85px); /* Structured gap for ticker element */
         }
 
         header.brand-core {
@@ -124,7 +124,7 @@
             text-transform: uppercase;
         }
 
-        /* --- STANDARD MODAL OVERLAYS (TOOLKIT & UTILITIES) --- */
+        /* --- STANDARD UTILITY OVERLAYS --- */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0;
@@ -181,14 +181,14 @@
         .close-label {
             font-size: 10px;
             text-align: center;
-            margin-top: 20px;
+            margin-top: 15px;
             color: var(--text-s);
             letter-spacing: 1px;
             font-weight: 600;
             cursor: pointer;
         }
 
-        /* --- FULL SCREEN SCROLLABLE EXAM OVERLAY --- */
+        /* --- PREMIUM FULL SCREEN INTERACTIVE PANEL --- */
         .full-screen-overlay {
             position: fixed;
             top: 0; left: 0;
@@ -197,7 +197,7 @@
             z-index: 2000;
             display: flex;
             flex-direction: column;
-            padding: calc(var(--safe-top) + 20px) 25px calc(var(--safe-bottom) + 20px);
+            padding: calc(var(--safe-top) + 25px) 25px calc(var(--safe-bottom) + 20px);
             opacity: 0;
             visibility: hidden;
             transform: translateY(100%);
@@ -213,15 +213,14 @@
         .scroll-container {
             flex: 1;
             overflow-y: auto;
-            margin-top: 20px;
-            padding-right: 5px;
-            -webkit-overflow-scrolling: touch; /* Native mobile bounce momentum */
+            margin-top: 25px;
+            padding-right: 4px;
+            -webkit-overflow-scrolling: touch; /* Fast iOS momentum mechanics */
         }
 
-        /* Pure CSS Scrollbar for premium dark theme visuals */
-        .scroll-container::-webkit-scrollbar { width: 4px; }
+        .scroll-container::-webkit-scrollbar { width: 3px; }
         .scroll-container::-webkit-scrollbar-track { background: transparent; }
-        .scroll-container::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+        .scroll-container::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
 
         .exam-details-card {
             background: var(--surface);
@@ -236,7 +235,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-top: 12px;
+            margin-top: 14px;
             padding-top: 12px;
             border-top: 1px solid rgba(255, 255, 255, 0.03);
         }
@@ -257,7 +256,7 @@
             font-weight: 500;
         }
 
-        /* --- UPDATES BAR + RUNNING TICKER ELEMENT --- */
+        /* --- STATIC WRAPPER WITH FIXED UPDATES TAG & ANIMATED TICKER --- */
         .marquee-footer-wrapper {
             position: absolute;
             bottom: calc(var(--safe-bottom) + 38px);
@@ -272,7 +271,7 @@
             overflow: hidden;
             cursor: pointer;
             backdrop-filter: blur(10px);
-            z-index: 50;
+            z-index: 100;
         }
 
         .updates-tag {
@@ -288,8 +287,8 @@
             justify-content: center;
             text-transform: uppercase;
             position: relative;
-            z-index: 60;
-            box-shadow: 8px 0 15px rgba(0, 0, 0, 0.4);
+            z-index: 110;
+            box-shadow: 6px 0 12px rgba(0, 0, 0, 0.4);
         }
 
         .marquee-container {
@@ -297,14 +296,13 @@
             overflow: hidden;
             display: flex;
             align-items: center;
-            position: relative;
         }
 
         .marquee-content {
             display: flex;
             white-space: nowrap;
             gap: 60px;
-            animation: scroll-left 30s linear infinite;
+            animation: scroll-left 28s linear infinite;
             padding-left: 20px;
         }
 
@@ -422,36 +420,54 @@
         </div>
     </div>
 
-    <!-- FULL SCREEN: Live Exam Updates Overlay Pane -->
+    <!-- FULL SCREEN INTERACTIVE PANEL: Live Exam Updates Overlay -->
     <div class="full-screen-overlay" id="exams-overlay">
-        <h3 style="font-size: 22px; font-weight: 800; text-align: left; letter-spacing: -0.5px; color: #ffffff; margin-top: 10px;">Live Updates</h3>
-        <p style="font-size: 12px; color: var(--text-s); text-align: left; margin-top: 4px;">Active exam lists, registrations, and PSU notifications.</p>
+        <h3 style="font-size: 24px; font-weight: 800; text-align: left; letter-spacing: -0.5px; color: #ffffff; margin-top: 10px;">Live Updates</h3>
+        <p style="font-size: 12px; color: var(--text-s); text-align: left; margin-top: 4px;">Active exam boards, vacancy listings, and real-time PSU recruitments.</p>
         
         <div class="scroll-container" id="exams-modal-list">
-            <!-- Populated dynamically via index.js links -->
+            <!-- Dynamically populated from structural JS data below -->
         </div>
         
-        <p class="close-label" onclick="closeExamsModal()" style="margin-top: 15px; background: rgba(255,255,255,0.03); padding: 16px; border-radius: 20px; color: #ffffff;">CLOSE INTERFACE</p>
+        <p class="close-label" onclick="closeExamsModal()" style="margin-top: 15px; background: rgba(255,255,255,0.03); padding: 16px; border-radius: 22px; color: #ffffff; font-weight: 700; letter-spacing: 0.5px;">CLOSE INTERFACE</p>
     </div>
 
-    <!-- Running Tab Wrapper Feature -->
+    <!-- Pin-Wrapped Bottom Running Element -->
     <div class="marquee-footer-wrapper" onclick="openExamsModal()">
         <div class="updates-tag">Updates</div>
         <div class="marquee-container">
             <div class="marquee-content" id="marquee-inner">
-                <!-- Populated dynamically via index.js loops -->
+                <!-- Dynamically populated from structural JS data below -->
             </div>
         </div>
     </div>
 
     <footer>&copy; 2026 Aethercore Interactive</footer>
 
-    <!-- 1. Link External Database Resource -->
-    <script src="index.js"></script>
-
-    <!-- 2. Interactive Application Flow Logic Scripts -->
     <script>
-        // --- DOM RENDER CONTEXT INITIALIZATION ---
+        // --- CENTRALIZED EXAM ENGINE DATABASE ---
+        const examsData = [
+            {
+                title: "BEL Recruitment 2026",
+                description: "Apply Online for 56 Field Operation Engineer, Project Engineer Posts",
+                category: "PSU",
+                date: "20 May 2026"
+            },
+            {
+                title: "NALCO Non Executive Recruitment 2026",
+                description: "Apply Online for 268 Various Posts",
+                category: "PSU",
+                date: "18 May 2026"
+            },
+            {
+                title: "NTPC EET Recruitment 2026",
+                description: "Through GATE 2025 (52 Posts) Online Form, Notification",
+                category: "PSU",
+                date: "18 May 2026"
+            }
+        ];
+
+        // --- CORE UI RENDERING MANAGER ---
         function initializeExamsFeature() {
             const marqueeInner = document.getElementById('marquee-inner');
             const modalList = document.getElementById('exams-modal-list');
@@ -459,13 +475,14 @@
             let marqueeHTML = '';
             let modalHTML = '';
 
-            // Map and structural loop over external data from index.js
             examsData.forEach(exam => {
+                // Ticker Structure
                 marqueeHTML += `<div class="marquee-item">🔹 ${exam.title} <span>(${exam.date})</span></div>`;
                 
+                // Dashboard Card Structure
                 modalHTML += `
                     <div class="exam-details-card">
-                        <p class="title" style="font-size: 16px; font-weight:700; margin-bottom: 6px; color: var(--accent);">${exam.title}</p>
+                        <p class="title" style="font-size: 16px; font-weight: 700; margin-bottom: 6px; color: var(--accent);">${exam.title}</p>
                         <p class="sub" style="color: #cbd5e1; font-size: 12px; line-height: 1.5; margin-bottom: 12px;">${exam.description}</p>
                         <div class="exam-meta-row">
                             <span class="exam-badge">${exam.category}</span>
@@ -475,17 +492,15 @@
                 `;
             });
 
-            // Duplicate loop items for fluid gapless scrolling animations
+            // Double string arrays inside the canvas to allow seamless loop continuity
             marqueeInner.innerHTML = marqueeHTML + marqueeHTML;
             modalList.innerHTML = modalHTML;
         }
 
-        // Run initialization instantly on layout paint
-        if (typeof examsData !== 'undefined') {
-            initializeExamsFeature();
-        }
+        // Initialize lists immediately
+        initializeExamsFeature();
 
-        // --- INTERACTION & EVENT BINDINGS ---
+        // --- NAVIGATION & INTERACTIVE STATE ROUTER ---
         const overlay = document.getElementById('overlay');
         const utilitiesOverlay = document.getElementById('utilities-overlay');
         const examsOverlay = document.getElementById('exams-overlay');
@@ -523,20 +538,4 @@
 
         function openExamsModal() {
             examsOverlay.classList.add('active');
-            if (navigator.vibrate) navigator.vibrate(10);
-            history.pushState({ modal: 'exams' }, '');
-        }
-
-        function closeExamsModal() {
-            if (examsOverlay.classList.contains('active')) {
-                examsOverlay.classList.remove('active');
-                if (history.state && history.state.modal === 'exams') history.back();
-            }
-        }
-
-        // Hardware tracking handles
-        window.addEventListener('popstate', function(event) {
-            overlay.classList.remove('active');
-            utilitiesOverlay.classList.remove('active');
-            examsOverlay.classList.remove('active');
-       
+            if (navigator.vibrate) naviga
