@@ -133,11 +133,6 @@
             transition: var(--transition);
         }
 
-        .exam-details-card:active {
-            transform: scale(0.98);
-            border-color: rgba(74, 144, 226, 0.2);
-        }
-
         .card-title { 
             font-size: 15px; 
             font-weight: 600; 
@@ -151,6 +146,51 @@
             color: #9eb1c9; 
             line-height: 1.5; 
             margin-bottom: 14px; 
+        }
+
+        /* --- LINK ENGINE PROTOCOL STYLING --- */
+        .card-link-wrapper {
+            margin-bottom: 16px;
+            padding-top: 4px;
+            border-top: 1px dashed rgba(255, 255, 255, 0.06);
+        }
+
+        .link-desc {
+            font-size: 11px;
+            color: var(--text-s);
+            margin-bottom: 6px;
+            letter-spacing: 0.1px;
+        }
+
+        .interactive-url {
+            display: inline-flex;
+            align-items: center;
+            color: var(--accent);
+            font-size: 12px;
+            font-weight: 600;
+            text-decoration: none;
+            letter-spacing: -0.1px;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        .interactive-url span {
+            border-bottom: 1px solid rgba(74, 144, 226, 0.3);
+            transition: var(--transition);
+        }
+
+        .interactive-url:active span {
+            border-bottom-color: transparent;
+            opacity: 0.7;
+        }
+
+        .interactive-url svg {
+            margin-left: 5px;
+            width: 12px;
+            height: 12px;
+            stroke: var(--accent);
+            stroke-width: 2.5;
+            flex-shrink: 0;
         }
 
         .exam-meta-row {
@@ -186,7 +226,8 @@
             letter-spacing: 0.5px;
         }
 
-        svg { width: 18px; height: 18px; fill: none; stroke: white; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+        /* Vector Standard Graphics */
+        svg.icon-back { width: 18px; height: 18px; fill: none; stroke: white; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
     </style>
 </head>
 <body oncontextmenu="return false;">
@@ -194,7 +235,7 @@
     <!-- Navigation Header Block -->
     <header class="nav-header">
         <div class="back-trigger" onclick="navigateBack()">
-            <svg viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            <svg class="icon-back" viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
         </div>
         <h1 class="view-title">Live Exam Updates</h1>
     </header>
@@ -212,48 +253,52 @@
     <!-- Filter Empty Response Display Screen -->
     <div class="empty-state" id="empty-notice">No updates matching current filter context.</div>
 
+    <!-- SCRIPT LINK INJECTION CONFIGURATION: Pulls array structured out of index.js -->
+    <script src="index.js"></script>
     <script>
-        // --- CENTRALIZED DATA FEED SYSTEM ---
-        const updatesMatrix = [
-            {
-                title: "BEL Recruitment 2026",
-                description: "Apply Online for 56 Field Operation Engineer, Project Engineer Posts",
-                category: "PSU",
-                date: "20 May 2026"
-            },
-            {
-                title: "NALCO Non Executive Recruitment 2026",
-                description: "Apply Online for 268 Various Posts",
-                category: "PSU",
-                date: "18 May 2026"
-            },
-            {
-                title: "NTPC EET Recruitment 2026",
-                description: "Through GATE 2025 (52 Posts) Online Form, Notification",
-                category: "PSU",
-                date: "18 May 2026"
-            }
-        ];
-
         // --- RENDER STREAM PROTOCOL ---
         function initializeFeedStream() {
             const feedRoot = document.getElementById('feed-root');
             let feedHTML = '';
 
-            updatesMatrix.forEach((update, targetIndex) => {
-                feedHTML += `
-                    <div class="exam-details-card" data-index="${targetIndex}">
-                        <h2 class="card-title">${update.title}</h2>
-                        <p class="card-sub">${update.description}</p>
-                        <div class="exam-meta-row">
-                            <span class="exam-badge">${update.category}</span>
-                            <span class="exam-date">${update.date}</span>
-                        </div>
-                    </div>
-                `;
-            });
+            // Using the global examsData loaded from index.js
+            if (typeof examsData !== 'undefined') {
+                examsData.forEach((update, targetIndex) => {
+                    
+                    // Logic layer checking structural existence of web links
+                    let linkMarkupBlock = '';
+                    if (update.linkDescription && update.link) {
+                        linkMarkupBlock = `
+                            <div class="card-link-wrapper">
+                                <p class="link-desc">${update.linkDescription}</p>
+                                <a href="${update.link}" target="_blank" rel="noopener noreferrer" class="interactive-url" onclick="triggerHapticFeedback(event)">
+                                    <span>Apply / View Portal</span>
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg>
+                                </a>
+                            </div>
+                        `;
+                    }
 
-            feedRoot.innerHTML = feedHTML;
+                    feedHTML += `
+                        <div class="exam-details-card" data-index="${targetIndex}">
+                            <h2 class="card-title">${update.title}</h2>
+                            <p class="card-sub">${update.description}</p>
+                            ${linkMarkupBlock}
+                            <div class="exam-meta-row">
+                                <span class="exam-badge">${update.category}</span>
+                                <span class="exam-date">${update.date}</span>
+                            </div>
+                        </div>
+                    `;
+                });
+                feedRoot.innerHTML = feedHTML;
+            }
+        }
+
+        // Haptic execution isolation utility for anchors
+        function triggerHapticFeedback(event) {
+            if (navigator.vibrate) navigator.vibrate(15);
+            event.stopPropagation(); // Shield card selection metrics if any exist downstream
         }
 
         // --- FILTER SEARCH PROCESSOR ---
@@ -276,7 +321,6 @@
                 }
             });
 
-            // Toggle visibility status indicator screen
             emptyNotice.style.display = (matchedElementsCount === 0) ? 'block' : 'none';
         }
 
@@ -289,7 +333,7 @@
         // System Safety Lockouts Execution
         document.addEventListener('contextmenu', event => event.preventDefault());
         document.addEventListener('touchstart', function(e) {
-            if (e.touches.length > 1) e.preventDefault();
+            if (e.touches.length > 1 && e.target.tagName !== 'INPUT') e.preventDefault();
         }, {passive: false});
 
         // Initialize script feed runtime rendering engine setup block
