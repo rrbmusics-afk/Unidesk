@@ -248,6 +248,38 @@
             color: var(--text-s);
         }
 
+        /* --- DYNAMIC TARGET CONTAINER STYLES --- */
+        .exam-link-wrapper {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px dashed rgba(255, 255, 255, 0.06);
+        }
+        .exam-link-desc {
+            font-size: 10px;
+            color: var(--text-s);
+            margin-bottom: 6px;
+        }
+        .exam-link-btn {
+            background: rgba(74, 144, 226, 0.1);
+            border: 1px solid rgba(74, 144, 226, 0.25);
+            color: #79b0ff;
+            font-size: 12px;
+            font-weight: 600;
+            text-decoration: none;
+            padding: 10px 14px;
+            border-radius: 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            width: 100%;
+            justify-content: center;
+            transition: var(--transition);
+        }
+        .exam-link-btn:active {
+            background: rgba(74, 144, 226, 0.2);
+            transform: scale(0.98);
+        }
+
         /* --- RUNNING TICKER TAB FOOTER BAR --- */
         .marquee-container {
             position: absolute;
@@ -421,7 +453,7 @@
     <footer>&copy; 2026 Aethercore Interactive</footer>
 
     <script>
-        // --- CENTRALIZED INDEX.JS SIMULATED STRUCTURE ---
+        // --- CENTRALIZED INDEX.JS DATALAYER STRUCTURE ---
         const examsData = [
             {
                 title: "BEL Recruitment 2026",
@@ -439,9 +471,16 @@
                 title: "NTPC EET Recruitment 2026",
                 description: "Through GATE 2025 (52 Posts) Online Form, Notification",
                 category: "PSU",
-                date: "18 May 2026"
+                date: "18 May 2026",
+                linkDescription: "Official website link is given below.",
+                link: "https://careers.ntpc.co.in/recruitment/login.php"
             }
         ];
+
+        // Exporting data cleanly in case you scale up to modern modules later
+        if (typeof module !== 'undefined' && module.exports) {
+            module.exports = examsData;
+        }
 
         // --- DOM RENDER FUNCTION ON LAUNCH ---
         function initializeExamsFeature() {
@@ -456,6 +495,20 @@
                 marqueeHTML += `<div class="marquee-item">📢 ${exam.title} <span>${exam.date}</span></div>`;
                 
                 // Build complete detailed list elements for popup window
+                let linkRowHTML = '';
+                if(exam.link) {
+                    const descText = exam.linkDescription ? exam.linkDescription : 'Access external registration link below:';
+                    linkRowHTML = `
+                        <div class="exam-link-wrapper">
+                            <p class="exam-link-desc">${descText}</p>
+                            <a href="${exam.link}" target="_blank" class="exam-link-btn">
+                                Proceed to Portal
+                                <svg style="width:12px; height:12px; fill:none; stroke:currentColor; stroke-width:2.5;" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"/></svg>
+                            </a>
+                        </div>
+                    `;
+                }
+
                 modalHTML += `
                     <div class="exam-details-card">
                         <p class="title" style="font-size: 14px; margin-bottom: 4px;">${exam.title}</p>
@@ -464,6 +517,7 @@
                             <span class="exam-badge">${exam.category}</span>
                             <span class="exam-date">${exam.date}</span>
                         </div>
+                        ${linkRowHTML}
                     </div>
                 `;
             });
@@ -479,57 +533,4 @@
         // --- INTERACTION & MODAL ACTIONS ---
         const overlay = document.getElementById('overlay');
         const utilitiesOverlay = document.getElementById('utilities-overlay');
-        const examsOverlay = document.getElementById('exams-overlay');
-        
-        document.addEventListener('contextmenu', event => event.preventDefault());
-        document.addEventListener('touchstart', function(e) {
-            if (e.touches.length > 1) e.preventDefault();
-        }, {passive: false});
-
-        function openModal() {
-            overlay.classList.add('active');
-            if (navigator.vibrate) navigator.vibrate(10);
-            history.pushState({ modal: 'toolkit' }, '');
-        }
-
-        function closeModal() {
-            if (overlay.classList.contains('active')) {
-                overlay.classList.remove('active');
-                if (history.state && history.state.modal === 'toolkit') history.back();
-            }
-        }
-
-        function openUtilitiesModal() {
-            utilitiesOverlay.classList.add('active');
-            if (navigator.vibrate) navigator.vibrate(10);
-            history.pushState({ modal: 'utilities' }, '');
-        }
-        
-        function closeUtilitiesModal() {
-            if (utilitiesOverlay.classList.contains('active')) {
-                utilitiesOverlay.classList.remove('active');
-                if (history.state && history.state.modal === 'utilities') history.back();
-            }
-        }
-
-        function openExamsModal() {
-            examsOverlay.classList.add('active');
-            if (navigator.vibrate) navigator.vibrate(10);
-            history.pushState({ modal: 'exams' }, '');
-        }
-
-        function closeExamsModal() {
-            if (examsOverlay.classList.contains('active')) {
-                examsOverlay.classList.remove('active');
-                if (history.state && history.state.modal === 'exams') history.back();
-            }
-        }
-
-        window.addEventListener('popstate', function(event) {
-            overlay.classList.remove('active');
-            utilitiesOverlay.classList.remove('active');
-            examsOverlay.classList.remove('active');
-        });
-    </script>
-</body>
-</html>
+        const examsOverlay = 
