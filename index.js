@@ -14,7 +14,7 @@ const examsData = [
         title: "NALCO Non Executive Recruitment 2026",
         description: "Apply Online for 268 Various Posts",
         category: "PSU",
-        date: "18 May 2026"
+        date: "18 May 2026",
         linkdescription: "Official website",
         link: "https://nalcoindia.com/"
     },
