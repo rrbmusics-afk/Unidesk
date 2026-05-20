@@ -52,7 +52,7 @@
             font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", sans-serif;
             display: flex;
             flex-direction: column;
-            padding: calc(var(--safe-top) + 40px) 30px calc(var(--safe-bottom) + 65px); /* Responsive offset bottom area spacing optimization to clear overlapping layout metrics */
+            padding: calc(var(--safe-top) + 40px) 30px calc(var(--safe-bottom) + 65px);
         }
 
         .brand-core {
@@ -195,7 +195,7 @@
 
         footer {
             position: absolute;
-            bottom: calc(var(--safe-bottom) + 55px); /* Position adjusted safely above ticker mechanics layout bounds */
+            bottom: calc(var(--safe-bottom) + 55px);
             width: 100%;
             left: 0;
             text-align: center;
@@ -570,4 +570,8 @@
                     <span class="panel-title">Engineering Opportunities</span>
                     <span class="panel-subtitle">Live Gateway Feed</span>
                 </div>
-         
+                <button class="panel-close-btn" id="panelCloseBtn">Dismiss</button>
+            </div>
+            <div class="panel-content">
+                
+          
