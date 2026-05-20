@@ -15,7 +15,6 @@
             --safe-bottom: env(safe-area-inset-bottom, 20px);
             --transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
             
-            /* EXAM SYSTEM INTERFACE DESIGN CORE VARIABLES */
             --ticker-bg: #06090d;
             --panel-bg: rgba(14, 21, 29, 0.96);
             --card-bg: rgba(255, 255, 255, 0.03);
@@ -23,22 +22,16 @@
             --accent-green: #2ecc71;
         }
 
-        /* HARD-CORE UI LOCK PROTOCOL */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
             -webkit-font-smoothing: antialiased;
-            
-            /* Disable Selection & Long-Press Callouts */
             -webkit-user-select: none;
             -ms-user-select: none;
             user-select: none;
             -webkit-touch-callout: none;
-            
-            /* SILENCE BLUE SELECTION HIGHLIGHT */
             -webkit-tap-highlight-color: transparent;
-            -webkit-tap-highlight-color: rgba(0,0,0,0);
         }
 
         html, body {
@@ -191,6 +184,7 @@
             color: var(--text-s);
             letter-spacing: 1px;
             font-weight: 600;
+            cursor: pointer;
         }
 
         footer {
@@ -214,10 +208,8 @@
         
         .exam-ticker-bar {
             position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 44px;
+            bottom: 0; left: 0;
+            width: 100%; height: 44px;
             background: var(--ticker-bg);
             border-top: 1px solid rgba(74, 144, 226, 0.3);
             display: flex;
@@ -481,7 +473,7 @@
         }
     </style>
 </head>
-<body oncontextmenu="return false;">
+<body>
 
     <header class="brand-core">
         <h1 class="logo">UNIDESK</h1>
@@ -489,7 +481,7 @@
     </header>
 
     <div class="main-stack">
-        <div class="btn-lounge" onclick="location.href='page.html'">
+        <div class="btn-lounge" id="studentLoungeBtn">
             <div class="icon-blue">
                 <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
             </div>
@@ -499,18 +491,19 @@
             </div>
         </div>
 
-        <div class="toolkit-trigger" onclick="openModal()" style="margin-bottom: 20px;">
+        <div class="toolkit-trigger" id="toolkitTriggerBtn" style="margin-bottom: 20px;">
             <span class="toolkit-text">Toolkit</span>
         </div>
 
-        <div class="toolkit-trigger" onclick="openUtilitiesModal()">
+        <div class="toolkit-trigger" id="utilitiesTriggerBtn">
             <span class="toolkit-text">Student Utilities</span>
         </div>
     </div>
 
-    <div class="modal-overlay" id="overlay" onclick="closeModal()">
-        <div class="modal-content" onclick="event.stopPropagation()">
-            <div class="tool-card" onclick="location.href='https://sharanmusician.github.io/Page-Forge/'">
+    <!-- Toolkit Modal Pop-up Layout Base -->
+    <div class="modal-overlay" id="toolkitModalOverlay">
+        <div class="modal-content" id="toolkitModalContent">
+            <div class="tool-card" id="pageForgeBtn">
                 <div class="icon-dark"><svg style="opacity: 0.5;" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
                 <div><p class="title">Page Forge</p><p class="sub">Image to PDF</p></div>
             </div>
@@ -518,21 +511,22 @@
                 <div class="icon-dark"><svg style="fill: #b5924d;" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
                 <div><p class="title">Resume Maker</p><p class="sub">CV Builder</p></div>
             </div>
-            <p class="close-label" onclick="closeModal()">DISMISS</p>
+            <p class="close-label" id="toolkitDismissBtn">DISMISS</p>
         </div>
     </div>
 
-    <div class="modal-overlay" id="utilities-overlay" onclick="closeUtilitiesModal()">
-        <div class="modal-content" onclick="event.stopPropagation()">
-            <div class="tool-card" onclick="location.href='https://sharanmusician.com/Scientific-calculator-/'">
+    <!-- Student Utilities Modal Pop-up Layout Base -->
+    <div class="modal-overlay" id="utilitiesModalOverlay">
+        <div class="modal-content" id="utilitiesModalContent">
+            <div class="tool-card" id="scientificCalcBtn">
                 <div class="icon-dark"><svg style="opacity: 0.5;" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10H7v-2h10v2zm0-4H7V7h10v2z"/></svg></div>
                 <div><p class="title">Scientific Calculator</p><p class="sub">Calculator Tool</p></div>
             </div>
-            <div class="tool-card" onclick="location.href='https://rrbmusics-afk.github.io/Cutoff-Calculator/'">
+            <div class="tool-card" id="tneaCutoffBtn">
                 <div class="icon-dark"><svg style="opacity: 0.5;" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10H7v-2h10v2zm0-4H7V7h10v2z"/></svg></div>
                 <div><p class="title">TNEA Cutoff Calculator</p><p class="sub">Engineering Cutoff</p></div>
             </div>
-            <div class="tool-card" onclick="location.href='https://rrbmusics-afk.github.io/Percentage-calculator/'">
+            <div class="tool-card" id="percentageCalcBtn">
                 <div class="icon-dark"><svg style="opacity: 0.5;" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10H7v-2h10v2zm0-4H7V7h10v2z"/></svg></div>
                 <div><p class="title">12th Percentage Calculator</p><p class="sub">Marks Score Analytics</p></div>
             </div>
@@ -540,15 +534,13 @@
                 <div class="icon-dark"><svg style="fill: #b5924d;" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H7c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.04-.42 1.99-1.07 2.75z"/></svg></div>
                 <div><p class="title">CGPA Calculator</p><p class="sub">Grading Suite</p></div>
             </div>
-            <p class="close-label" onclick="closeUtilitiesModal()">DISMISS</p>
+            <p class="close-label" id="utilitiesDismissBtn">DISMISS</p>
         </div>
     </div>
 
     <footer>&copy; 2026 Aethercore Interactive</footer>
 
-    <!-- ================================================================= -->
-    <!--          AETHERCORE LIVE ENGINEERING EXAMS TICKER & PANEL          -->
-    <!-- ================================================================= -->
+    <!-- Running Exam Dynamic Ticker Bottom Dock Layout Base -->
     <div class="exam-ticker-bar" id="examTickerBar">
         <div class="ticker-label">LIVE EXAMS</div>
         <div class="ticker-wrap">
@@ -563,6 +555,7 @@
         </div>
     </div>
 
+    <!-- Exam Sliding Details Popup Panel Drawer Layout Base -->
     <div class="exam-panel-overlay" id="examPanelOverlay">
         <div class="exam-sliding-panel" id="examSlidingPanel">
             <div class="panel-header">
@@ -574,4 +567,14 @@
             </div>
             <div class="panel-content">
                 
-           
+                <!-- Card 1 -->
+                <div class="exam-card">
+                    <div class="exam-card-meta">
+                        <div class="exam-card-title">Coal India Limited (CIL) Management Trainee Recruitment 2026</div>
+                        <span class="exam-status-badge status-open">Active</span>
+                    </div>
+                    <div class="exam-card-footer">
+                        <div class="exam-date-info">
+                            <span class="exam-date-label">Apply Closing Date</span>
+                            <span class="exam-date-value">07 June 2026</span>
+                        
