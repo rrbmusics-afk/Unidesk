@@ -247,6 +247,25 @@
             font-size: 10px;
             color: var(--text-s);
         }
+        .exam-link-btn {
+            display: block;
+            text-align: center;
+            background: rgba(74, 144, 226, 0.2);
+            border: 1px solid var(--accent);
+            color: #ffffff;
+            font-size: 12px;
+            font-weight: 600;
+            text-decoration: none;
+            padding: 10px;
+            border-radius: 12px;
+            margin-top: 10px;
+            transition: background 0.3s ease;
+            -webkit-user-select: auto;
+            user-select: auto;
+        }
+        .exam-link-btn:active {
+            background: rgba(74, 144, 226, 0.4);
+        }
 
         /* --- RUNNING TICKER TAB FOOTER BAR --- */
         .marquee-container {
@@ -439,7 +458,9 @@
                 title: "NTPC EET Recruitment 2026",
                 description: "Through GATE 2025 (52 Posts) Online Form, Notification",
                 category: "PSU",
-                date: "18 May 2026"
+                date: "18 May 2026",
+                linkDescription: "Official website link is given below.",
+                link: "https://careers.ntpc.co.in/recruitment/login.php"
             }
         ];
 
@@ -456,6 +477,15 @@
                 marqueeHTML += `<div class="marquee-item">📢 ${exam.title} <span>${exam.date}</span></div>`;
                 
                 // Build complete detailed list elements for popup window
+                let linkHTML = '';
+                if (exam.link) {
+                    const descText = exam.linkDescription ? exam.linkDescription : "Apply or view details using the link below:";
+                    linkHTML = `
+                        <p class="sub" style="color: #636e7b; font-size: 11px; margin-top: 8px; font-style: italic;">${descText}</p>
+                        <a href="${exam.link}" target="_blank" class="exam-link-btn" onclick="event.stopPropagation()">Visit Official Link</a>
+                    `;
+                }
+
                 modalHTML += `
                     <div class="exam-details-card">
                         <p class="title" style="font-size: 14px; margin-bottom: 4px;">${exam.title}</p>
@@ -464,6 +494,7 @@
                             <span class="exam-badge">${exam.category}</span>
                             <span class="exam-date">${exam.date}</span>
                         </div>
+                        ${linkHTML}
                     </div>
                 `;
             });
@@ -501,35 +532,4 @@
 
         function openUtilitiesModal() {
             utilitiesOverlay.classList.add('active');
-            if (navigator.vibrate) navigator.vibrate(10);
-            history.pushState({ modal: 'utilities' }, '');
-        }
-        
-        function closeUtilitiesModal() {
-            if (utilitiesOverlay.classList.contains('active')) {
-                utilitiesOverlay.classList.remove('active');
-                if (history.state && history.state.modal === 'utilities') history.back();
-            }
-        }
-
-        function openExamsModal() {
-            examsOverlay.classList.add('active');
-            if (navigator.vibrate) navigator.vibrate(10);
-            history.pushState({ modal: 'exams' }, '');
-        }
-
-        function closeExamsModal() {
-            if (examsOverlay.classList.contains('active')) {
-                examsOverlay.classList.remove('active');
-                if (history.state && history.state.modal === 'exams') history.back();
-            }
-        }
-
-        window.addEventListener('popstate', function(event) {
-            overlay.classList.remove('active');
-            utilitiesOverlay.classList.remove('active');
-            examsOverlay.classList.remove('active');
-        });
-    </script>
-</body>
-</html>
+            if (navigator.vibrate) naviga
