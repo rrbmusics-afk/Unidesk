@@ -124,7 +124,6 @@
             text-transform: uppercase;
         }
 
-        /* --- OVERLAYS & MODALS --- */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0;
@@ -157,31 +156,6 @@
 
         .modal-overlay.active .modal-content { transform: scale(1) translateY(0); }
 
-        /* --- FULL SCREEN MODAL VARIANT FOR EXAMS --- */
-        #exams-overlay .modal-content {
-            width: 100%;
-            max-width: 100%;
-            height: 100%;
-            max-height: 100vh;
-            border: none;
-            border-radius: 0;
-            background: var(--bg);
-            padding: calc(var(--safe-top) + 30px) 24px calc(var(--safe-bottom) + 40px);
-            display: flex;
-            flex-direction: column;
-            transform: translateY(100%); /* Elegant slide-up transition */
-        }
-
-        #exams-overlay.active .modal-content { transform: translateY(0); }
-
-        #exams-modal-list {
-            flex: 1;
-            overflow-y: auto;
-            margin-top: 20px;
-            padding-bottom: 20px;
-            -webkit-overflow-scrolling: touch; /* Smooth iOS momentum scrolling */
-        }
-
         .tool-card {
             background: rgba(255, 255, 255, 0.02);
             border-radius: 22px;
@@ -213,16 +187,6 @@
             letter-spacing: 1px;
             font-weight: 600;
             cursor: pointer;
-        }
-
-        /* Full Screen Close CTA Tuning */
-        #exams-overlay .close-label {
-            margin-top: auto;
-            padding-top: 15px;
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
-            font-size: 12px;
-            letter-spacing: 2px;
-            color: var(--accent);
         }
 
         /* --- EXAM LIVE UPDATES DIALOG STYLING --- */
@@ -270,29 +234,10 @@
             align-items: center;
             backdrop-filter: blur(10px);
         }
-
-        /* "UPDATES" BADGE DESIGN */
-        .marquee-tag {
-            background: var(--accent);
-            color: #000000;
-            font-size: 9px;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            padding: 5px 10px;
-            margin-left: 15px;
-            border-radius: 6px;
-            z-index: 5;
-            position: relative;
-            box-shadow: 0 0 15px rgba(74, 144, 226, 0.3);
-            flex-shrink: 0;
-        }
-
         .marquee-content {
             display: flex;
             white-space: nowrap;
             gap: 50px;
-            padding-left: 20px;
             animation: scroll-left 25s linear infinite;
         }
         .marquee-item {
@@ -409,20 +354,19 @@
         </div>
     </div>
 
-    <!-- Live Updates Full Screen Modal Pop-up -->
+    <!-- Live Updates Modal Pop-up -->
     <div class="modal-overlay" id="exams-overlay" onclick="closeExamsModal()">
         <div class="modal-content" onclick="event.stopPropagation()">
-            <h3 style="font-size: 18px; margin-top: 10px; text-align: center; letter-spacing: 0.5px; color: var(--accent); font-weight: 800;">LIVE EXAM UPDATES</h3>
+            <h3 style="font-size: 16px; margin-bottom: 15px; text-align: center; letter-spacing: 0.5px; color: var(--accent);">Live Exam Updates</h3>
             <div id="exams-modal-list">
                 <!-- Injected dynamically via index.js logic below -->
             </div>
-            <p class="close-label" onclick="closeExamsModal()">CLOSE PANEL</p>
+            <p class="close-label" onclick="closeExamsModal()">DISMISS</p>
         </div>
     </div>
 
-    <!-- Running Tab (Marquee Footer Feature with Static Badge) -->
+    <!-- Running Tab (Marquee Footer Feature) -->
     <div class="marquee-container" onclick="openExamsModal()">
-        <div class="marquee-tag">Updates</div>
         <div class="marquee-content" id="marquee-inner">
             <!-- Injected dynamically via index.js logic below -->
         </div>
@@ -537,4 +481,16 @@
 
         window.addEventListener('popstate', function(event) {
             overlay.classList.remove('active');
-            ut
+            utilitiesOverlay.classList.remove('active');
+            examsOverlay.classList.remove('active');
+        });
+    </script>
+</body>
+</html>
+
+
+In this code put a badge named "Updates" before the footer running exam details.
+
+Also when tapping the footer you can see a popup opens, make it full screen and scrollable if more updates are updated.
+
+Please integrate this without any bug in the above code.
