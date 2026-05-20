@@ -156,24 +156,32 @@
 
         .modal-overlay.active .modal-content { transform: scale(1) translateY(0); }
 
-        /* Full Screen Override Specific to Exams Overlay Content */
+        /* Full Screen Override Specific to Exams Overlay Content Optimized for Mobile */
         #exams-overlay .modal-content {
-            width: 100vw;
-            height: 100vh;
-            max-width: 100vw;
-            max-height: 100vh;
+            width: 100%;
+            height: 100%;
+            max-width: 100%;
+            max-height: 100%;
             border-radius: 0;
             border: none;
-            padding: calc(var(--safe-top) + 30px) 25px calc(var(--safe-bottom) + 30px);
+            padding: calc(var(--safe-top) + 20px) 20px calc(var(--safe-bottom) + 20px);
             display: flex;
             flex-direction: column;
             background: var(--bg);
+            transform: translateY(100%);
+            box-sizing: border-box;
         }
+        
+        #exams-overlay.active .modal-content {
+            transform: translateY(0);
+        }
+        
         #exams-modal-list {
             flex: 1;
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
-            padding-right: 2px;
+            padding-bottom: 10px;
+            margin-top: 15px;
         }
 
         .tool-card {
@@ -200,13 +208,15 @@
         .sub { font-size: 11px; color: var(--text-s); margin-top: 1px; }
         
         .close-label {
-            font-size: 10px;
+            font-size: 11px;
             text-align: center;
-            margin-top: 15px;
+            margin-top: auto;
+            padding: 15px 0 5px;
             color: var(--text-s);
-            letter-spacing: 1px;
-            font-weight: 600;
+            letter-spacing: 2px;
+            font-weight: 700;
             cursor: pointer;
+            text-transform: uppercase;
         }
 
         /* --- EXAM LIVE UPDATES DIALOG STYLING --- */
@@ -392,7 +402,7 @@
     <!-- Live Updates Modal Pop-up -->
     <div class="modal-overlay" id="exams-overlay" onclick="closeExamsModal()">
         <div class="modal-content" onclick="event.stopPropagation()">
-            <h3 style="font-size: 16px; margin-bottom: 15px; text-align: center; letter-spacing: 0.5px; color: var(--accent);">Live Exam Updates</h3>
+            <h3 style="font-size: 17px; text-align: center; letter-spacing: 0.5px; color: var(--accent); font-weight: 700;">Live Exam Updates</h3>
             <div id="exams-modal-list">
                 <!-- Injected dynamically via index.js logic below -->
             </div>
