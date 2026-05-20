@@ -20,7 +20,9 @@ const examsData = [
         title: "NTPC EET Recruitment 2026",
         description: "Through GATE 2025 (52 Posts) Online Form, Notification",
         category: "PSU",
-        date: "18 May 2026"
+        date: "18 May 2026",
+        linkDescription: "Official website link is given below.",
+        link: "https://careers.ntpc.co.in/recruitment/login.php"
     }
 ];
 
