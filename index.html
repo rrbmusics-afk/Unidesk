@@ -44,7 +44,7 @@
             font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", sans-serif;
             display: flex;
             flex-direction: column;
-            padding: calc(var(--safe-top) + 40px) 30px calc(var(--safe-bottom) + 20px);
+            padding: calc(var(--safe-top) + 40px) 30px calc(var(--safe-bottom) + 80px); /* Increased bottom padding for marquee */
         }
 
         header.brand-core {
@@ -150,6 +150,8 @@
             padding: 25px;
             transform: scale(0.9) translateY(20px);
             transition: var(--transition);
+            max-height: 75vh;
+            overflow-y: auto;
         }
 
         .modal-overlay.active .modal-content { transform: scale(1) translateY(0); }
@@ -185,6 +187,78 @@
             letter-spacing: 1px;
             font-weight: 600;
             cursor: pointer;
+        }
+
+        /* --- EXAM LIVE UPDATES DIALOG STYLING --- */
+        .exam-details-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 16px;
+            margin-bottom: 12px;
+            text-align: left;
+        }
+        .exam-meta-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 8px;
+        }
+        .exam-badge {
+            background: rgba(74, 144, 226, 0.15);
+            color: var(--accent);
+            font-size: 9px;
+            padding: 3px 8px;
+            border-radius: 8px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .exam-date {
+            font-size: 10px;
+            color: var(--text-s);
+        }
+
+        /* --- RUNNING TICKER TAB FOOTER BAR --- */
+        .marquee-container {
+            position: absolute;
+            bottom: calc(var(--safe-bottom) + 38px);
+            left: 0;
+            width: 100%;
+            background: rgba(18, 24, 31, 0.8);
+            border-top: 1px solid rgba(255, 255, 255, 0.04);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            padding: 10px 0;
+            overflow: hidden;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            backdrop-filter: blur(10px);
+        }
+        .marquee-content {
+            display: flex;
+            white-space: nowrap;
+            gap: 50px;
+            animation: scroll-left 25s linear infinite;
+        }
+        .marquee-item {
+            display: flex;
+            align-items: center;
+            font-size: 11px;
+            font-weight: 500;
+            letter-spacing: 0.2px;
+        }
+        .marquee-item span {
+            color: var(--accent);
+            font-weight: 700;
+            margin-left: 8px;
+            font-size: 10px;
+            background: rgba(74, 144, 226, 0.1);
+            padding: 1px 6px;
+            border-radius: 5px;
+        }
+        @keyframes scroll-left {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
         }
 
         footer {
@@ -280,16 +354,89 @@
         </div>
     </div>
 
+    <!-- Live Updates Modal Pop-up -->
+    <div class="modal-overlay" id="exams-overlay" onclick="closeExamsModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <h3 style="font-size: 16px; margin-bottom: 15px; text-align: center; letter-spacing: 0.5px; color: var(--accent);">Live Exam Updates</h3>
+            <div id="exams-modal-list">
+                <!-- Injected dynamically via index.js logic below -->
+            </div>
+            <p class="close-label" onclick="closeExamsModal()">DISMISS</p>
+        </div>
+    </div>
+
+    <!-- Running Tab (Marquee Footer Feature) -->
+    <div class="marquee-container" onclick="openExamsModal()">
+        <div class="marquee-content" id="marquee-inner">
+            <!-- Injected dynamically via index.js logic below -->
+        </div>
+    </div>
+
     <footer>&copy; 2026 Aethercore Interactive</footer>
 
     <script>
+        // --- CENTRALIZED INDEX.JS SIMULATED STRUCTURE ---
+        const examsData = [
+            {
+                title: "BEL Recruitment 2026",
+                description: "Apply Online for 56 Field Operation Engineer, Project Engineer Posts",
+                category: "PSU",
+                date: "20 May 2026"
+            },
+            {
+                title: "NALCO Non Executive Recruitment 2026",
+                description: "Apply Online for 268 Various Posts",
+                category: "PSU",
+                date: "18 May 2026"
+            },
+            {
+                title: "NTPC EET Recruitment 2026",
+                description: "Through GATE 2025 (52 Posts) Online Form, Notification",
+                category: "PSU",
+                date: "18 May 2026"
+            }
+        ];
+
+        // --- DOM RENDER FUNCTION ON LAUNCH ---
+        function initializeExamsFeature() {
+            const marqueeInner = document.getElementById('marquee-inner');
+            const modalList = document.getElementById('exams-modal-list');
+            
+            let marqueeHTML = '';
+            let modalHTML = '';
+
+            examsData.forEach(exam => {
+                // Build running tab elements (Title & Date only)
+                marqueeHTML += `<div class="marquee-item">📢 ${exam.title} <span>${exam.date}</span></div>`;
+                
+                // Build complete detailed list elements for popup window
+                modalHTML += `
+                    <div class="exam-details-card">
+                        <p class="title" style="font-size: 14px; margin-bottom: 4px;">${exam.title}</p>
+                        <p class="sub" style="color: #9eb1c9; font-size: 11px; line-height: 1.4; margin-bottom: 8px;">${exam.description}</p>
+                        <div class="exam-meta-row">
+                            <span class="exam-badge">${exam.category}</span>
+                            <span class="exam-date">${exam.date}</span>
+                        </div>
+                    </div>
+                `;
+            });
+
+            // Duplicate strings inside ticker content to make a loop look seamless
+            marqueeInner.innerHTML = marqueeHTML + marqueeHTML;
+            modalList.innerHTML = modalHTML;
+        }
+
+        // Call the generation handler immediately
+        initializeExamsFeature();
+
+        // --- INTERACTION & MODAL ACTIONS ---
         const overlay = document.getElementById('overlay');
         const utilitiesOverlay = document.getElementById('utilities-overlay');
+        const examsOverlay = document.getElementById('exams-overlay');
         
-        // Suppress browser dialogues & context menus
         document.addEventListener('contextmenu', event => event.preventDefault());
         document.addEventListener('touchstart', function(e) {
-            // Silence potential long-press select/copy triggers
             if (e.touches.length > 1) e.preventDefault();
         }, {passive: false});
 
@@ -302,9 +449,7 @@
         function closeModal() {
             if (overlay.classList.contains('active')) {
                 overlay.classList.remove('active');
-                if (history.state && history.state.modal === 'toolkit') {
-                    history.back();
-                }
+                if (history.state && history.state.modal === 'toolkit') history.back();
             }
         }
 
@@ -317,17 +462,27 @@
         function closeUtilitiesModal() {
             if (utilitiesOverlay.classList.contains('active')) {
                 utilitiesOverlay.classList.remove('active');
-                if (history.state && history.state.modal === 'utilities') {
-                    history.back();
-                }
+                if (history.state && history.state.modal === 'utilities') history.back();
             }
         }
 
-        // Handle structural physical / software back navigation events safely
+        function openExamsModal() {
+            examsOverlay.classList.add('active');
+            if (navigator.vibrate) navigator.vibrate(10);
+            history.pushState({ modal: 'exams' }, '');
+        }
+
+        function closeExamsModal() {
+            if (examsOverlay.classList.contains('active')) {
+                examsOverlay.classList.remove('active');
+                if (history.state && history.state.modal === 'exams') history.back();
+            }
+        }
+
         window.addEventListener('popstate', function(event) {
-            // Close active overlays instead of popping page execution
             overlay.classList.remove('active');
             utilitiesOverlay.classList.remove('active');
+            examsOverlay.classList.remove('active');
         });
     </script>
 </body>
