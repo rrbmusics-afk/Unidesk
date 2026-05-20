@@ -457,7 +457,7 @@
                 // Build running tab elements (Title & Date only)
                 marqueeHTML += `<div class="marquee-item">📢 ${exam.title} <span>${exam.date}</span></div>`;
                 
-                // Check if conditional link parameters exist
+                // Conditional Link rendering logic
                 let linkHTML = '';
                 if (exam.linkDescription && exam.link) {
                     linkHTML = `
@@ -465,7 +465,7 @@
                         <a href="${exam.link}" target="_blank" style="display: inline-block; color: #ffffff; font-size: 11px; font-weight: 600; text-decoration: none; background: rgba(74, 144, 226, 0.3); border: 1px solid rgba(74, 144, 226, 0.5); padding: 5px 12px; border-radius: 12px; margin-top: 6px; -webkit-user-select: auto; user-select: auto;">Visit Link</a>
                     `;
                 }
-
+                
                 // Build complete detailed list elements for popup window
                 modalHTML += `
                     <div class="exam-details-card">
@@ -524,4 +524,4 @@
             }
         }
 
-        function
+        fu
