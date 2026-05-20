@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Live Updates | UNIDESK</title>
+    <style>
+        :root {
+            --bg: #080c10;
+            --accent: #4a90e2;
+            --surface: #12181f;
+            --text-p: #ffffff;
+            --text-s: #636e7b;
+            --safe-top: env(safe-area-inset-top, 20px);
+            --safe-bottom: env(safe-area-inset-bottom, 20px);
+            --transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* HARD-CORE UI LOCK PROTOCOL */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
+            
+            /* Disable Selection & Long-Press Callouts */
+            -webkit-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+            
+            /* SILENCE BLUE SELECTION HIGHLIGHT */
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            height: 100%;
+            overflow: hidden;
+            background-color: var(--bg);
+        }
+
+        body {
+            color: var(--text-p);
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", sans-serif;
+            display: flex;
+            flex-direction: column;
+            padding: calc(var(--safe-top) + 20px) 24px calc(var(--safe-bottom) + 20px);
+        }
+
+        /* --- NAVIGATION HEADER SYSTEM --- */
+        header.nav-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            flex-shrink: 0;
+        }
+
+        .back-trigger {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 42px;
+            height: 42px;
+            background: var(--surface);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .back-trigger:active {
+            transform: scale(0.92);
+            background: #1a222a;
+        }
+
+        .view-title {
+            font-size: 17px;
+            font-weight: 800;
+            letter-spacing: -0.3px;
+            text-align: center;
+            flex: 1;
+            margin-right: 42px; /* Balanced centering offset */
+        }
+
+        /* --- LIVE CONTROL FILTERS --- */
+        .search-container {
+            margin-bottom: 20px;
+            flex-shrink: 0;
+        }
+
+        .search-input {
+            width: 100%;
+            background: var(--surface);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 14px 18px;
+            color: #ffffff;
+            font-size: 13px;
+            font-family: inherit;
+            outline: none;
+            -webkit-user-select: text; /* Allow user interaction inside input fields */
+            user-select: text;
+            transition: var(--transition);
+        }
+
+        .search-input:focus {
+            border-color: rgba(74, 144, 226, 0.5);
+            background: #151d26;
+        }
+
+        /* --- STREAM CONTAINER VIEWPORTS --- */
+        .updates-viewport {
+            flex: 1;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding-right: 4px;
+        }
+
+        /* Hide Scrollbars cleanly for layout immersion */
+        .updates-viewport::-webkit-scrollbar {
+            width: 0px;
+            background: transparent;
+        }
+
+        .exam-details-card {
+            background: linear-gradient(165deg, rgba(255, 255, 255, 0.02) 0%, rgba(255, 255, 255, 0.005) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 24px;
+            padding: 20px;
+            margin-bottom: 14px;
+            text-align: left;
+            transition: var(--transition);
+        }
+
+        .exam-details-card:active {
+            transform: scale(0.98);
+            border-color: rgba(74, 144, 226, 0.2);
+        }
+
+        .card-title { 
+            font-size: 15px; 
+            font-weight: 600; 
+            letter-spacing: -0.2px; 
+            line-height: 1.3;
+            margin-bottom: 6px;
+        }
+        
+        .card-sub { 
+            font-size: 11.5px; 
+            color: #9eb1c9; 
+            line-height: 1.5; 
+            margin-bottom: 14px; 
+        }
+
+        .exam-meta-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .exam-badge {
+            background: rgba(74, 144, 226, 0.12);
+            color: var(--accent);
+            font-size: 9px;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .exam-date {
+            font-size: 10px;
+            color: var(--text-s);
+            font-weight: 500;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            color: var(--text-s);
+            font-size: 12px;
+            margin-top: 40px;
+            display: none;
+            letter-spacing: 0.5px;
+        }
+
+        svg { width: 18px; height: 18px; fill: none; stroke: white; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+    </style>
+</head>
+<body oncontextmenu="return false;">
+
+    <!-- Navigation Header Block -->
+    <header class="nav-header">
+        <div class="back-trigger" onclick="navigateBack()">
+            <svg viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+        </div>
+        <h1 class="view-title">Live Exam Updates</h1>
+    </header>
+
+    <!-- Contextual Filtering Input Block -->
+    <div class="search-container">
+        <input type="text" id="search-bar" class="search-input" placeholder="Search vacancies, parameters, organizations..." oninput="filterStreamUpdates()">
+    </div>
+
+    <!-- Scrollable Feed Viewport -->
+    <div class="updates-viewport" id="feed-root">
+        <!-- Structural components are handled dynamically below -->
+    </div>
+
+    <!-- Filter Empty Response Display Screen -->
+    <div class="empty-state" id="empty-notice">No updates matching current filter context.</div>
+
+    <script>
+        // --- CENTRALIZED DATA FEED SYSTEM ---
+        const updatesMatrix = [
+            {
+                title: "BEL Recruitment 2026",
+                description: "Apply Online for 56 Field Operation Engineer, Project Engineer Posts",
+                category: "PSU",
+                date: "20 May 2026"
+            },
+            {
+                title: "NALCO Non Executive Recruitment 2026",
+                description: "Apply Online for 268 Various Posts",
+                category: "PSU",
+                date: "18 May 2026"
+            },
+            {
+                title: "NTPC EET Recruitment 2026",
+                description: "Through GATE 2025 (52 Posts) Online Form, Notification",
+                category: "PSU",
+                date: "18 May 2026"
+            }
+        ];
+
+        // --- RENDER STREAM PROTOCOL ---
+        function initializeFeedStream() {
+            const feedRoot = document.getElementById('feed-root');
+            let feedHTML = '';
+
+            updatesMatrix.forEach((update, targetIndex) => {
+                feedHTML += `
+                    <div class="exam-details-card" data-index="${targetIndex}">
+                        <h2 class="card-title">${update.title}</h2>
+                        <p class="card-sub">${update.description}</p>
+                        <div class="exam-meta-row">
+                            <span class="exam-badge">${update.category}</span>
+                            <span class="exam-date">${update.date}</span>
+                        </div>
+                    </div>
+                `;
+            });
+
+            feedRoot.innerHTML = feedHTML;
+        }
+
+        // --- FILTER SEARCH PROCESSOR ---
+        function filterStreamUpdates() {
+            const searchQuery = document.getElementById('search-bar').value.toLowerCase();
+            const updatesCards = document.querySelectorAll('.exam-details-card');
+            const emptyNotice = document.getElementById('empty-notice');
+            let matchedElementsCount = 0;
+
+            updatesCards.forEach(card => {
+                const titleText = card.querySelector('.card-title').textContent.toLowerCase();
+                const subText = card.querySelector('.card-sub').textContent.toLowerCase();
+                const badgeText = card.querySelector('.exam-badge').textContent.toLowerCase();
+
+                if (titleText.includes(searchQuery) || subText.includes(searchQuery) || badgeText.includes(searchQuery)) {
+                    card.style.display = 'block';
+                    matchedElementsCount++;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            // Toggle visibility status indicator screen
+            emptyNotice.style.display = (matchedElementsCount === 0) ? 'block' : 'none';
+        }
+
+        // --- TRANSACTION ENGINE / NAVIGATION HANDLING ---
+        function navigateBack() {
+            if (navigator.vibrate) navigator.vibrate(12);
+            location.href = 'index.html';
+        }
+
+        // System Safety Lockouts Execution
+        document.addEventListener('contextmenu', event => event.preventDefault());
+        document.addEventListener('touchstart', function(e) {
+            if (e.touches.length > 1) e.preventDefault();
+        }, {passive: false});
+
+        // Initialize script feed runtime rendering engine setup block
+        window.addEventListener('DOMContentLoaded', initializeFeedStream);
+    </script>
+</body>
+</html>
