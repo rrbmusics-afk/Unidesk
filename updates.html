@@ -151,7 +151,7 @@
         /* --- LINK ENGINE PROTOCOL STYLING --- */
         .card-link-wrapper {
             margin-bottom: 16px;
-            padding-top: 4px;
+            padding-top: 12px;
             border-top: 1px dashed rgba(255, 255, 255, 0.06);
         }
 
@@ -253,7 +253,7 @@
     <!-- Filter Empty Response Display Screen -->
     <div class="empty-state" id="empty-notice">No updates matching current filter context.</div>
 
-    <!-- SCRIPT LINK INJECTION CONFIGURATION: Pulls array structured out of index.js -->
+    <!-- SCRIPT LINK INJECTION CONFIGURATION: Pulls array structure out of index.js -->
     <script src="index.js"></script>
     <script>
         // --- RENDER STREAM PROTOCOL ---
@@ -265,12 +265,14 @@
             if (typeof examsData !== 'undefined') {
                 examsData.forEach((update, targetIndex) => {
                     
-                    // Logic layer checking structural existence of web links
+                    // Case-insensitive safely isolated lookup property configuration logic 
+                    const descriptionText = update.linkDescription || update.linkdescription;
                     let linkMarkupBlock = '';
-                    if (update.linkDescription && update.link) {
+                    
+                    if (descriptionText && update.link) {
                         linkMarkupBlock = `
                             <div class="card-link-wrapper">
-                                <p class="link-desc">${update.linkDescription}</p>
+                                <p class="link-desc">${descriptionText}</p>
                                 <a href="${update.link}" target="_blank" rel="noopener noreferrer" class="interactive-url" onclick="triggerHapticFeedback(event)">
                                     <span>Apply / View Portal</span>
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg>
