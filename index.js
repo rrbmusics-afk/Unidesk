@@ -15,7 +15,7 @@ const examsData = [
         description: "Apply Online for 268 Various Posts",
         category: "PSU",
         date: "18 May 2026",
-        linkdescription: "Official website",
+        linkDescription: "Official website",
         link: "https://nalcoindia.com/"
     },
     {
