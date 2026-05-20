@@ -453,7 +453,7 @@
     <footer>&copy; 2026 Aethercore Interactive</footer>
 
     <script>
-        // --- CENTRALIZED INDEX.JS DATALAYER STRUCTURE ---
+        // --- CENTRALIZED INDEX.JS SIMULATED STRUCTURE ---
         const examsData = [
             {
                 title: "BEL Recruitment 2026",
@@ -477,11 +477,6 @@
             }
         ];
 
-        // Exporting data cleanly in case you scale up to modern modules later
-        if (typeof module !== 'undefined' && module.exports) {
-            module.exports = examsData;
-        }
-
         // --- DOM RENDER FUNCTION ON LAUNCH ---
         function initializeExamsFeature() {
             const marqueeInner = document.getElementById('marquee-inner');
@@ -503,7 +498,7 @@
                             <p class="exam-link-desc">${descText}</p>
                             <a href="${exam.link}" target="_blank" class="exam-link-btn">
                                 Proceed to Portal
-                                <svg style="width:12px; height:12px; fill:none; stroke:currentColor; stroke-width:2.5;" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"/></svg>
+                                <svg style="width:12px; height:12px; fill:none; stroke:currentColor; stroke-width:2.5;" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h14M15 3h6v6M10 14L21 3"/></svg>
                             </a>
                         </div>
                     `;
@@ -533,4 +528,7 @@
         // --- INTERACTION & MODAL ACTIONS ---
         const overlay = document.getElementById('overlay');
         const utilitiesOverlay = document.getElementById('utilities-overlay');
-        const examsOverlay = 
+        const examsOverlay = document.getElementById('exams-overlay');
+        
+        document.addEventListener('contextmenu', event => event.preventDefault());
+        document.addEventListener('touchstart', function(e
