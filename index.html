@@ -15,7 +15,7 @@
             --safe-bottom: env(safe-area-inset-bottom, 20px);
             --transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
             
-            /* NEW DESIGN VARIABLES FOR EXAM SYSTEM */
+            /* EXAM SYSTEM INTERFACE DESIGN CORE VARIABLES */
             --ticker-bg: #06090d;
             --panel-bg: rgba(14, 21, 29, 0.96);
             --card-bg: rgba(255, 255, 255, 0.03);
@@ -52,7 +52,7 @@
             font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", sans-serif;
             display: flex;
             flex-direction: column;
-            padding: calc(var(--safe-top) + 40px) 30px calc(var(--safe-bottom) + 65px); /* Adjusted bottom padding dynamically to avoid ticker overlapping */
+            padding: calc(var(--safe-top) + 40px) 30px calc(var(--safe-bottom) + 65px); /* Responsive offset bottom area spacing optimization to clear overlapping layout metrics */
         }
 
         .brand-core {
@@ -195,7 +195,7 @@
 
         footer {
             position: absolute;
-            bottom: calc(var(--safe-bottom) + 55px); /* Bumped higher slightly so it is clearly above the dynamic ticker */
+            bottom: calc(var(--safe-bottom) + 55px); /* Position adjusted safely above ticker mechanics layout bounds */
             width: 100%;
             left: 0;
             text-align: center;
@@ -209,7 +209,7 @@
         svg { width: 20px; height: 20px; fill: white; }
 
         /* ========================================== */
-        /*   NEW TICKER & SLIDING PANEL STYLING      */
+        /*   TICKER & SLIDING POPUP SHEET STYLING     */
         /* ========================================== */
         
         .exam-ticker-bar {
@@ -570,4 +570,4 @@
                     <span class="panel-title">Engineering Opportunities</span>
                     <span class="panel-subtitle">Live Gateway Feed</span>
                 </div>
-                <button class="panel-
+         
