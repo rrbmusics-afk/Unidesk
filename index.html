@@ -232,7 +232,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-top: 8px;
+            margin-top: 12px;
         }
         .exam-badge {
             background: rgba(74, 144, 226, 0.15);
@@ -247,24 +247,38 @@
             font-size: 10px;
             color: var(--text-s);
         }
-        .exam-link-btn {
-            display: block;
-            text-align: center;
-            background: rgba(74, 144, 226, 0.2);
-            border: 1px solid var(--accent);
+        
+        /* Tapable Link Styles */
+        .exam-link-container {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.03);
+        }
+        .exam-link-desc {
+            font-size: 11px;
+            color: var(--text-s);
+            margin-bottom: 6px;
+        }
+        .exam-action-link {
+            display: inline-flex;
+            align-items: center;
             color: #ffffff;
-            font-size: 12px;
+            background: rgba(74, 144, 226, 0.25);
+            border: 1px solid rgba(74, 144, 226, 0.4);
+            padding: 6px 14px;
+            font-size: 11px;
             font-weight: 600;
             text-decoration: none;
-            padding: 10px;
             border-radius: 12px;
-            margin-top: 10px;
-            transition: background 0.3s ease;
+            transition: var(--transition);
+            
+            /* Re-enabling interaction strictly for links */
             -webkit-user-select: auto;
             user-select: auto;
         }
-        .exam-link-btn:active {
-            background: rgba(74, 144, 226, 0.4);
+        .exam-action-link:active {
+            background: var(--accent);
+            transform: scale(0.96);
         }
 
         /* --- RUNNING TICKER TAB FOOTER BAR --- */
@@ -476,25 +490,29 @@
                 // Build running tab elements (Title & Date only)
                 marqueeHTML += `<div class="marquee-item">📢 ${exam.title} <span>${exam.date}</span></div>`;
                 
-                // Build complete detailed list elements for popup window
+                // Build conditional link structure safely
                 let linkHTML = '';
-                if (exam.link) {
-                    const descText = exam.linkDescription ? exam.linkDescription : "Apply or view details using the link below:";
+                if (exam.link && exam.linkDescription) {
                     linkHTML = `
-                        <p class="sub" style="color: #636e7b; font-size: 11px; margin-top: 8px; font-style: italic;">${descText}</p>
-                        <a href="${exam.link}" target="_blank" class="exam-link-btn" onclick="event.stopPropagation()">Visit Official Link</a>
+                        <div class="exam-link-container">
+                            <p class="exam-link-desc">${exam.linkDescription}</p>
+                            <a href="${exam.link}" target="_blank" rel="noopener noreferrer" class="exam-action-link" onclick="event.stopPropagation();">
+                                Apply Online
+                            </a>
+                        </div>
                     `;
                 }
 
+                // Build complete detailed list elements for popup window
                 modalHTML += `
                     <div class="exam-details-card">
                         <p class="title" style="font-size: 14px; margin-bottom: 4px;">${exam.title}</p>
                         <p class="sub" style="color: #9eb1c9; font-size: 11px; line-height: 1.4; margin-bottom: 8px;">${exam.description}</p>
+                        ${linkHTML}
                         <div class="exam-meta-row">
                             <span class="exam-badge">${exam.category}</span>
                             <span class="exam-date">${exam.date}</span>
                         </div>
-                        ${linkHTML}
                     </div>
                 `;
             });
@@ -514,22 +532,8 @@
         
         document.addEventListener('contextmenu', event => event.preventDefault());
         document.addEventListener('touchstart', function(e) {
+            // Keep swipe to scroll operational inside links or inputs
             if (e.touches.length > 1) e.preventDefault();
         }, {passive: false});
 
-        function openModal() {
-            overlay.classList.add('active');
-            if (navigator.vibrate) navigator.vibrate(10);
-            history.pushState({ modal: 'toolkit' }, '');
-        }
-
-        function closeModal() {
-            if (overlay.classList.contains('active')) {
-                overlay.classList.remove('active');
-                if (history.state && history.state.modal === 'toolkit') history.back();
-            }
-        }
-
-        function openUtilitiesModal() {
-            utilitiesOverlay.classList.add('active');
-            if (navigator.vibrate) naviga
+      
